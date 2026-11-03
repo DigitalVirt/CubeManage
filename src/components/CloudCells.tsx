@@ -1,4 +1,4 @@
-import {Button,ProgressCircle,Table,Tooltip} from '@heroui/react';
+import {Button,Table,Tooltip} from '@heroui/react';
 import {useState} from 'react';
 import {Clipboard,ClipboardCheck,Monitor} from 'lucide-react';
 import {StatusIcon,cloudStatus,suspendTypes} from './StatusIcon';
@@ -18,7 +18,7 @@ export function CopyIp({ip,what='IP'}:{ip:string;what?:string}){
  return <Tooltip delay={300}><Button variant="ghost" size="sm" isIconOnly className={'ip-copy'+(done?' is-done':'')} aria-label={'复制'+what+' '+ip} onPress={async()=>{if(await copyText(ip)){setDone(true);setTimeout(()=>setDone(false),1500);}}}>{done?<ClipboardCheck size={14}/>:<Clipboard size={14}/>}</Button><Tooltip.Content>{done?'已复制':'复制'+what}</Tooltip.Content></Tooltip>;
 }
 
-export function CloudState({row,pending,onRefresh}:{row:Row;pending:boolean;onRefresh:()=>void}){const spec=cloudStatus(row.status);const detail=String(row.status)==='suspend'&&row.suspend_type?suspendTypes[row.suspend_type]||row.suspend_type:String(row.status)==='task'?row.task_name||row.task:'';return <Tooltip delay={0}><Button variant="ghost" size="sm" isIconOnly className="status-button" aria-label={'刷新实例 '+row.hostname+'，当前'+spec.title} isDisabled={pending} onPress={onRefresh}><span className="node-status-icon">{pending?<ProgressCircle isIndeterminate size="sm" color="accent" aria-label="正在获取实时状态" className="cloud-state-loading"><ProgressCircle.Track><ProgressCircle.TrackCircle/><ProgressCircle.FillCircle/></ProgressCircle.Track></ProgressCircle>:<StatusIcon spec={spec} size={18}/>}</span></Button><Tooltip.Content>{spec.title}{detail?'（'+detail+'）':''} · 点击刷新此实例</Tooltip.Content></Tooltip>;}
+export function CloudState({row,pending,onRefresh}:{row:Row;pending:boolean;onRefresh:()=>void}){const spec=cloudStatus(row.status);const detail=String(row.status)==='suspend'&&row.suspend_type?suspendTypes[row.suspend_type]||row.suspend_type:String(row.status)==='task'?row.task_name||row.task:'';return <Tooltip delay={0}><Button variant="ghost" size="sm" isIconOnly className="status-button" aria-label={'刷新实例 '+row.hostname+'，当前'+spec.title} isDisabled={pending} onPress={onRefresh}><span className="node-status-icon">{pending?<span className="cloud-state-loading" role="progressbar" aria-label="正在获取实时状态"/>:<StatusIcon spec={spec} size={18}/>}</span></Button><Tooltip.Content>{spec.title}{detail?'（'+detail+'）':''} · 点击刷新此实例</Tooltip.Content></Tooltip>;}
 
 /** Operating system name as the platform reports it, whichever field carries it, without an image-file extension (Ubuntu-26.04-x64.qcow2 → Ubuntu-26.04-x64). */
 export function osName(row:Row){return stripImageExt(String(row.os_name||row.operate_system||row.image_name||row.os||''));}
