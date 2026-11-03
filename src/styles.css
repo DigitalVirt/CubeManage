@@ -181,6 +181,14 @@ body{margin:0;min-width:320px}
 .login-heading h1{margin:0;font-size:1.75rem;line-height:1.3;font-weight:600;letter-spacing:-.03em}
 .login-heading p{margin:.375rem 0 0;font-size:.9375rem;color:var(--muted)}
 .login-form .input-group{width:100%}
+.login-platform{display:grid;gap:.375rem;min-width:0}
+.login-field-label{font-size:.875rem;font-weight:500}
+.login-platform .select,.login-platform .select__trigger{width:100%;min-width:0}
+.login-platform .select__value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.login-platform-help{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;font-size:.75rem;color:var(--muted)}
+.login-link{flex:none;padding:0;border:0;background:none;color:var(--accent);font:inherit;cursor:pointer;border-radius:.25rem}
+.login-link:hover{text-decoration:underline;text-underline-offset:3px}
+.login-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .login-submit{height:2.75rem;margin-top:.25rem;font-size:.9375rem}
 .login-footer{font-size:.75rem;color:var(--muted)}
 @media(max-width:960px){

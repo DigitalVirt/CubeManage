@@ -1,6 +1,8 @@
 import {useState,type FormEvent} from 'react';
 import {Button,TextField,Label,Input,InputGroup,Description} from '@heroui/react';
 import {ArrowRight,Eye,EyeOff,ShieldCheck} from 'lucide-react';
+import {Choice} from '../components/Controls';
+import {loadPlatforms,rememberPlatform,forgetPlatform} from '../lib/savedPlatforms';
 import {api,send,type Session} from '../lib/api';
 import {ErrorBox} from '../components/Shared';
 
@@ -24,10 +26,17 @@ function Lifecycle(){
  </svg>;
 }
 
+const NEW='__new';
+
 export function Login({onLogin}:{onLogin:(s:Session)=>void}){
- const [baseUrl,setBase]=useState(''),[username,setUsername]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[show,setShow]=useState(false);
- // Nothing is prefilled from the server: the address, user name and password are typed here each time and never stored.
- async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{onLogin(await api<Session>('/login',send('POST',{baseUrl,username,password})));}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+ // 登录过的平台地址保存在这个浏览器里（只有地址），有的话默认选中最近一次的；用户名和密码每次输入，从不保存。
+ const [saved,setSaved]=useState<string[]>(()=>loadPlatforms());
+ const [baseUrl,setBase]=useState(()=>saved[0]||''),[typing,setTyping]=useState(()=>!saved.length);
+ const [username,setUsername]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[show,setShow]=useState(false);
+ const pick=(v:string)=>{if(v===NEW){setTyping(true);setBase('');}else setBase(v);};
+ const backToList=()=>{setTyping(false);setBase(saved[0]||'');};
+ const remove=()=>{const list=forgetPlatform(baseUrl);setSaved(list);if(list.length)setBase(list[0]);else{setTyping(true);setBase('');}};
+ async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{const session=await api<Session>('/login',send('POST',{baseUrl,username,password}));rememberPlatform(baseUrl);onLogin(session);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  return <main className="login-page">
   <aside className="login-brand">
    <div className="login-mark"><img src="/logo.svg" width={36} height={36} alt=""/><span>Cube<b>Manage</b></span></div>
@@ -40,14 +49,22 @@ export function Login({onLogin}:{onLogin:(s:Session)=>void}){
    <form className="login-form" onSubmit={submit} noValidate={false}>
     <div className="login-heading"><h1>登录</h1><p>使用云平台管理员账号登录。</p></div>
     {error&&<ErrorBox message={error}/>}
-    <TextField isRequired value={baseUrl} onChange={setBase} name="platform">
+    {typing?<TextField isRequired value={baseUrl} onChange={setBase} name="platform">
      <Label>平台地址</Label>
-     <Input placeholder="https://cloud.example.com/管理目录" type="url" autoComplete="url" inputMode="url"/>
-     <Description>填写管理端地址，包含管理目录，不需要加 /v1。</Description>
+     <Input placeholder="https://cloud.example.com/管理目录" type="url" autoComplete="url" inputMode="url" autoFocus={saved.length>0}/>
+     <Description className="login-platform-help"><span>填写管理端地址，包含管理目录，不需要加 /v1。</span>{saved.length>0&&<button type="button" className="login-link" onClick={backToList}>选择已保存的地址</button>}</Description>
     </TextField>
+    :<div className="login-platform">
+     <span className="login-field-label">平台地址</span>
+     <Choice aria-label="平台地址" value={baseUrl} onChange={e=>pick(e.target.value)}>
+      {saved.map(url=><option key={url} value={url}>{url}</option>)}
+      <option value={NEW}>+ 输入新的平台地址…</option>
+     </Choice>
+     <div className="login-platform-help"><span>最近登录过的平台，保存在这个浏览器里。</span><button type="button" className="login-link" onClick={remove}>从列表中移除</button></div>
+    </div>}
     <TextField isRequired value={username} onChange={setUsername} name="username">
      <Label>用户名</Label>
-     <Input autoComplete="username" placeholder="平台管理员用户名"/>
+     <Input autoComplete="username" placeholder="平台管理员用户名" autoFocus={!typing}/>
     </TextField>
     <TextField isRequired value={password} onChange={setPassword} name="password">
      <Label>密码</Label>
