@@ -11,7 +11,7 @@
 ## 运行
 
 ```bash
-docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped digitalvirt/cubemanage:latest
+docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped digitalvirtllc/cubemanage:latest
 ```
 
 然后在浏览器打开 `http://服务器IP:5080`。
@@ -21,7 +21,7 @@ docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped digitalvir
 ```yaml
 services:
   cubemanage:
-    image: digitalvirt/cubemanage:latest
+    image: digitalvirtllc/cubemanage:latest
     container_name: cubemanage
     restart: unless-stopped
     ports:
