@@ -1,4 +1,15 @@
+<p align="center">
+  <a href="https://github.com/DigitalVirt">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/digitalvirt-logo-light.svg">
+      <img src=".github/assets/digitalvirt-logo.svg" alt="DigitalVirt" height="44">
+    </picture>
+  </a>
+</p>
+
 # CubeManage
+
+> 由 **DigitalVirt** 开发并开源，基于 [MIT 许可证](LICENSE) 发布。
 
 CubeManage 是一个通过 **魔方云虚拟化平台 API** 管理云实例的控制台，用 Vite 8 + React 19 + HeroUI 开发。实例、用户、区域节点、网络、镜像和日志都能在一个界面里管理；前端只和本地 Node 服务通信，平台凭据和令牌不会发送到浏览器。
 
@@ -126,6 +137,13 @@ npm run build
 实例列表的主 IP、配置、镜像、CPU、内存、实时带宽、本月流量可点击表头排序（平台 `v1/clouds` 的 `orderby` / `sort`，写入网址；本月流量平台不支持，只对当前页排序）。实例列表支持勾选后批量操作，菜单顺序与魔方云后台一致，19 项均已接入（取消迁移在迁移队列弹窗里）：重启、硬重启、开机、关机、硬关机、解除挂起、暂停、取消暂停和迁移逐个调用单实例接口（迁移每台单独发起 `POST v1/clouds/:id/migrate`，不走批量迁移队列）；重置密码、强制删除、删除、实例设置、重装、规则应用、添加 IPv6、替换 IP、一键重建实例调用平台的批量接口；导出下载平台生成的 CSV。弹窗列出所选实例，提交时服务端核对实例数量，防止列表已变化；结束后按实例汇总成功与失败，随机密码只显示一次。
 
 实例详情页的操作区还有：设置（启动盘、启动顺序、ISO 挂载、CPU 模式与限制、CPU 拓扑 / CPUTune / NUMA、VNC 与串口控制台、ACPI、时钟、QEMU 版本、VirtIO-GPU、网卡多队列、跳过冷备份、查看 XML；APIC 平台不支持修改，只读；控制台密码只在点“显示”时读取）、快照、备份（创建、还原、删除、取消创建）、计划任务（定时快照 / 备份）。实例详情页提供电源操作、网页终端、救援系统、重装、修改密码 / 配置 / 带宽、流量设置与重置，以及网络（IPv4 / IPv6、主 IP、VPC、断网）、磁盘、监控图表和实例日志。界面规范见 `DESIGN.md`。
+
+## 开源声明
+
+CubeManage 由 DigitalVirt 开发，并以 [MIT 许可证](LICENSE) 开源：可以自由使用、修改和分发（包括商业用途），只需保留版权和许可声明。
+
+- 欢迎通过 [Issues](https://github.com/DigitalVirt/CubeManage/issues) 反馈问题和建议，或提交 Pull Request。
+- 本项目按“现状”提供，不附带任何担保。管理的是生产环境中的云资源，使用写操作（删除、重装、迁移等）前请先在测试环境验证。
 
 ## 版本号
 
