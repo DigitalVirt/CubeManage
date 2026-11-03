@@ -951,6 +951,7 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .nav-popover .menu-item[data-focus-visible="true"]{outline:2px solid #b5d3ff;outline-offset:-2px}
 .nav-popover .account-menu-heading{border-bottom-color:#3a5d86}
 .nav-popover .account-menu-heading strong{color:#fff}
+.nav-popover .account-menu-version{color:#a9bddb}
 .nav-popover .account-menu-heading small{color:#b4c7e2}
 /* 顶栏右上角头像：白色圆底 + 蓝色线性用户图标。 */
 .global-header .header-account .avatar.header-avatar{--avatar-bg:#fff;background:#fff;color:#1d4ed8;box-shadow:0 0 0 1px rgb(255 255 255 / .35)}
@@ -1235,3 +1236,4 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 /* 全局搜索：搜索中显示三行结果骨架，不转圈 */
 .gs-skeleton{display:grid;gap:.25rem;padding:.5rem}.gs-sk-row{display:flex;align-items:center;gap:.625rem;padding:.5rem}.gs-sk-row>span{flex:1;display:grid;gap:.375rem}
 .gs-sk-icon{width:1.75rem;height:1.75rem;border-radius:.5rem;flex:none}.gs-sk-line{height:.625rem;border-radius:4px}.gs-sk-line.is-sub{height:.5rem;opacity:.7}
+.account-menu-version{margin-left:auto;padding-left:1rem;font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
