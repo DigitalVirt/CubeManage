@@ -86,7 +86,9 @@ export function registerBatch(app,{asyncRoute}){
    if(task)return {...row,...cold,progress:percent(task.progress)??0,msg:task.msg||cold.msg,source:'task'};
    return {...row,...cold,progress:cold.progress,source:cold.progress==null?undefined:'migrate'};
   });
-  data.sort((a,b)=>b.status-a.status||a.id-b.id);
+  // 排序：有实际进度（百分比大于 0 或有速度 / 大小）的在最上面，进度高的在前；然后是正在迁移但还没进度的，最后是排队中的。
+  const rank=x=>x.status!==1?0:(x.progress||0)>0||x.speed||x.migrated?2:1;
+  data.sort((a,b)=>rank(b)-rank(a)||(b.progress||0)-(a.progress||0)||a.id-b.id);
   res.json({data,total:data.length,running:data.filter(x=>x.status===1).length});
  }));
  app.post('/api/clouds/batch/:op',asyncRoute(async(req,res)=>{

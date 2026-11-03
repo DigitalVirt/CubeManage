@@ -30,6 +30,7 @@ test('迁移队列：冷迁移进度为空时用任务进度，任务未开始�
  assert.deepEqual([by[3].status,by[3].msg],[0,'等待执行'],'迁移任务还没开始：排队中（同一实例的其他任务不算）');
  assert.equal(by[4].status,0);
  assert.equal(q.running,2);
+ assert.deepEqual(q.data.map(x=>x.id),[2,1,3,4],'有进度的在上面，进度高的在前，排队中的在后');
  const taskCalls=calls.filter(c=>c.route==='tasks');
  assert.deepEqual(taskCalls.map(c=>c.query.get('status')),['1','0']);
  assert.ok(taskCalls.every(c=>c.query.get('rel_type')==='cloud'));

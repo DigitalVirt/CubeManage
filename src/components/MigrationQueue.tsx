@@ -69,7 +69,12 @@ export function MigrationQueue({onClose,onChanged,notify}:{onClose:()=>void;onCh
     <Table.Cell><Checkbox slot={null} className="table-check" aria-label={'选择 '+(r.hostname||id)} isSelected={selected.has(id)} onChange={v=>toggle(id,v)}><Checkbox.Control><Checkbox.Indicator/></Checkbox.Control></Checkbox></Table.Cell>
     <Table.Cell><div className="recycle-name"><button type="button" className="link-button" onClick={()=>{onClose();go('/clouds/'+id);}}><strong>{r.hostname||'实例 #'+id}</strong></button><small><span className="num">#{id}</span>{r.mainip?<> · <span className="mono">{r.mainip}</span></>:''}</small></div></Table.Cell>
     <Table.Cell>{on?<Chip size="sm" variant="soft" color="accent"><Spinner size="sm" color="current"/>正在迁移</Chip>:<Chip size="sm" variant="soft">等待迁移</Chip>}</Table.Cell>
-    <Table.Cell>{on&&r.progress!=null?<div className="migrate-progress"><div className="migrate-line"><span className="migrate-bar" aria-hidden="true"><i style={{width:Math.max(3,Number(r.progress))+'%'}}/></span><span className="num">{r.progress}%</span></div><small title={r.source==='task'?'平台没有返回迁移速度和大小，显示的是迁移任务的进度':undefined}>{[r.target&&'→ '+r.target,r.migrated&&r.total&&r.migrated+' / '+r.total,r.speed,r.eta&&'剩余 '+r.eta,!(r.migrated||r.speed||r.eta)&&r.msg].filter(Boolean).join(' · ')}</small></div>:<span className="inst-muted">{on?'平台暂未返回进度':r.msg?'排队中 · '+r.msg:'排队中'}</span>}</Table.Cell>
+    <Table.Cell>{on&&r.progress!=null?(()=>{const size=r.migrated&&r.total?r.migrated+' / '+r.total:'',rate=[r.speed,r.eta&&'剩余 '+r.eta].filter(Boolean).join(' · '),note=[r.target&&'→ '+r.target,!size&&!rate&&r.msg].filter(Boolean).join(' · ');
+     return <div className="migrate-progress" title={r.source==='task'?'平台没有返回迁移速度和大小，显示的是迁移任务的进度':undefined}>
+      {(size||rate)&&<div className="migrate-meta"><span className="num">{size}</span><span className="num">{rate}</span></div>}
+      <div className="migrate-line"><span className="migrate-bar" aria-hidden="true"><i style={{width:Math.max(3,Number(r.progress))+'%'}}/></span><span className="num">{r.progress}%</span></div>
+      {note&&<small>{note}</small>}
+     </div>;})():on?null:<span className="inst-muted">{r.msg?'排队中 · '+r.msg:'排队中'}</span>}</Table.Cell>
     <Table.Cell><Button variant="ghost" size="sm" isIconOnly className="is-danger" aria-label={'取消 '+(r.hostname||id)+' 的迁移'} onPress={()=>ask([r])}><Ban size={15}/></Button></Table.Cell>
    </Table.Row>;})}</Table.Body></Table.Content></Table.ScrollContainer></Table>}
  </Dialog>;
