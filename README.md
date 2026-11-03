@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/DigitalVirt">
+  <a href="https://digitalvirt.com/opensource/cubemanage">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset=".github/assets/digitalvirt-logo-light.svg">
       <img src=".github/assets/digitalvirt-logo.svg" alt="DigitalVirt" height="44">
@@ -9,7 +9,7 @@
 
 # CubeManage
 
-> 由 **DigitalVirt** 开发并开源，基于 [MIT 许可证](LICENSE) 发布。
+> 由 **DigitalVirt** 开发并开源，基于 [MIT 许可证](LICENSE) 发布。项目介绍：[digitalvirt.com/opensource/cubemanage](https://digitalvirt.com/opensource/cubemanage)
 
 CubeManage 是一个通过 **魔方云虚拟化平台 API** 管理云实例的控制台，用 Vite 8 + React 19 + HeroUI 开发。实例、用户、区域节点、网络、镜像和日志都能在一个界面里管理；前端只和本地 Node 服务通信，平台凭据和令牌不会发送到浏览器。
 
