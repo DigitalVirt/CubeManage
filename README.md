@@ -40,9 +40,9 @@ CubeManage 是一个通过 **魔方云虚拟化平台 API** 管理云实例的�
 | 方式 | 状态 |
 | --- | --- |
 | 自行安装（Node.js） | 已支持 |
-| Docker | 已支持 |
-| macOS 客户端 | 可自行打包，安装包即将发布 |
-| Windows 客户端 | 可自行打包，安装包即将发布 |
+| Docker | 已支持，镜像 [`digitalvirt/cubemanage`](https://hub.docker.com/r/digitalvirt/cubemanage) |
+| macOS 客户端 | [下载](https://github.com/DigitalVirt/CubeManage/releases/latest)（Apple 芯片 / Intel） |
+| Windows 客户端 | [下载](https://github.com/DigitalVirt/CubeManage/releases/latest)（64 位） |
 
 ### 自行安装
 
@@ -58,10 +58,16 @@ npm start        # 默认监听 127.0.0.1:5080
 
 ### Docker
 
-不想安装 Node 的话，用 Docker 一条命令就能运行（镜像里已经包含 Node 和打包好的页面）：
+不想安装 Node 的话，用 Docker 一条命令就能运行。镜像已发布到 Docker Hub（[digitalvirt/cubemanage](https://hub.docker.com/r/digitalvirt/cubemanage)），包含 Node 和打包好的页面，支持 amd64 和 arm64：
 
 ```bash
-docker compose up -d
+docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped digitalvirt/cubemanage:latest
+```
+
+或者下载仓库里的 [`docker-compose.yml`](docker-compose.yml) 后运行 `docker compose up -d`。想从源代码自己构建镜像：
+
+```bash
+docker compose up -d --build
 # 或者
 docker build -t cubemanage .
 docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped cubemanage
@@ -73,11 +79,13 @@ docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped cubemanage
 - 对公网开放时，请在前面加 HTTPS 反向代理（Nginx、Caddy 等），不需要其他配置：程序会识别代理传来的 HTTPS 和原始域名，会话 Cookie 自动带上 Secure。
 - 平台使用 JSON 请求体时，设置 `CUBE_BODY_ENCODING=json`。
 - 如果平台的管理接口限制了来源 IP，需要把运行 CubeManage 的服务器 IP 加入白名单。
+- 升级：`docker pull digitalvirt/cubemanage:latest` 后重新创建容器（Compose 用 `docker compose pull && docker compose up -d`）。也可以把 `latest` 换成版本号（如 `0.1.69`）固定版本。
 - 依赖由 pnpm 管理（`pnpm-lock.yaml`），镜像构建时通过 corepack 使用 `package.json` 里指定的 pnpm 版本。
+- **发布镜像**：推送 `v` 开头的标签，或在 Actions 页面手动运行 “Docker”，会构建 amd64 / arm64 镜像并推送到 Docker Hub（版本号和 `latest` 两个标签）。需要先在仓库 Secrets 里配置 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN`；镜像名默认 `digitalvirt/cubemanage`，可以用仓库变量 `DOCKERHUB_IMAGE` 修改。
 
 ### macOS / Windows 客户端
 
-客户端基于 Electron，把页面和本机服务打包在一起：双击打开即可使用，不需要安装 Node，也不需要配置 HTTPS。服务只在本机 `127.0.0.1` 上运行，请求直接从你的电脑发往平台。正式安装包发布后会在这里更新下载地址，也可以自己打包：
+客户端基于 Electron，把页面和本机服务打包在一起：双击打开即可使用，不需要安装 Node，也不需要配置 HTTPS。服务只在本机 `127.0.0.1` 上运行，请求直接从你的电脑发往平台。安装包在 [Releases](https://github.com/DigitalVirt/CubeManage/releases) 页面下载，也可以自己打包：
 
 ```bash
 pnpm desktop        # 构建页面并打开桌面窗口（调试用）

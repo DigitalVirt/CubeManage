@@ -1,0 +1,100 @@
+# 构建并发布 Docker 镜像到 Docker Hub：
+# - 推送 v 开头的标签（如 v0.1.69），或在 Actions 页面手动运行 “Docker”：构建 amd64 / arm64 镜像，
+#   推送 <镜像名>:<版本号> 和 <镜像名>:latest 两个标签，版本号取自 package.json；
+# - 推送到 main 时只构建 amd64 镜像，检查 Dockerfile 能正常构建，不推送。
+# 发布前需要在仓库 Settings → Secrets and variables → Actions 里配置：
+#   Secrets：DOCKERHUB_USERNAME（Docker Hub 用户名）、DOCKERHUB_TOKEN（Docker Hub 访问令牌，需要 Read & Write 权限）
+#   Variables（可选）：DOCKERHUB_IMAGE，镜像名，默认 digitalvirt/cubemanage
+name: Docker
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore: ['**.md', 'electron/**', 'electron-builder.yml', 'build/**', '.github/release-notes/**', '.github/assets/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ${{ vars.DOCKERHUB_IMAGE || 'digitalvirt/cubemanage' }}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 判断是否发布
+        id: meta
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/v* || "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64,linux/arm64" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 检查 Docker Hub 账号
+        if: steps.meta.outputs.publish == 'true'
+        env:
+          USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -z "$USERNAME" ] || [ -z "$TOKEN" ]; then
+            echo "::error::还没有配置 DOCKERHUB_USERNAME / DOCKERHUB_TOKEN，请在仓库 Settings → Secrets and variables → Actions 里添加后重新运行。"
+            exit 1
+          fi
+
+      - uses: docker/setup-qemu-action@v3
+        if: steps.meta.outputs.publish == 'true'
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: 登录 Docker Hub
+        if: steps.meta.outputs.publish == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 构建并推送
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ steps.meta.outputs.platforms }}
+          push: ${{ steps.meta.outputs.publish == 'true' }}
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.title=CubeManage
+            org.opencontainers.image.description=魔方云虚拟化平台的开源管理控制台
+            org.opencontainers.image.vendor=DigitalVirt
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.url=https://digitalvirt.com/opensource/cubemanage
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 同步 Docker Hub 简介
+        if: steps.meta.outputs.publish == 'true'
+        continue-on-error: true
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE }}
+          short-description: 魔方云虚拟化平台的开源管理控制台，由 DigitalVirt 开发并开源
+          readme-filepath: ./.github/DOCKERHUB.md
