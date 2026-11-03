@@ -45,21 +45,46 @@ async function mapLimit(items,limit,fn){
  await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{while(next<items.length){const i=next++;out[i]=await fn(items[i],i);}}));
  return out;
 }
+/** 进度：0–100 的整数；“42%”、“42.5”也认；没有或不是数字时为 null。 */
+const percent=v=>{if(v==null||v==='')return null;const n=Number(String(v).replace('%','').trim());return Number.isFinite(n)?Math.max(0,Math.min(100,Math.round(n))):null;};
+/** 平台上正在执行和还没开始的实例任务，按任务 ID 和实例 ID 索引；同一实例优先取迁移类任务。失败时返回空表。 */
+async function migrateTasks(client){
+ const byId=new Map(),byHost=new Map();
+ for(const status of [1,0]){
+  try{
+   const r=await client.request('GET','tasks',{query:{status,rel_type:'cloud',per_page:100,orderby:'id',sort:'desc'}});
+   for(const t of listResult(r,1,100).data){
+    const host=Number(t.hostid);if(t.id!=null)byId.set(Number(t.id),t);if(!host)continue;
+    const mig=/migrat/i.test(String(t.type||''))||/迁移/.test(String(t.msg||''));const prev=byHost.get(host);
+    if(!prev||(mig&&!prev.mig))byHost.set(host,{...t,mig});
+   }
+  }catch{/* 读不到任务列表时只用冷迁移进度 */}
+ }
+ return {byId,byHost};
+}
 const listOf=(r,key)=>Array.isArray(r?.[key])?r[key]:Array.isArray(r?.data?.[key])?r.data[key]:[];
 const sumNum=raw=>{const n=raw.map(r=>r?.num??r?.data?.num).filter(x=>x!==undefined&&x!==null);return n.length?n.reduce((a,b)=>a+Number(b||0),0):undefined;};
 
 export function registerBatch(app,{asyncRoute}){
  // 迁移队列: 获取迁移实例列表 (v1/clouds/migrate); instances being migrated also get 获取实例冷迁移进度 (v1/clouds/:id/migrate).
+ // 冷迁移进度接口在热迁移（或平台低于 v2.2.7）时不返回真实进度：这时改用任务列表（v1/tasks）里该实例迁移任务的进度和描述；
+ // 任务还没开始执行（status=0）的实例算作排队中。
  app.get('/api/clouds/migrate_queue',asyncRoute(async(req,res)=>{
   const client=req.session.client;const r=await client.request('GET','clouds/migrate');
   const rows=(Array.isArray(r)?r:Array.isArray(r?.data)?r.data:listResult(r,1,100).data).filter(x=>x&&x.id!=null);
   const pick=v=>v&&typeof v==='object'&&!Array.isArray(v)&&v.data&&typeof v.data==='object'?v.data:v||{};
+  const tasks=rows.some(x=>Number(x.migrate_status)===1)?await migrateTasks(client):{byId:new Map(),byHost:new Map()};
   // 进度逐台查询，最多同时 6 个请求，避免队列很长时一次性压垮平台。
   const data=await mapLimit(rows,6,async x=>{
    const row={id:Number(x.id),hostname:x.hostname||'',mainip:x.mainip||'',ipaddress:x.ipaddress||'',status:Number(x.migrate_status)===1?1:0};
    if(row.status!==1)return row;
-   try{const m=pick(await client.request('GET',`clouds/${row.id}/migrate`));return {...row,progress:Math.max(0,Math.min(100,Math.round(Number(m.progress)||0))),target:m.target_node?.name||'',speed:m.speed||'',eta:m.eta_string||'',migrated:m.migrate_size||'',total:m.total_size||'',msg:m.msg||''};}
-   catch{return row;}
+   let m={};try{m=pick(await client.request('GET',`clouds/${row.id}/migrate`));}catch{/* 没有冷迁移进度，下面用任务进度 */}
+   const task=(m.taskid!=null&&tasks.byId.get(Number(m.taskid)))||tasks.byHost.get(row.id);
+   const cold={progress:percent(m.progress),target:m.target_node?.name||'',speed:m.speed||'',eta:m.eta_string||'',migrated:m.migrate_size||'',total:m.total_size||'',msg:m.msg||''};
+   if((cold.progress||0)>0||cold.speed||cold.migrated)return {...row,...cold,progress:cold.progress??0,source:'migrate'};
+   if(task&&Number(task.status)===0)return {...row,status:0,target:cold.target,msg:task.msg||''};
+   if(task)return {...row,...cold,progress:percent(task.progress)??0,msg:task.msg||cold.msg,source:'task'};
+   return {...row,...cold,progress:cold.progress,source:cold.progress==null?undefined:'migrate'};
   });
   data.sort((a,b)=>b.status-a.status||a.id-b.id);
   res.json({data,total:data.length,running:data.filter(x=>x.status===1).length});
