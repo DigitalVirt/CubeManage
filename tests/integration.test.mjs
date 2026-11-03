@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtemp,rm,readFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {createApp} from '../server/index.mjs';
 import {CubeClient,listResult,scrub} from '../server/cube-client.mjs';
 import {normalizeBase} from '../server/config.mjs';
@@ -125,11 +126,11 @@ test('管理功能：镜像 / ISO / 用户增改查、只读日志与清理校�
 });
 test('系统日志的特殊分页响应可正常转换',async()=>{const {normalizeManagedList,managementQuery}=await import('../server/management.mjs');const result=listResult(normalizeManagedList({total:81,page:2,total_page:5,list:[{id:7,des:'登录'}]}),2,20);assert.equal(result.meta.total,81);assert.equal(result.meta.total_pages,5);assert.deepEqual(result.data,[{id:7,des:'登录'}]);assert.deepEqual(managementQuery('login-logs',{page:2}).type,['=',1]);});
 test('会话随平台令牌结束：平台返回 401 时清除浏览器会话，登录不写任何本机文件',async t=>{
- const {readdir}=await import('node:fs/promises');const before=(await readdir(path.join(path.dirname(new URL(import.meta.url).pathname),'..'))).sort().join();
+ const {readdir}=await import('node:fs/promises');const before=(await readdir(fileURLToPath(new URL('..',import.meta.url)))).sort().join();
  let expired=false;const app=createApp({auditFile:path.join(os.tmpdir(),'cubemanage-expire-audit.jsonl'),clientFactory:config=>new CubeClient(config,{transport:async url=>url.pathname.endsWith('/login')?response('T-1'):expired?response({error:'token expired'},401):response({data:[],meta:{total:0}})})});
  const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));t.after(()=>new Promise(r=>server.close(r)));const base='http://127.0.0.1:'+server.address().port;
  let res=await fetch(base+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({baseUrl:'https://cube.example/admin',username:'admin',password:'pw'})});const cookie=res.headers.get('set-cookie').split(';')[0];
  assert.equal((await fetch(base+'/api/resources/areas',{headers:{Cookie:cookie}})).status,200);
  expired=true;res=await fetch(base+'/api/resources/areas',{headers:{Cookie:cookie}});assert.equal(res.status,401);assert.match(res.headers.get('set-cookie')||'',/cubemanage=;.*Max-Age=0/);
- assert.equal((await readdir(path.join(path.dirname(new URL(import.meta.url).pathname),'..'))).sort().join(),before,'no file created by logging in');
+ assert.equal((await readdir(fileURLToPath(new URL('..',import.meta.url)))).sort().join(),before,'no file created by logging in');
 });
