@@ -69,7 +69,7 @@ export function MigrationQueue({onClose,onChanged,notify}:{onClose:()=>void;onCh
     <Table.Cell><Checkbox slot={null} className="table-check" aria-label={'选择 '+(r.hostname||id)} isSelected={selected.has(id)} onChange={v=>toggle(id,v)}><Checkbox.Control><Checkbox.Indicator/></Checkbox.Control></Checkbox></Table.Cell>
     <Table.Cell><div className="recycle-name"><button type="button" className="link-button" onClick={()=>{onClose();go('/clouds/'+id);}}><strong>{r.hostname||'实例 #'+id}</strong></button><small><span className="num">#{id}</span>{r.mainip?<> · <span className="mono">{r.mainip}</span></>:''}</small></div></Table.Cell>
     <Table.Cell>{on?<Chip size="sm" variant="soft" color="accent"><Spinner size="sm" color="current"/>正在迁移</Chip>:<Chip size="sm" variant="soft">等待迁移</Chip>}</Table.Cell>
-    <Table.Cell>{on&&r.progress!=null?(()=>{const size=r.migrated&&r.total?r.migrated+' / '+r.total:'',rate=[r.speed,r.eta&&'剩余 '+r.eta].filter(Boolean).join(' · '),note=[r.target&&'→ '+r.target,!size&&!rate&&r.msg].filter(Boolean).join(' · ');
+    <Table.Cell>{on&&r.progress!=null?(()=>{const size=r.migrated&&r.total?r.migrated+' / '+r.total:'',rate=[r.speed,r.eta&&'剩余 '+r.eta].filter(Boolean).join(' · '),note=!size&&!rate?r.msg:'';
      return <div className="migrate-progress" title={r.source==='task'?'平台没有返回迁移速度和大小，显示的是迁移任务的进度':undefined}>
       {(size||rate)&&<div className="migrate-meta"><span className="num">{size}</span><span className="num">{rate}</span></div>}
       <div className="migrate-line"><span className="migrate-bar" aria-hidden="true"><i style={{width:Math.max(3,Number(r.progress))+'%'}}/></span><span className="num">{r.progress}%</span></div>
