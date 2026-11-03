@@ -39,11 +39,12 @@ function Running({row,children}:{row:Row;children:React.ReactNode}){return Strin
 /** The image's OS mark from the platform, its name on hover; a neutral monitor when the platform has none. */
 export function OsIcon({row}:{row:Row}){const [failed,setFailed]=useState(false);const url=osIconUrl(row.svg),name=osName(row)||'未知镜像';return <Tooltip delay={0}><Tooltip.Trigger tabIndex={0} aria-label={'镜像：'+name} className="os-icon">{url&&!failed?<img src={url} alt="" width={20} height={20} onError={()=>setFailed(true)}/>:<Monitor size={18} aria-hidden="true"/>}</Tooltip.Trigger><Tooltip.Content>{name}</Tooltip.Content></Tooltip>;}
 
-export function CloudCells({row}:{row:Row}){
+/** place: 配置下方的位置行（国旗 · 节点 · 分组），由实例列表传入。 */
+export function CloudCells({row,place}:{row:Row;place?:React.ReactNode}){
  const disk=diskTotal(row),t=traffic(row);
  return <>
   <Table.Cell><span className="cloud-ip-cell"><span className="mono cloud-ip">{label(row.mainip)}</span>{row.mainip&&<CopyIp ip={String(row.mainip)}/>}</span></Table.Cell>
-  <Table.Cell><span className="spec-cell">{label(row.cpu)}vCPU · {label(row.memory)}GB · {disk!=null?disk+'GB':'—'}</span></Table.Cell>
+  <Table.Cell><div className="spec-stack"><span className="spec-cell">{label(row.cpu)}vCPU · {label(row.memory)}GB · {disk!=null?disk+'GB':'—'}</span>{place}</div></Table.Cell>
   <Table.Cell><OsIcon row={row}/></Table.Cell>
   <Table.Cell><Running row={row}><Usage value={row.cpu_usage} label={row.hostname+' CPU 使用率'}/></Running></Table.Cell>
   <Table.Cell><Running row={row}><Usage value={row.memory_usage} label={row.hostname+' 内存使用率'}/></Running></Table.Cell>

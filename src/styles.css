@@ -219,6 +219,14 @@ body{margin:0;min-width:320px}
 .instance-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 .instance-sub{padding-left:0}
 .instance-sub .country-flag{font-size:.75rem;border-radius:2px}
+.instance-owner{color:var(--muted);text-decoration:none;max-width:10rem;overflow:hidden;text-overflow:ellipsis;border-radius:.25rem}
+a.instance-owner:hover{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+a.instance-owner:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+/* 实例列表“配置”列：配置下方是位置（国旗 · 节点 · 分组） */
+.spec-stack{display:grid;gap:.1875rem;justify-items:start}
+.spec-place{display:flex;align-items:center;gap:.375rem;font-size:.75rem;color:var(--muted);white-space:nowrap}
+.spec-place .country-flag{font-size:.75rem;border-radius:2px}
+.group-tag.is-sm{height:1rem;padding:0 .3125rem;border-radius:.25rem;font-size:.625rem;font-weight:500;letter-spacing:.01em}
 
 /* Popovers and their options follow the control radius: the frame is the control radius plus its
    4px padding, so each option sits concentric inside it with the same 10px as every control. */
