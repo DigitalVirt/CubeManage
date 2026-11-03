@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.data/
+.env
+config/cubecloud.json
+*.log
+.backup/
+
+# 不上传到 GitHub
+.DS_Store
+docs/
+digitalvirt-v1-api.md
+release/
+
+# 旧的 npm 锁文件，依赖以 pnpm-lock.yaml 为准
+package-lock.json

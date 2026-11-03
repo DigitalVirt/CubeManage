@@ -1,0 +1,12 @@
+# 一键启动：docker compose up -d，然后在浏览器打开 http://服务器IP:5080
+# 对公网开放时，请在前面加 HTTPS 反向代理（Nginx、Caddy 等），不需要其他配置。
+services:
+  cubemanage:
+    build: .
+    image: cubemanage:latest
+    container_name: cubemanage
+    restart: unless-stopped
+    ports:
+      - "5080:5080"
+    environment:
+      CUBE_BODY_ENCODING: form

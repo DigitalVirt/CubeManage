@@ -1,0 +1,37 @@
+# 桌面安装包配置（electron-builder）。本地打包：pnpm desktop:dist；CI 打包见 .github/workflows/desktop.yml
+appId: com.cubemanage.desktop
+productName: CubeManage
+copyright: Copyright © CubeManage
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**
+  - server/**
+  - electron/**
+  - package.json
+  - "!**/*.map"
+asar: true
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+mac:
+  category: public.app-category.developer-tools
+  icon: build/icon.png
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  hardenedRuntime: true
+  gatekeeperAssess: false
+dmg:
+  title: ${productName} ${version}
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: CubeManage
+publish: null

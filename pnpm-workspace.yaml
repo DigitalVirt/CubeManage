@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+  electron: true
+  electron-winstaller: true
+minimumReleaseAgeExclude:
+  - '@vitejs/plugin-react@6.2.1'

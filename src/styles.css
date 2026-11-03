@@ -1,0 +1,1221 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+@import "flag-icons/css/flag-icons.min.css";
+body{margin:0;min-width:320px}
+.brand,.workspace,.profile,.topbar>div,.heading-actions,.toolbar-right,.pagination>div,.settings-footer,.row-actions{display:flex;align-items:center;gap:.75rem}
+.brand{font-weight:600}.brand-symbol{display:inline-flex}.brand-light{font-weight:400}
+.login-story[hidden]{display:none}.login-page{min-height:100vh;display:grid;place-items:center;padding:1rem}.login-panel{width:100%;max-width:28rem}.login-form,.operation-body{display:grid;gap:1rem}.login-heading,.mobile-brand{margin-bottom:1rem}.login-panel>footer{margin-top:2rem}.password-wrap{position:relative}.password-wrap>button{position:absolute;right:.25rem;bottom:.25rem}.login-security,.form-note,.error-box{display:flex;align-items:center;gap:.5rem}.login-security,.field-help,.updated-note,small{font-size:.875rem;color:var(--muted)}.field-error{color:var(--danger);font-size:.875rem}
+.app-shell{min-height:100vh;display:flex}.sidebar{width:15rem;flex:none;display:flex;flex-direction:column;gap:1rem;padding:1rem;border-right:1px solid var(--border)}.sidebar-brand{display:flex;justify-content:space-between}.workspace>div,.profile>div{display:grid}.sidebar nav{display:grid;gap:.25rem}.sidebar nav button{justify-content:flex-start;width:100%}.sidebar nav button span{flex:1;text-align:left}.sidebar-bottom{margin-top:auto;display:grid;gap:1rem}.profile>div{flex:1}.workspace-main{min-width:0;flex:1}.topbar{min-height:4rem;padding:1rem 2rem;display:flex;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--border)}.page-content{padding:2rem;max-width:90rem;margin:auto}.app-footer{padding:1rem 2rem;display:flex;justify-content:space-between}.page-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}.page-heading h1{font-size:1.5rem;font-weight:600}.page-heading p,.panel-heading p{color:var(--muted)}.section-kicker{font-size:.75rem;color:var(--muted);margin-bottom:.5rem}.count{margin-left:.5rem}.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem}.stat-block{height:auto;min-width:0;display:grid;gap:1rem;padding:1rem}.stat-block>div,.stat-block footer{display:flex;justify-content:space-between;gap:.5rem;width:100%}.stat-block>strong{font-size:2rem}.overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}.data-panel{min-width:0;padding:1rem}.panel-heading,.list-toolbar,.pagination{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1rem}.panel-heading h2,.settings-panel h2{font-weight:600}.area-list,.node-list{display:grid}.area-list>button,.node-list>button{height:auto;justify-content:flex-start;padding:1rem;width:100%}.area-list>button div,.node-list>button div{display:grid;text-align:left;flex:1}.table-scroll{overflow-x:auto}.table-scroll table{min-width:38rem}td small{display:block}.filter-row{display:flex;align-items:end;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}.filter-row label{display:grid;gap:.25rem}.search-box,.relation-search{display:flex;align-items:center;gap:.5rem}.search-box{max-width:20rem}.pagination{margin:1rem 0 0;flex-wrap:wrap}.pagination label{display:flex;align-items:center;gap:.5rem}.form-grid,.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.span-two{grid-column:1/-1}.relation-field{display:grid;gap:.5rem}.settings-list>div{display:grid;grid-template-columns:10rem 1fr;gap:1rem;padding:.75rem 0}.settings-list dd,.detail-grid dd{margin:0;overflow-wrap:anywhere}.settings-footer{justify-content:space-between;margin-top:1rem}.tabs{display:flex;gap:.5rem;margin-bottom:1rem}.detail-status,.subheading{margin:1rem 0}.empty,.loading{padding:2rem;text-align:center}.empty svg{margin:auto}.mobile-nav,.mobile-close,.nav-scrim{display:none}.mono{font-family:monospace;overflow-wrap:anywhere}.nowrap{white-space:nowrap}
+@media(max-width:767px){.sidebar{position:fixed;inset:0 auto 0 0;z-index:30;background:var(--background);transform:translateX(-100%)}.sidebar.mobile-open{transform:none}.mobile-nav,.mobile-close{display:inline-flex}.nav-scrim{display:block;position:fixed;inset:0;z-index:20;background:#0008}.topbar{padding:1rem}.connection-host{display:none}.page-content{padding:1rem}.page-heading{flex-wrap:wrap}.overview-grid{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr}.form-grid,.detail-grid{grid-template-columns:1fr}.span-two{grid-column:auto}.settings-list>div{grid-template-columns:1fr}.list-toolbar{flex-wrap:wrap}}
+/* Layout and hierarchy; component colors and surfaces use the HeroUI theme. */
+.sidebar{position:sticky;top:0;height:100svh;padding:1.5rem 1rem;gap:1.75rem}.sidebar-brand{padding:0 .5rem}.workspace{padding:.75rem .5rem}.nav-label{padding:0 .75rem;font-size:.75rem;color:var(--muted)}.sidebar nav{gap:.375rem}.sidebar nav button{min-height:2.75rem}.sidebar nav .nav-divider{margin-top:1rem}.sidebar-connection{font-size:.75rem;color:var(--muted);padding:0 .5rem}.profile{padding-top:1rem;border-top:1px solid var(--border)}.profile strong{font-size:.875rem}.profile small{font-size:.75rem}.workspace-main{display:flex;flex-direction:column}.page-content{width:100%;max-width:86rem;flex:1;padding:2rem 2.5rem}.topbar{padding:1rem 2.5rem}.connection-host{font-size:.8125rem;color:var(--muted)}.page-heading{margin-bottom:2rem;align-items:center}.page-heading h1{font-size:1.75rem;letter-spacing:-.04em;line-height:1.4}.page-heading p{margin-top:.375rem;font-size:.875rem}.section-kicker{font-size:.75rem}.stats-grid{gap:1.25rem;margin-bottom:1.5rem}.metric-card{min-width:0}.metric-card .card__header{display:flex;align-items:center;justify-content:space-between}.metric-label{display:flex;align-items:center;gap:.75rem}.metric-label .card__title{font-size:.875rem}.resource-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:2.5rem;height:2.5rem;background:var(--default);border-radius:var(--radius);color:var(--muted)}.metric-value{font-size:2.5rem;font-weight:600;letter-spacing:-.05em;line-height:1.3;margin-bottom:.5rem;font-variant-numeric:tabular-nums}.metric-value>span{font-size:.8125rem;color:var(--muted);margin-left:.75rem;font-weight:400;letter-spacing:0}.metric-card .card__footer{display:flex;align-items:center;justify-content:space-between}.overview-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:1.5rem;margin-bottom:1.5rem}.data-panel{padding:1.5rem}.panel-title{display:flex;align-items:center;gap:.625rem}.panel-title svg{color:var(--muted)}.panel-heading p{font-size:.8125rem;margin-top:.375rem}.panel-heading{margin-bottom:1.25rem}.region-distribution{display:grid;gap:1.5rem}.region-summary{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;gap:.75rem}.region-name{display:flex;align-items:center;gap:.625rem;min-width:0}.region-name>div{min-width:0}.region-name button,.node-copy button{padding-left:0;justify-content:flex-start;height:auto;min-height:1.5rem}.region-name small,.node-copy small{display:block;font-size:.75rem}.region-total{display:flex;align-items:baseline;gap:.375rem;white-space:nowrap}.region-total strong{font-size:1.125rem;font-variant-numeric:tabular-nums}.region-total small{font-size:.75rem}.node-row{display:flex;align-items:center;gap:.75rem;padding:.875rem 0}.node-row+.node-row{border-top:1px solid var(--border)}.node-copy{flex:1;min-width:0}.updated-note{display:flex;align-items:center;justify-content:flex-end;gap:.375rem;margin-top:1rem;font-size:.75rem}.app-footer{font-size:.75rem;color:var(--muted);padding:1rem 2.5rem}.list-toolbar{padding-bottom:1rem;border-bottom:0}
+@media(max-width:1100px){.overview-grid{grid-template-columns:1fr}.page-content{padding:1.5rem}.metric-label{gap:.375rem}.metric-label .resource-icon{display:none}}
+@media(max-width:767px){.sidebar{position:fixed;height:100svh}.topbar{padding:1rem}.page-content{padding:1.25rem 1rem}.page-heading{align-items:flex-start;gap:1rem}.page-heading h1{font-size:1.5rem}.heading-actions{width:100%}.stats-grid{grid-template-columns:1fr;gap:.75rem}.metric-card .card__content{padding-top:0}.metric-value{font-size:2rem}.data-panel{padding:1rem}.panel-heading{align-items:flex-start;gap:.5rem}.panel-heading p{max-width:12rem}.region-name .resource-icon{display:none}.region-name button{white-space:normal;text-align:left}.app-footer{padding:1rem}.updated-note{justify-content:flex-start}}
+.metric-card .card__header{flex-direction:row;justify-content:flex-start;align-items:center}.metric-card .card__content{padding-top:.25rem}.metric-card .card__footer{flex-direction:row}.metric-card{gap:1rem}.metric-label{width:100%}.metric-value{margin-top:.25rem}.metric-card .card__description{font-size:.8125rem}
+/* Full-width application header. */
+.app-shell{flex-direction:column}.global-header{display:flex;align-items:center;gap:1.5rem;min-height:4.5rem;padding:1rem 2rem;border-bottom:1px solid var(--border);width:100%;background:var(--background)}.header-brand{flex-shrink:0}.header-nav{display:flex;align-items:center;gap:.25rem;flex:1;min-width:0}.header-nav button{flex-shrink:0}.header-account{display:flex;align-items:center;gap:1rem;margin-left:auto;flex-shrink:0}.compact-navigation{display:none}.account-menu-heading{display:grid;gap:.25rem;padding:.75rem 1rem;border-bottom:1px solid var(--border)}.account-menu-heading strong{font-size:.875rem}.account-menu-heading small{font-size:.75rem}.workspace-main{width:100%}.page-content{max-width:86rem}
+@media(max-width:1200px){.global-header{padding:1rem;gap:1rem}.header-nav{gap:0}.header-nav button{padding-inline:.625rem}.header-nav button svg{display:none}.header-account{gap:.75rem}}
+@media(max-width:960px){.global-header{min-height:4rem}.header-nav{display:none}.compact-navigation{display:inline-flex}}
+@media(max-width:380px){.header-account>.chip{display:none}.global-header{gap:.5rem}}
+.home-data-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:1.5rem;margin-top:1.5rem}.seven-day-chart svg{display:block;width:100%;min-width:34rem}.seven-day-chart{overflow-x:auto}.chart-legend{display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem}.chart-legend>span{display:flex;align-items:center;gap:.5rem;font-size:.8125rem}.chart-legend i{width:.625rem;height:.625rem;border-radius:.125rem}.chart-legend>small{margin-left:auto}.seven-day-chart details{font-size:.75rem;color:var(--muted);margin-top:.5rem}.chart-data{padding-top:.5rem;line-height:1.8}@media(max-width:1000px){.home-data-grid{grid-template-columns:1fr}}
+.home-data-grid-single{grid-template-columns:minmax(0,1fr)}
+/* Flat data sections: spacing supplies grouping without a card shell. */
+.data-panel{padding:0}.panel-heading{margin-bottom:1rem;min-height:2.75rem}.home-data-grid{gap:2.5rem;margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}.home-data-grid>.data-panel{min-width:0}.list-toolbar{padding-bottom:1rem;margin-bottom:1rem}.pagination{padding-top:1rem;border-top:0}.settings-panel{max-width:52rem}.settings-panel>h2{margin-bottom:1.25rem}.settings-list{margin:0 0 1.5rem}.settings-list>div{padding:1rem 0;border-bottom:1px solid var(--border)}.settings-panel .form-note{padding-block:.5rem;align-items:flex-start}.settings-panel .settings-footer{margin-top:1.5rem}.seven-day-chart{padding-top:.5rem}.home-data-grid .table__scroll-container{max-width:100%}.home-data-grid .table__content{min-width:30rem}
+@media(max-width:767px){.data-panel{padding:0}.home-data-grid{gap:2rem;margin-top:2rem;padding-top:1.5rem}.panel-heading{flex-wrap:wrap}.panel-heading p{max-width:none}}
+/* Preserve HeroUI's original table shape and surface, without elevation. */
+.table__body{box-shadow:none}
+.resource-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2rem;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}.resource-summary{display:grid;gap:.75rem;justify-items:start;min-width:0}.resource-summary>strong{font-size:2rem;font-variant-numeric:tabular-nums}.resource-summary>strong small{font-weight:400;font-size:.8125rem}.region-overview{margin-bottom:2.5rem}.region-overview .table__content{min-width:32rem}.chart-plot{position:relative;min-width:34rem}.chart-hover-layer{position:absolute;top:6.92%;bottom:16.92%;left:5.5%;right:2%;display:flex}.chart-hover-layer>.chart-day-target{height:100%;min-width:0;flex:1;padding:0;border-radius:0;background:transparent}.chart-day-target:hover,.chart-day-target:focus-visible{background:color-mix(in srgb,var(--accent) 5%,transparent)}.chart-tooltip{display:grid;gap:.5rem;min-width:10rem}.chart-tooltip>span{display:flex;align-items:center;gap:.5rem}.chart-tooltip i{width:.5rem;height:.5rem;border-radius:50%}.chart-tooltip b{margin-left:auto;padding-left:1.5rem;font-variant-numeric:tabular-nums}@media(max-width:600px){.resource-summary-grid{gap:1rem}.resource-summary>strong{font-size:1.5rem}.resource-summary button{padding-inline:0;font-size:.75rem}}
+/* Homepage: regional context beside recent activity, then the instance ranking. */
+.home-primary-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:start;gap:2rem}.home-primary-grid>.data-panel{min-width:0}.home-primary-grid .region-overview{margin:0}.home-primary-grid .region-overview .table__scroll-container{max-height:24rem}.home-primary-grid .region-overview .table__content{min-width:26rem}.home-primary-grid .region-overview .table__cell{padding-block:.5rem}.home-primary-grid .chart-plot,.home-primary-grid .seven-day-chart svg{min-width:30rem}.home-primary-grid .seven-day-chart{padding-bottom:.5rem}.home-ranking{margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}.home-ranking .table__content{min-width:34rem}
+@media(max-width:1100px){.home-primary-grid{grid-template-columns:minmax(0,1fr)}.home-primary-grid .region-overview .table__scroll-container{max-height:none}.home-primary-grid .chart-plot,.home-primary-grid .seven-day-chart svg{min-width:30rem}}
+.region-name-link{display:inline-flex;align-items:center;gap:.5rem;white-space:nowrap}.region-flag{font-size:1.125rem;line-height:1;flex-shrink:0}
+.instance-detail-page .tabs{padding-bottom:1rem;border-bottom:0;margin-bottom:1.5rem;flex-wrap:wrap}.instance-detail-page .detail-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem 2rem}.instance-detail-page .detail-grid>div{padding-bottom:1rem;border-bottom:0}.instance-detail-page dt{color:var(--muted);font-size:.8125rem;margin-bottom:.5rem}.instance-detail-page dd{font-size:.9375rem}.instance-detail-page .detail-status{margin-bottom:1.5rem}@media(max-width:960px){.instance-detail-page .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.instance-detail-page .detail-grid{grid-template-columns:1fr}}
+.node-usage{display:grid;gap:.375rem;min-width:6rem;max-width:9rem}.node-usage strong{font-size:.8125rem;font-weight:500;font-variant-numeric:tabular-nums}.node-bandwidth,.node-switches{display:grid;gap:.375rem;white-space:nowrap}.node-bandwidth{font-size:.8125rem;font-variant-numeric:tabular-nums}.node-switches .switch{font-size:.75rem}
+.node-metric-tooltip{display:grid;gap:.375rem;max-width:22rem}.node-disk-list{display:grid;gap:.75rem}.node-usage{min-width:5rem}.node-metric-tooltip span{overflow-wrap:anywhere}
+.bandwidth-out{color:var(--success)}.bandwidth-in{color:var(--accent)}
+.node-progress.progress-bar--accent{--progress-bar-fill:var(--accent)}.node-status-icon{display:inline-flex;align-items:center;justify-content:center}.node-status-icon.is-healthy{color:color-mix(in srgb,var(--success) 65%,black)}.node-status-icon.is-unhealthy{color:color-mix(in srgb,var(--danger) 65%,black)}.draggable-node{cursor:grab}.draggable-node:active{cursor:grabbing}.draggable-node.drop-before .table__cell{border-top:2px solid var(--accent)}.draggable-node.drop-after .table__cell{border-bottom:2px solid var(--accent)}
+
+.node-status-icon svg:not(.node-refreshing):not(.status-icon) circle{fill:currentColor;stroke:currentColor}.node-status-icon svg:not(.node-refreshing):not(.status-icon) path{fill:none;stroke:var(--background);stroke-width:2.5}
+
+.status-column-heading{display:inline-flex;align-items:center;gap:.125rem;white-space:nowrap}.status-column-heading .button{width:1.5rem;height:1.5rem;min-width:1.5rem}.node-refreshing{animation:node-refresh-spin 1s linear infinite}@keyframes node-refresh-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.node-refreshing{animation:none}}
+
+.country-flag{flex-shrink:0;font-size:1.125rem;border-radius:2px;box-shadow:inset 0 0 0 1px rgb(0 0 0 / 8%)}.node-name-link{display:inline-flex;align-items:center;gap:.625rem;white-space:nowrap}
+.resource-search{width:20rem;max-width:100%}
+/* Match the content width and gutters to the full-width header. */
+.page-content{max-width:none;width:100%;padding-inline:2rem}.app-footer{padding-inline:2rem}
+@media(max-width:1200px){.page-content,.app-footer{padding-inline:1rem}}
+.node-progress-labeled .progress-bar__track{height:1.375rem;position:relative}.node-progress-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.6875rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--foreground);line-height:1;pointer-events:none}
+
+.node-progress-labeled .progress-bar__track,.node-progress-labeled .progress-bar__fill{border-radius:999px}.node-progress-labeled.progress-bar--accent{--progress-bar-fill:var(--accent)}.node-progress-label-filled{color:var(--accent-foreground)}.node-progress-labeled.progress-bar--warning .node-progress-label-filled{color:var(--foreground)}
+.node-bandwidth{display:flex;align-items:center;gap:.875rem;white-space:nowrap}
+.nodes-table{table-layout:auto}.nodes-table .node-auto-column{width:1%;white-space:nowrap}.nodes-table .node-auto-column .resource-name{white-space:nowrap}.nodes-table .node-auto-column .mono{overflow-wrap:normal}
+.nodes-table :is(.table__column,.table__cell):first-child,.areas-table :is(.table__column,.table__cell):first-child{width:1%;white-space:nowrap;padding-inline:.5rem}.areas-table .table__cell:first-child{text-align:center}
+/* CubeManage header: navy navigation with a restrained active surface. */
+.global-header{background:#102442;color:#edf4ff;border-bottom:1px solid #213a5c;min-height:4.75rem}.global-header .brand{font-size:1.125rem;letter-spacing:-.025em;gap:.625rem}.global-header .brand-light{font-weight:500}.global-header .button--ghost{color:#c6d5ec}.global-header .button--ghost:hover{background:#1c3558;color:#fff}.global-header .button--secondary{background:#24436b;color:#fff}.global-header .header-nav{gap:.375rem}.global-header .header-nav .nav-chevron{display:block;color:#8da7c9}.global-header .header-account>.chip{background:#193f43;color:#a0edce}.global-header .header-account>.chip--warning{background:#4c3c23;color:#f5d895}.global-header .header-account .avatar{--avatar-bg:#284a73;color:#e9f3ff}.managed-cell{max-width:34rem;overflow-wrap:anywhere;line-height:1.6}.cleanup-form{max-width:38rem;display:grid;gap:1.5rem}.cleanup-types{display:flex;flex-wrap:wrap;gap:1.5rem}.cleanup-form>.button{justify-self:start}
+@media(max-width:1350px){.global-header{gap:1rem}.global-header .header-nav{gap:0}.global-header .header-nav>.button,.global-header .header-nav>[data-slot="dropdown-trigger"]{padding-inline:.625rem}.global-header .header-nav>button>svg:not(.nav-chevron){display:none}}
+.management-table .table__column{white-space:nowrap}.management-table .chip{white-space:nowrap}.managed-cell-status,.managed-cell-state{min-width:3rem}.managed-cell-name,.managed-cell-username{min-width:9rem}.managed-cell-group{min-width:4.5rem}.managed-cell-filename{min-width:10rem}.managed-cell-size{min-width:4.5rem;white-space:nowrap}.managed-cell-area{min-width:12rem;max-width:25rem}.managed-cell-create_time,.managed-cell-action_time,.managed-cell-login_time{min-width:10rem}
+.downloaded-region-icon{color:var(--success)}:is(.managed-images,.managed-isos) .managed-cell-status,:is(.managed-images,.managed-isos) .managed-cell-area{min-width:0}:is(.managed-images,.managed-isos) .table__column:first-child,:is(.managed-images,.managed-isos) .table__cell:first-child{width:1%;white-space:nowrap}:is(.managed-images,.managed-isos) .managed-cell-name{min-width:12rem}
+.clouds-table :is(.table__column,.table__cell):first-child{width:1%;white-space:nowrap;padding-inline:.5rem}.clouds-table .table__column{white-space:nowrap}.clouds-table .resource-name,.cloud-ip{white-space:nowrap}.clouds-table .node-usage{min-width:5rem}.node-status-icon.is-offline{color:var(--muted)}.node-status-icon.is-warning{color:color-mix(in srgb,var(--warning) 65%,black)}
+.clouds-table .table__cell{padding-inline:.625rem}.clouds-table .node-name-link{padding-inline:.375rem}
+
+/* ===== Scheme C (2026-11) ===================================================
+   One radius for every control (the field radius), compact page headings with
+   search in the heading row, a filter bar with the total on the right, compact
+   usage meters, and the single-page instance detail. */
+:root{--cm-radius:var(--radius-field)}
+.button,.global-header .button,.global-header .header-nav>[data-slot="dropdown-trigger"]{border-radius:var(--cm-radius)}
+.checkbox__control{border-radius:calc(var(--cm-radius) / 2)}
+
+/* Brand */
+.brand img{display:block}
+
+/* Page heading */
+.page-heading{margin-bottom:1.25rem;align-items:flex-end}
+.page-heading h1{font-size:1.5rem;letter-spacing:-.03em;line-height:1.4;display:flex;align-items:center;flex-wrap:wrap;gap:.625rem}
+.page-heading .count{margin-left:0;display:inline-flex;align-items:center;height:1.5rem;padding:0 .625rem;border-radius:999px;background:var(--default);color:var(--foreground);font-size:.75rem;font-weight:500;letter-spacing:0;font-variant-numeric:tabular-nums}
+.section-kicker{font-size:.75rem;color:var(--muted);margin-bottom:.375rem;display:flex;align-items:center;gap:.25rem}
+.crumb-link{height:auto;min-height:0;padding:0;font-size:.75rem;color:var(--muted);font-weight:400}
+.crumb-link:hover{color:var(--foreground);background:transparent}
+.title-id{color:var(--muted);font-weight:500}
+.heading-actions{flex-wrap:wrap;justify-content:flex-end}
+.heading-actions .resource-search{width:17.5rem;max-width:100%}
+
+/* Filter bar */
+.filter-bar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
+.filter-bar .filters{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.filter-bar .select{min-width:9rem}
+.list-total{font-size:.8125rem;color:var(--muted);white-space:nowrap}
+
+/* Names, groups, sub-lines */
+.name-cell{display:flex;align-items:center;gap:.5rem}
+.group-tag{display:inline-flex;align-items:center;height:1.25rem;padding:0 .4375rem;border-radius:.375rem;background:color-mix(in srgb,var(--accent) 12%,transparent);color:color-mix(in srgb,var(--accent) 60%,black);font-size:.6875rem;font-weight:600;white-space:nowrap;line-height:1}
+.instance-cell .node-name-link{padding-inline:0}
+.instance-sub{display:flex;align-items:center;gap:.375rem;padding-left:2rem;font-size:.75rem;color:var(--muted);white-space:nowrap}
+.row-remark{display:block;font-size:.75rem;color:var(--muted)}
+.spec-cell{display:grid;gap:.125rem;font-size:.8125rem;white-space:nowrap}
+.spec-cell small{font-size:.75rem;color:var(--muted)}
+.cell-empty{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+/* Compact usage meters: value on top, thin bar below */
+.usage{display:grid;gap:.3125rem;min-width:4.75rem}
+.usage>strong{font-size:.875rem;font-weight:500;font-variant-numeric:tabular-nums}
+.usage-empty{color:var(--muted)}
+.usage-track{display:block;height:6px;width:4.75rem;border-radius:999px;background:var(--default);overflow:hidden}
+.usage-track>i{display:block;height:100%;border-radius:inherit;background:var(--accent)}
+.usage.is-high .usage-track>i,.traffic-cell.is-high .usage-track>i,.usage-track.is-high>i{background:var(--warning)}
+.usage.is-critical .usage-track>i{background:var(--danger)}
+.usage-track.wide{width:7rem}
+.usage-track.full{width:100%;height:10px}
+.traffic-cell{display:grid;gap:.3125rem;font-size:.8125rem;white-space:nowrap}
+.traffic-cell small{color:var(--muted);font-size:.8125rem}
+.node-bandwidth{display:grid;gap:.125rem;font-size:.8125rem;line-height:1.5}
+.node-disk-list{gap:.5rem}
+
+/* Selected instance rows */
+.clouds-table .is-picked .table__cell{background:color-mix(in srgb,var(--accent) 6%,var(--background))}
+.clouds-table :is(.table__column,.table__cell):first-child{width:1%;padding-inline:.75rem .25rem}
+
+/* List footer: batch menu on the left, page size and pager on the right */
+.list-footer{display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;padding-top:1rem}
+.list-footer-start,.pager{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.pager .select{min-width:8.5rem;margin-right:.5rem}
+.pager-gap{padding:0 .25rem;color:var(--muted)}
+
+.batch-count{display:inline-grid;place-items:center;min-width:1.25rem;height:1.25rem;padding:0 .375rem;border-radius:999px;background:var(--accent);color:var(--accent-foreground);font-size:.75rem;font-weight:600}
+.batch-popover{min-width:13.5rem}
+.batch-popover .menu,.batch-popover [role="menu"]{max-height:min(32rem,60vh);overflow-y:auto}
+.batch-menu-heading{padding:.625rem 1rem .5rem;font-size:.75rem;color:var(--muted);border-bottom:1px solid var(--border)}
+.batch-pending{margin-left:auto;font-size:.6875rem;color:var(--muted)}
+.batch-targets{list-style:none;margin:0;padding:0;display:grid;gap:.25rem;font-size:.875rem}
+.batch-targets li{display:flex;align-items:center;gap:.625rem}
+.batch-targets .mono{color:var(--muted);font-size:.8125rem}
+.batch-targets em{margin-left:auto;font-style:normal;font-size:.75rem}
+.batch-targets em.ok{color:var(--success)}
+.batch-targets em.fail{color:var(--danger)}
+.batch-targets .more{color:var(--muted)}
+
+/* Instance detail: one page */
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:0 0 1.75rem;padding:4px;border-radius:1.25rem;background:var(--default)}
+.facts>div{min-width:0;padding:.875rem 1.125rem;border-radius:1rem;background:var(--background)}
+.facts dt{font-size:.75rem;color:var(--muted);margin-bottom:.375rem}
+.facts dd{margin:0;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.9375rem;font-weight:500;overflow-wrap:anywhere}
+.facts dd .button{width:1.75rem;height:1.75rem;min-width:1.75rem}
+.detail-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,27.5rem),1fr));gap:1.75rem 3rem;align-items:start}
+.detail-column{display:grid;gap:1.75rem;min-width:0}
+.detail-column .panel-heading{margin-bottom:.5rem;min-height:2.25rem}
+.detail-column .panel-heading h2{font-size:1rem}
+.detail-column .panel-heading small{font-size:.8125rem;color:var(--muted)}
+.kv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 2rem;margin:0}
+.kv-grid>div{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--border);min-width:0}
+.kv-grid dt{font-size:.8125rem;color:var(--muted);white-space:nowrap}
+.kv-grid dd{margin:0;font-size:.875rem;text-align:right;overflow-wrap:anywhere}
+.traffic-panel{display:grid;gap:.75rem}
+.traffic-total{display:flex;align-items:baseline;gap:.375rem}
+.traffic-total strong{font-size:1.5rem;font-weight:600;letter-spacing:-.02em}
+.traffic-total span{font-size:.875rem;color:var(--muted)}
+.traffic-total small{margin-left:auto;font-size:.8125rem;color:var(--muted)}
+.traffic-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:.5rem 0 0}
+.traffic-stats dt{font-size:.75rem;color:var(--muted)}
+.traffic-stats dd{margin:.125rem 0 0;font-size:1rem;font-weight:600}
+.task-list{list-style:none;margin:0;padding:0}
+.task-list li{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--border)}
+.task-list li:last-child{border-bottom:0}
+.task-list strong{display:block;font-size:.875rem;font-weight:500}
+.task-list small{font-size:.75rem;color:var(--muted)}
+@media(max-width:960px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.facts,.kv-grid,.traffic-stats{grid-template-columns:1fr}.heading-actions .resource-search{width:100%}.list-footer{flex-direction:column;align-items:stretch}}
+.filter-note{font-size:.8125rem;color:var(--muted)}
+
+/* Login: brand field on the left, the form on white. */
+.login-page{min-height:100vh;min-height:100svh;display:grid;grid-template-columns:minmax(0,11fr) minmax(0,9fr);place-items:stretch;padding:0;background:var(--app-bg)}
+.login-brand{display:flex;flex-direction:column;justify-content:space-between;gap:2.5rem;padding:2.5rem 3.5rem 3rem;background:#102442;color:#edf4ff;min-width:0}
+.login-mark{display:flex;align-items:center;gap:.75rem;font-size:1.25rem;font-weight:600;letter-spacing:-.025em;color:#fff}
+.login-mark b{font-weight:500}
+.login-mark img{display:block}
+.login-story{display:grid;gap:.75rem;max-width:30rem}
+.login-trust{margin:0;display:flex;align-items:center;gap:.5rem;font-size:.8125rem;color:#a9bddb}
+.login-main{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2rem;padding:3rem 2rem 2rem;min-width:0}
+.login-form{width:100%;max-width:24rem;display:grid;gap:1.25rem}
+.login-heading{margin:0 0 .25rem}
+.login-heading h1{margin:0;font-size:1.75rem;line-height:1.3;font-weight:600;letter-spacing:-.03em}
+.login-heading p{margin:.375rem 0 0;font-size:.9375rem;color:var(--muted)}
+.login-form .input-group{width:100%}
+.login-submit{height:2.75rem;margin-top:.25rem;font-size:.9375rem}
+.login-footer{font-size:.75rem;color:var(--muted)}
+@media(max-width:960px){
+ .login-page{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+ .login-brand{flex-direction:row;align-items:center;padding:1.25rem 1.5rem;gap:1rem}
+ .login-fleet,.login-story{display:none}
+ .login-main{justify-content:flex-start;padding:2.5rem 1.25rem 1.5rem}
+}
+.login-lifecycle{display:block;width:min(100%,44rem);height:auto;align-self:center;font-family:inherit}
+/* The only motion on the login: the running server's lights and the image being written. */
+.login-led{animation:login-led 2.4s ease-in-out infinite}
+.login-led-late{animation-delay:.6s}
+.login-install{stroke-dasharray:32;stroke-dashoffset:32;animation:login-install 3.2s ease-out infinite}
+@keyframes login-led{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes login-install{0%{stroke-dashoffset:32}70%,100%{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){.login-led,.login-install{animation:none;stroke-dashoffset:0}}
+@media(max-width:960px){.login-lifecycle{display:none}}
+
+/* Table headers: no vertical separators between columns. */
+.table__column::after{content:none}
+
+/* Controls: a slightly tighter radius, and a grey border on every field (HeroUI ships 0px/transparent). */
+:root{--field-radius:10px;--field-border-width:1px;--field-border:#d4d4d8}
+
+/* Input groups read as one field: no divider before a prefix or suffix (HeroUI draws it with
+   --field-border), and an icon button inset evenly on every side, in the muted ink. */
+.input-group__prefix,.input-group__suffix{border-inline-width:0}
+.input-group__suffix:has(> .button){padding-inline-end:2px}
+.input-group__suffix > .button{color:var(--muted)}
+.input-group__suffix > .button:hover{color:var(--foreground)}
+
+/* Instance name: a plain link, underlined on hover only; the flag sits small before the ID. */
+.instance-cell{display:grid;gap:.1875rem}
+.instance-link{justify-self:start;color:var(--foreground);font-weight:500;text-decoration:none;text-underline-offset:3px;white-space:nowrap}
+.instance-link:hover{text-decoration:underline}
+.instance-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.instance-sub{padding-left:0}
+.instance-sub .country-flag{font-size:.75rem;border-radius:2px}
+
+/* Popovers and their options follow the control radius: the frame is the control radius plus its
+   4px padding, so each option sits concentric inside it with the same 10px as every control. */
+.select__popover,.dropdown__popover,.popover{border-radius:calc(var(--field-radius) + 4px)}
+.list-box-item,.menu-item{border-radius:var(--field-radius)}
+
+/* One height for every control in a heading or filter row: 36px. */
+.heading-actions .button,.filter-bar .button{height:2.25rem}
+.heading-actions .button--icon-only,.filter-bar .button--icon-only{width:2.25rem;min-width:2.25rem}
+.heading-actions .input-group{height:2.25rem;min-height:2.25rem}
+.heading-actions .input-group__input{height:100%;padding-block:0}
+.filter-bar .select__trigger{height:2.25rem;min-height:2.25rem;padding-block:0;align-items:center}
+
+/* Design spec page */
+.guide-section{display:grid;grid-template-columns:minmax(0,16rem) minmax(0,1fr);gap:1rem 3rem;padding:1.75rem 0;border-top:1px solid var(--border)}
+.guide-section:first-of-type{border-top:0;padding-top:0}
+.guide-head h2{margin:0;font-size:1rem;font-weight:600}
+.guide-head p{margin:.375rem 0 0;font-size:.8125rem;line-height:1.6;color:var(--muted)}
+.guide-body{display:grid;gap:1rem;min-width:0}
+.guide-row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.guide-status-list{display:grid}
+.guide-status-row{display:grid;grid-template-columns:1.5rem 6rem 7.5rem .875rem 5rem minmax(0,1fr);align-items:center;gap:.75rem;padding:.625rem 0;border-bottom:1px solid var(--border);font-size:.875rem}
+.guide-status-row strong{font-weight:500}
+.guide-status-row code,.guide-color code{font-size:.75rem;color:var(--muted)}
+.guide-meaning{color:var(--muted);font-size:.8125rem}
+.guide-swatch{display:inline-block;width:.875rem;height:.875rem;border-radius:4px;box-shadow:inset 0 0 0 1px rgb(0 0 0 / 8%)}
+.guide-swatch.large{width:2.5rem;height:2.5rem;border-radius:var(--field-radius);flex:none}
+.guide-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem 2rem;max-width:44rem}
+.guide-field{display:grid;gap:.5rem;align-content:start}
+.guide-label{font-size:.875rem;font-weight:500}
+.guide-fields .resource-search{width:100%}
+.guide-inline-title{margin:0;display:flex;align-items:center;gap:.625rem;font-size:1.5rem;font-weight:600;letter-spacing:-.03em}
+.guide-sample{max-width:20rem}
+.guide-usage .usage{min-width:6rem}
+.guide-swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:1rem 1.5rem}
+.guide-color{display:flex;align-items:center;gap:.75rem}
+.guide-color>div{display:grid;gap:.125rem}
+.guide-color strong{font-size:.875rem;font-weight:500}
+.guide-color small{font-size:.75rem;color:var(--muted)}
+@media(max-width:960px){.guide-section{grid-template-columns:1fr;gap:1rem}.guide-status-row{grid-template-columns:1.5rem 6rem minmax(0,1fr)}.guide-status-row>code,.guide-status-row>.guide-swatch{display:none}.guide-fields{grid-template-columns:1fr}}
+
+/* Fields carry a border only, no shadow. A transparent shadow, not `none`: HeroUI joins this value
+   with the focus ring in one box-shadow list, where `none` would invalidate the ring too. */
+:root{--field-shadow:0 0 #0000}
+
+/* Instance list: a 22px status mark in a narrow column (checkbox and status hug their content). */
+.clouds-table :is(.table__column,.table__cell):nth-child(2){width:1%;padding-inline:.125rem .5rem;text-align:center}
+.clouds-table .table__cell:nth-child(2) .button{width:1.875rem;min-width:1.875rem;height:1.875rem;padding:0}
+.clouds-table .table__cell:nth-child(2) .status-icon{display:block}
+
+/* Configured bandwidth reads as a setting, in ink; the live figures keep their colours. */
+.bw-limit{color:var(--foreground)}
+.bw-limit small{font-size:.75rem;color:var(--muted)}
+
+/* Instance list, round 2. HeroUI forces svg inside a small button to 16px (.button--sm svg); this
+   selector outranks it so the status mark really is 18px. The status button has no hover or press look. */
+.clouds-table .status-button .status-icon{width:18px;height:18px;margin:0}
+.clouds-table .status-button{--button-bg-hover:transparent;--button-bg-pressed:transparent;transform:none}
+.clouds-table .status-button[data-pressed="true"]{transform:none}
+/* Cells that must stay on one line; the table scrolls in its own box when the window is narrow. */
+.clouds-table .spec-cell,.clouds-table .bw-limit span,.clouds-table .node-bandwidth span,.clouds-table .traffic-line,.clouds-table .cloud-ip{white-space:nowrap}
+.clouds-table .spec-cell{display:inline;font-size:.875rem}
+.os-icon{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:6px;color:var(--muted)}
+.os-icon img{display:block;width:20px;height:20px;object-fit:contain}
+.os-icon:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.clouds-table :is(.table__column,.table__cell){padding-inline:.625rem}
+
+/* Config reads as a secondary line: small grey text. */
+.clouds-table .spec-cell{font-size:.8125rem;color:var(--muted)}
+
+/* List skeleton: flat bars at the size of the values they stand in for. */
+.table-skeleton .sk-stack{display:grid;gap:.375rem}
+.table-skeleton .sk-bar{height:.75rem;border-radius:4px}
+.table-skeleton .sk-sub{height:.5rem;opacity:.7}
+.table-skeleton .sk-square{width:1.125rem;height:1.125rem;border-radius:999px}
+.table-skeleton .table__row{pointer-events:none}
+
+/* Monthly traffic: used on the left, quota on the right, one line, the bar spanning both. */
+.clouds-table .traffic-cell{width:7rem}
+.clouds-table .traffic-line{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem;white-space:nowrap;font-size:.8125rem}
+.clouds-table .traffic-line small{font-size:.8125rem;color:var(--muted)}
+.clouds-table .traffic-cell .usage-track.wide{width:100%}
+
+/* Batch dialog: who it touches, what happens, the form, then the outcome in the same frame. */
+.batch-dialog{display:grid;gap:1.125rem}
+.batch-targets{display:grid;gap:.5rem;list-style:none;margin:0;padding:0}
+.batch-targets-label{font-size:.8125rem;color:var(--muted)}
+.batch-chips{display:flex;flex-wrap:wrap;gap:.375rem;max-height:6.5rem;overflow:auto}
+.batch-chip{display:inline-flex;align-items:center;height:1.625rem;padding:0 .625rem;border-radius:999px;background:var(--default);font-size:.8125rem;white-space:nowrap}
+.batch-chip.more{color:var(--muted)}
+.batch-note{display:flex;align-items:flex-start;gap:.5rem;padding:.75rem .875rem;border-radius:var(--field-radius);font-size:.875rem;line-height:1.5;background:var(--default);color:var(--foreground)}
+.batch-note svg{flex:none;margin-top:.125rem;color:var(--muted)}
+.batch-note.tone-caution{background:#fffbeb;color:#92400e}.batch-note.tone-caution svg{color:#b45309}
+.batch-note.tone-danger{background:#fef2f2;color:#991b1b}.batch-note.tone-danger svg{color:#b91c1c}
+.batch-form{display:grid;gap:1rem}
+.batch-field{display:grid;gap:.375rem;min-width:0}
+.batch-field-label{font-size:.875rem;font-weight:500}
+.batch-field small,.batch-hint{margin:0;font-size:.8125rem;color:var(--muted)}
+.batch-field .select{width:100%}
+.batch-unit{color:var(--muted);font-weight:400}
+.batch-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.batch-summary{display:flex;align-items:flex-start;gap:.625rem;padding:.875rem 1rem;border-radius:var(--field-radius);background:#f0fdf4;color:#166534}
+.batch-summary.has-failed{background:#fffbeb;color:#92400e}
+.batch-summary svg{flex:none;margin-top:.125rem}
+.batch-summary div{display:grid;gap:.125rem}
+.batch-summary strong{font-weight:600}
+.batch-summary span{font-size:.8125rem;opacity:.85}
+.batch-results{list-style:none;margin:0;padding:0;display:grid;max-height:12rem;overflow:auto}
+.batch-results li{display:flex;justify-content:space-between;gap:1rem;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.875rem}
+.batch-results em{font-style:normal;color:#b91c1c;text-align:right}
+.batch-secret{display:grid;gap:.5rem}
+.batch-secret-head{display:flex;justify-content:space-between;align-items:center}
+.batch-secret-head strong{font-size:.875rem;font-weight:600}
+.batch-secret ul{list-style:none;margin:0;padding:0;display:grid;max-height:12rem;overflow:auto;border-radius:var(--field-radius);background:var(--default)}
+.batch-secret li{display:flex;justify-content:space-between;gap:1rem;padding:.5rem .75rem;font-size:.8125rem}
+.batch-secret li+li{border-top:1px solid var(--border)}
+.batch-secret code{font-family:ui-monospace,Menlo,monospace;font-size:.8125rem;user-select:all;overflow-wrap:anywhere;text-align:right}
+@media(max-width:640px){.batch-grid{grid-template-columns:1fr}}
+
+/* 弹窗头部：标题与关闭按钮同一行 */
+.modal__header{flex-direction:row;align-items:center;justify-content:space-between;gap:.75rem}
+.modal__header .modal__heading{flex:1;min-width:0;font-size:1rem;font-weight:600}
+.modal__header > .button{flex:none;margin-inline-end:-.375rem}
+.batch-chips{max-height:6.5rem;overflow:auto}
+
+/* Instance detail (2026-11, round 2): a summary header, facts beside traffic and CPU, then network,
+   disks and monitoring, all on one page. Cards are flat: a 1px border on the surface, no shadow. */
+.inst-page{display:grid;gap:1.25rem}
+.inst-crumb{display:flex;align-items:center;gap:.375rem;margin:0}
+.inst-card{min-width:0;background:var(--surface,var(--background));border:1px solid var(--border);border-radius:1rem;overflow:hidden}
+.inst-card-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 1.25rem}
+.inst-card-head h2{display:flex;align-items:center;gap:.5rem;margin:0;font-size:.9375rem;font-weight:600}
+.inst-card-head h2 svg{color:var(--muted)}
+.inst-card-actions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.inst-card .table__wrapper,.inst-card .table{border-radius:0}
+.inst-pad{padding:0 1.25rem 1.25rem}
+.inst-muted{color:var(--muted);font-size:.8125rem}
+.inst-icon-btn.button{width:1.75rem;height:1.75rem;min-width:1.75rem;color:var(--muted)}
+
+.inst-hero{display:flex;align-items:center;gap:1.25rem;padding:1.25rem 1.5rem;flex-wrap:wrap}
+.inst-os{flex:none;display:grid;place-items:center;width:4rem;height:4rem;border:1px solid var(--border);border-radius:.875rem;color:var(--muted)}
+.inst-os img{width:2.5rem;height:2.5rem}
+.inst-hero-main{flex:1;min-width:16rem;display:grid;gap:.625rem}
+.inst-title{display:flex;align-items:center;gap:.625rem;flex-wrap:wrap}
+.inst-title h1{margin:0;font-size:1.5rem;font-weight:700;letter-spacing:-.01em;overflow-wrap:anywhere}
+.inst-spec{display:inline-flex;align-items:center;height:1.5rem;padding:0 .5rem;border-radius:.4375rem;background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);font-size:.8125rem;font-weight:600}
+.inst-pills{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.inst-pill{display:inline-flex;align-items:center;gap:.4375rem;height:2rem;padding:0 .75rem;border:1px solid var(--border);border-radius:999px;font-size:.875rem;font-weight:500;color:var(--foreground);white-space:nowrap}
+.inst-pill svg{flex:none}.inst-pill>svg{color:var(--muted)}
+.inst-pill.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem}
+.inst-pill .inst-icon-btn.button{width:1.5rem;height:1.5rem;min-width:1.5rem;margin-inline-end:-.375rem}
+.inst-pill .country-flag{width:1.125rem;border-radius:2px}
+.inst-hero-actions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+
+.inst-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(17rem,1fr);grid-template-areas:"facts traffic" "actions cpu";gap:1.25rem}
+.inst-facts{grid-area:facts}.inst-traffic{grid-area:traffic}.inst-actions{grid-area:actions}.inst-cpu{grid-area:cpu}
+.inst-facts dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0;height:100%}
+.inst-facts dl>div{display:grid;align-content:center;gap:.5rem;min-width:0;padding:1.125rem 1.25rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.inst-facts dl>div:nth-child(3n){border-right:0}.inst-facts dl>div:nth-child(n+4){border-bottom:0}
+.inst-facts dt{font-size:.8125rem;color:var(--muted)}
+.inst-facts dd{margin:0;display:flex;align-items:center;gap:.5rem;font-size:1rem;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.inst-facts dd small{font-size:.8125rem;font-weight:500;color:var(--muted)}
+.inst-facts dd img{flex:none}
+.inst-secret{gap:.25rem!important}.inst-secret>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-inline-end:.25rem}
+.inst-dots{letter-spacing:.12em;color:var(--muted)}
+.inst-traffic{display:grid;align-content:start;gap:.625rem;padding-bottom:1.25rem}
+.inst-traffic>:not(header){margin-inline:1.25rem}
+.inst-traffic .inst-card-head{padding-bottom:.25rem}
+.inst-traffic-total{font-size:.875rem;color:var(--muted)}.inst-traffic-total b{color:var(--accent);font-size:1rem}
+.inst-traffic-row{display:flex;justify-content:space-between;font-size:.8125rem;color:var(--muted)}
+.inst-traffic .usage-track.full{width:auto;height:.5rem}
+.inst-actions{padding:1.25rem}
+.inst-action-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:.75rem}
+.inst-tile.button{width:100%;justify-content:flex-start;gap:.625rem;height:3.25rem;padding-inline:1rem;font-weight:600}
+.inst-tile-icon{display:inline-flex;color:var(--accent)}
+.inst-tile.is-danger .inst-tile-icon{color:var(--danger)}
+.inst-cpu{display:flex;flex-direction:column}
+.inst-cpu .inst-card-head{padding-bottom:0}
+.inst-cpu-now{display:block;padding:0 1.25rem;font-size:2rem;font-weight:700;letter-spacing:-.02em}
+.inst-spark{margin-top:auto;min-height:6rem;display:flex;align-items:flex-end}
+.inst-spark>small{padding:0 1.25rem 1rem}
+.inst-spark .line-chart{width:100%}
+
+.inst-tag{display:inline-flex;align-items:center;height:1.375rem;padding:0 .5rem;border-radius:.375rem;background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);font-size:.75rem;font-weight:600;white-space:nowrap}
+.inst-tag.is-v6{background:color-mix(in srgb,#7c3aed 10%,transparent);color:#7c3aed}
+.inst-tag.is-private,.inst-tag.is-data{background:var(--default);color:var(--foreground)}
+.inst-ip{font-size:.875rem}
+.inst-main{display:inline-flex;align-items:center;gap:.25rem;margin-left:.5rem;padding:0 .375rem;height:1.25rem;border-radius:.375rem;background:color-mix(in srgb,var(--warning) 16%,transparent);color:color-mix(in srgb,var(--warning) 70%,black);font-size:.6875rem;font-weight:600;vertical-align:middle}
+.inst-col-actions{width:1%;white-space:nowrap;text-align:right}
+.inst-row-actions{display:flex;justify-content:flex-end;gap:.25rem}
+.inst-card .button.is-danger{color:var(--danger)}
+.inst-disk{display:inline-flex;align-items:center;gap:.5rem;font-weight:500}.inst-disk svg{color:var(--muted)}
+.inst-unit{margin-left:.25rem;color:var(--muted);font-size:.75rem}
+.inst-mount{display:inline-flex;background:none;border:0;padding:0;cursor:default}
+
+.inst-range{display:inline-flex;gap:2px;padding:3px;border-radius:.625rem;background:var(--default)}
+.inst-range button{height:1.875rem;padding:0 .875rem;border:0;border-radius:.5rem;background:transparent;color:var(--muted);font:inherit;font-size:.8125rem;font-weight:500;cursor:pointer}
+.inst-range button:hover{color:var(--foreground)}
+.inst-range button.is-active{background:var(--background);color:var(--accent);font-weight:600;box-shadow:0 1px 2px #0000000f}
+.inst-range button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.inst-charts{display:grid;gap:1rem;padding:0 1.25rem 1.25rem}
+.inst-chart{border:1px solid var(--border);border-radius:.875rem;padding:1rem 1.25rem .75rem}
+.inst-chart h3{margin:0 0 .75rem;font-size:.875rem;font-weight:600}
+.inst-empty{margin:0;padding:3rem 0;text-align:center;color:var(--muted);font-size:.875rem}
+
+.line-chart{position:relative;width:100%}
+.line-chart svg{display:block;overflow:visible}
+.lc-grid{stroke:var(--border);stroke-dasharray:3 4}
+.lc-tick{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.lc-cross{stroke:var(--muted);stroke-dasharray:3 3}
+.lc-tip{position:absolute;top:.25rem;z-index:2;display:grid;gap:.25rem;min-width:9.5rem;padding:.5rem .625rem;border:1px solid var(--border);border-radius:.625rem;background:var(--background);box-shadow:0 4px 16px #0000001a;font-size:.75rem;pointer-events:none}
+.lc-tip strong{font-weight:600}
+.lc-tip span{display:flex;align-items:center;gap:.375rem;color:var(--muted)}
+.lc-tip b{margin-left:auto;color:var(--foreground);font-weight:600;font-variant-numeric:tabular-nums}
+.lc-tip i,.lc-legend i{width:.625rem;height:.1875rem;border-radius:2px}
+.lc-legend{display:flex;gap:1rem;padding:.25rem 0 0 4.5rem;font-size:.8125rem;color:var(--muted)}
+.lc-legend span{display:inline-flex;align-items:center;gap:.375rem}
+
+.password-row{display:flex;gap:.5rem}.password-row .input{flex:1;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.log-pager{display:flex;align-items:center;gap:.5rem;width:100%}.log-pager span{margin-right:auto;font-size:.8125rem;color:var(--muted)}
+.log-list{list-style:none;margin:0;padding:0}
+.log-list li{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--border)}
+.log-list li:last-child{border-bottom:0}
+.log-list strong{display:block;font-size:.875rem;font-weight:500}
+.log-list small,.log-list time{font-size:.75rem;color:var(--muted);white-space:nowrap}
+
+@media(max-width:1100px){.inst-grid{grid-template-columns:1fr;grid-template-areas:"facts" "traffic" "actions" "cpu"}}
+@media(max-width:640px){.inst-facts dl{grid-template-columns:1fr 1fr}.inst-facts dl>div:nth-child(n){border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.inst-facts dl>div:nth-child(2n){border-right:0}.inst-facts dl>div:nth-child(n+5){border-bottom:0}.inst-hero{padding:1rem}.inst-hero-actions{width:100%}}
+
+/* Password field: the generate and copy buttons are squares at the input's own height. */
+.password-row{display:flex;align-items:stretch;gap:.5rem}
+.password-row .input{flex:1;min-width:0}
+.password-row>.button,.password-row .tooltip__trigger>.button{flex:none;height:auto;min-height:0;align-self:stretch;aspect-ratio:1;width:auto;min-width:0;padding:0}
+
+/* Instance detail, borderless: white cards on the grey page (the theme's --background is grey,
+   --surface is white). No outline anywhere at card level; inside a card, small elements (OS tile,
+   pills, action tiles, range switch) take the page grey, and tables and charts sit directly on white. */
+.inst-card{border:0;background:var(--surface);box-shadow:0 1px 2px #0000000a}
+.inst-os{border:0;background:var(--background)}
+.inst-pill{border:0;background:var(--background)}
+.inst-tile.button{border-color:transparent;background:var(--background)}
+.inst-tile.button:hover{background:color-mix(in srgb,var(--accent) 8%,var(--background))}
+.inst-traffic .usage-track.full{background:var(--background)}
+.inst-charts{gap:0}
+.inst-chart{border:0;border-radius:0;padding:1rem 0 .75rem;background:transparent}
+.inst-chart+.inst-chart{border-top:1px solid var(--border)}
+.inst-range{background:var(--background)}
+.inst-range button.is-active{background:var(--surface);box-shadow:0 1px 2px #00000014}
+
+/* Reinstall: OS family tiles (platform icon + name), then the version select. */
+.os-families{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem}
+.os-family{display:flex;align-items:center;gap:.5rem;height:2.75rem;padding:0 .75rem;border:1px solid var(--field-border,var(--border));border-radius:var(--field-radius,.625rem);background:var(--background);color:var(--foreground);font:inherit;font-size:.875rem;font-weight:500;cursor:pointer;text-align:left}
+.os-family span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.os-family img,.os-family svg{flex:none}
+.os-family:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--border))}
+.os-family.is-active{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--background));color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.os-family:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Instance detail, lower half: network | disks, monitoring | log, two to a row. Tables are plain HeroUI
+   tables, as on every other page; a section is a heading row and its content, no card around it. */
+.inst-lower{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.75rem 1.25rem;align-items:start}
+.inst-section{min-width:0;display:grid;gap:.75rem}
+.inst-section-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;min-height:2.25rem}
+.inst-section-head h2{display:flex;align-items:center;gap:.5rem;margin:0;font-size:1rem;font-weight:600}
+.inst-section-head h2 svg{color:var(--muted)}
+.inst-table{min-width:0}
+.inst-ip-cell{display:grid;gap:.125rem;min-width:0}
+.inst-ip-cell small{font-size:.75rem;color:var(--muted)}
+.inst-panel{background:var(--surface);border-radius:1rem;box-shadow:0 1px 2px #0000000a;padding:1rem 1.25rem .875rem}
+.inst-monitor-bar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem}
+.inst-range.is-small button{height:1.75rem;padding:0 .625rem;font-size:.75rem}
+.inst-disk-pick{min-width:9rem}
+.inst-chart-loading{min-height:15rem;display:grid;place-items:center}
+.inst-monitor .inst-empty{min-height:15rem;display:grid;place-items:center;padding:0}
+@media(max-width:1100px){.inst-lower{grid-template-columns:1fr}}
+.inst-table td,.inst-table th{white-space:nowrap}
+.inst-table .inst-ip-cell>span{display:flex;align-items:center}
+
+/* Instance detail: the page itself is light grey, so the white cards stand out whatever the theme's page colour.
+   Inside a white card, small elements (OS tile, pills, action tiles) keep a light grey fill. */
+.inst-card,.inst-panel{background:var(--surface)}
+.inst-os,.inst-pill,.inst-tile.button,.inst-range,.inst-traffic .usage-track.full{background:var(--app-bg)}
+.inst-tile.button:hover{background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+
+/* Global search in the navy header: a translucent field, the shortcut hint at its right end,
+   and a results panel below it (instances, then users). */
+.header-search-wrap{position:relative;flex:0 1 20rem;min-width:12rem;margin-left:auto}
+.global-header .header-search{--field-background:rgb(255 255 255 / .08);--field-border:rgb(255 255 255 / .16);background:rgb(255 255 255 / .08);border-color:rgb(255 255 255 / .16);color:#edf4ff;transition:background-color .15s,border-color .15s}
+.global-header .header-search:hover{background:rgb(255 255 255 / .12)}
+.global-header .header-search:focus-within{background:#fff;border-color:#fff;color:var(--foreground)}
+.global-header .header-search .input-group__input{color:inherit;background:transparent}
+.global-header .header-search .input-group__input::placeholder{color:rgb(237 244 255 / .6)}
+.global-header .header-search:focus-within .input-group__input::placeholder{color:var(--muted)}
+.global-header .header-search .input-group__prefix,.global-header .header-search .input-group__suffix{background:transparent;color:rgb(237 244 255 / .7)}
+.global-header .header-search:focus-within .input-group__prefix,.global-header .header-search:focus-within .input-group__suffix{color:var(--muted)}
+.header-search .input-group__input::-webkit-search-cancel-button{display:none}
+.header-search-kbd{display:inline-flex;align-items:center;gap:.125rem;height:1.375rem;padding:0 .4375rem;border:1px solid currentColor;border-radius:.375rem;font:500 .75rem/1 ui-sans-serif,system-ui,-apple-system,sans-serif;opacity:.75;white-space:nowrap}
+.header-search-kbd .kbd-cmd{font-size:.875rem;line-height:1}
+.gs-panel{position:absolute;top:calc(100% + .5rem);right:0;z-index:60;width:max(100%,26rem);max-width:calc(100vw - 2rem);background:var(--surface);color:var(--foreground);border:1px solid var(--border);border-radius:calc(var(--field-radius,.625rem) + .25rem);box-shadow:0 12px 32px #0f172a29;overflow:hidden}
+.gs-panel ul{list-style:none;margin:0;padding:.375rem;max-height:min(24rem,60vh);overflow:auto}
+.gs-group{padding:.5rem .625rem .25rem;font-size:.75rem;font-weight:600;color:var(--muted)}
+.gs-item{display:flex;align-items:center;gap:.625rem;padding:.5rem .625rem;border-radius:var(--field-radius,.5rem);cursor:pointer}
+.gs-item>svg{flex:none;color:var(--muted)}
+.gs-item.is-active{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.gs-item.is-active>svg{color:var(--accent)}
+.gs-main{display:grid;min-width:0;flex:1}
+.gs-main strong{font-size:.875rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-main small{font-size:.75rem;color:var(--muted)}
+.gs-side{flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8125rem;color:var(--muted)}
+.gs-state{display:flex;align-items:center;gap:.5rem;padding:1rem;font-size:.875rem;color:var(--muted)}
+.gs-state.is-error{color:var(--danger)}
+.gs-foot{display:flex;align-items:center;gap:.875rem;flex-wrap:wrap;padding:.5rem .75rem;border-top:1px solid var(--border);background:var(--background);font-size:.75rem;color:var(--muted)}
+.gs-foot span{display:inline-flex;align-items:center;gap:.25rem}
+.gs-foot kbd{display:inline-flex;align-items:center;justify-content:center;min-width:1.125rem;height:1.125rem;padding:0 .25rem;border:1px solid var(--border);border-radius:.25rem;background:var(--surface);font:500 .6875rem/1 ui-sans-serif,system-ui,sans-serif}
+.gs-foot button{margin-left:auto;border:0;background:none;padding:0;font:inherit;color:var(--accent);cursor:pointer}
+.gs-foot button:hover{text-decoration:underline}
+@media(max-width:1360px){.header-search-wrap{flex-basis:14rem;min-width:11rem}.header-search-kbd{display:none}}
+/* Narrow headers: the search folds to its magnifier and unfolds over the header when focused (click or ⌘K / Ctrl+K). */
+@media(max-width:1100px){
+ .header-search-wrap{flex:0 0 2.25rem;min-width:2.25rem;height:2.25rem}
+ .header-search-wrap .header-search{position:absolute;top:0;right:0;width:2.25rem;transition:width .15s ease}
+ .header-search-wrap:focus-within .header-search{width:min(20rem,calc(100vw - 2rem));z-index:61}
+ .header-search-wrap:not(:focus-within) .header-search .input-group__input{opacity:0;cursor:pointer}
+}
+
+/* Every page sits on the same light grey as the instance detail; cards and tables are white on it. */
+:root{--app-bg:#f6f6f6}
+body,.app-shell,.workspace-main{background:var(--app-bg)}
+.workspace-main{min-height:calc(100svh - 4.75rem);display:flex;flex-direction:column}
+.workspace-main>.page-content{flex:1;background:transparent}
+.app-footer{background:transparent}
+
+/* Header connection state: an icon with a status dot; the platform host in the tooltip. */
+.global-header .header-link-state{position:relative;display:inline-grid;place-items:center;width:2rem;min-width:2rem;height:2rem;padding:0;border:0;border-radius:.5rem;background:transparent;color:#cfe0f7;cursor:pointer}
+.global-header .header-link-state.is-current{background:#24436b;color:#fff}
+.global-header .header-link-state:hover{background:rgb(255 255 255 / .12)}
+.header-link-state i{position:absolute;right:.3125rem;bottom:.3125rem;width:.4375rem;height:.4375rem;border-radius:50%;box-shadow:0 0 0 2px #102442}
+.header-link-state.is-live i{background:#22c55e}
+
+
+/* Instance list filtered to one owner (from the global search): a removable pill at 36px like the other filters. */
+.owner-filter{display:inline-flex;align-items:center;gap:.375rem;height:2.25rem;padding:0 .375rem 0 .75rem;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:var(--field-radius,.625rem);background:color-mix(in srgb,var(--accent) 8%,var(--surface));color:var(--accent);font-size:.875rem;white-space:nowrap}
+.owner-filter strong{font-weight:600;color:var(--foreground);max-width:12rem;overflow:hidden;text-overflow:ellipsis}
+.owner-filter button{display:inline-grid;place-items:center;width:1.5rem;height:1.5rem;border:0;border-radius:.375rem;background:transparent;color:var(--muted);cursor:pointer}
+.owner-filter button:hover{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--foreground)}
+.owner-count-link{color:var(--accent);font-weight:600;text-decoration:none;border-radius:.25rem}.owner-count-link:hover{text-decoration:underline}.owner-count-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Navy header buttons: HeroUI keeps a menu trigger in its pressed state while the menu is open
+   (data-pressed / aria-expanded), which used the light theme's grey. Every state stays on the navy palette. */
+.global-header .button--ghost{--button-bg:transparent;--button-bg-hover:#1c3558;--button-bg-pressed:#1c3558;--button-fg:#c6d5ec}
+.global-header .button--secondary{--button-bg:#24436b;--button-bg-hover:#2b4e7b;--button-bg-pressed:#2b4e7b;--button-fg:#fff}
+.global-header .button--ghost[data-pressed="true"],.global-header .button--ghost[aria-expanded="true"]{background:#1c3558;color:#fff}
+.global-header .button--secondary[data-pressed="true"],.global-header .button--secondary[aria-expanded="true"]{background:#2b4e7b;color:#fff}
+.global-header .button[aria-expanded="true"] .nav-chevron{color:#fff;transform:rotate(180deg)}
+.global-header .nav-chevron{transition:transform .15s ease}
+
+/* Logo is the home link. */
+a.header-brand{display:inline-flex;align-items:center;border-radius:.5rem;color:inherit;text-decoration:none;padding:.25rem .375rem;margin:-.25rem -.375rem}
+a.header-brand:hover{background:rgb(255 255 255 / .06)}
+a.header-brand:focus-visible{outline:2px solid #8db8ff;outline-offset:2px}
+
+/* 系统设置: horizontal tabs (scroll sideways when narrow); each group has its title on the left and fields on the right. */
+.cfg-tabs{display:block}
+.cfg-tabs .tabs__list-container{overflow-x:auto;scrollbar-width:none;margin-bottom:.5rem}
+.cfg-tabs .tabs__list-container::-webkit-scrollbar{display:none}
+.cfg-tabs .tabs__list{width:max-content;min-width:100%}
+.cfg-tabs .tabs__tab{white-space:nowrap}
+.cfg-panel{outline:none}
+.cfg-section{display:grid}
+.cfg-group{display:grid;grid-template-columns:minmax(12rem,16rem) minmax(0,1fr);gap:1.5rem 2.5rem;padding:1.75rem 0;border-bottom:1px solid var(--border)}
+.cfg-group-head{display:grid;align-content:start;gap:.5rem}
+.cfg-group-head h2{font-size:1rem;font-weight:600}
+.cfg-group-head p{font-size:.8125rem;line-height:1.6;color:var(--muted)}
+.cfg-group-head .button{justify-self:start;margin-top:.25rem}
+.cfg-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem 1.5rem;align-content:start}
+.cfg-field{display:grid;gap:.375rem;align-content:start;min-width:0}
+.cfg-field.is-wide{grid-column:1/-1}
+.cfg-field>small,.cfg-switch>small{font-size:.75rem;line-height:1.5;color:var(--muted)}
+.cfg-label{font-size:.875rem;font-weight:500}
+.cfg-switch{align-self:center}
+.cfg-switch .switch__content{gap:.625rem}
+.cfg-input-row{display:flex;align-items:center;gap:.5rem}
+.cfg-input-row .input{flex:1;min-width:0}
+.cfg-unit{flex:none;font-size:.8125rem;color:var(--muted);white-space:nowrap}
+.cfg-static{display:flex;align-items:center;height:2.25rem;font-size:.875rem}
+.cfg-field .textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem}
+.cfg-note{display:flex;align-items:flex-start;gap:.5rem;margin-top:1rem;padding:.75rem 1rem;border-radius:var(--field-radius,.625rem);background:color-mix(in srgb,var(--warning) 12%,var(--surface));color:color-mix(in srgb,var(--warning) 70%,var(--foreground));font-size:.875rem;line-height:1.5}
+.cfg-note svg{flex:none;margin-top:.125rem}
+.cfg-note.is-danger{background:color-mix(in srgb,var(--danger) 10%,var(--surface));color:var(--danger)}
+.cfg-savebar{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;justify-content:flex-end;gap:.5rem;margin-top:1.25rem;padding:.75rem 0;background:var(--app-bg,var(--background));font-size:.875rem;color:var(--muted)}
+.cfg-savebar>span{margin-right:auto}
+.cfg-savebar.is-dirty>span{color:var(--warning);font-weight:500}
+.cfg-diff{list-style:none;margin:.75rem 0;padding:0;display:grid;gap:.5rem;max-height:18rem;overflow:auto}
+.cfg-diff li{display:grid;grid-template-columns:9rem 1fr;gap:.75rem;font-size:.875rem;padding:.5rem .75rem;border-radius:.5rem;background:var(--default)}
+.cfg-diff span{overflow-wrap:anywhere}
+.cfg-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem 1.5rem;margin:0}
+.cfg-info>div{display:grid;gap:.25rem}.cfg-info dt{font-size:.75rem;color:var(--muted)}.cfg-info dd{margin:0;font-size:.875rem;overflow-wrap:anywhere}
+.cfg-node-groups{display:grid;gap:1rem}
+.cfg-node-group{display:grid;gap:.5rem}
+.cfg-node-area{font-size:.8125rem;font-weight:600;color:var(--muted)}
+.cfg-node-group>div{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem}
+.cfg-node-group small{color:var(--muted)}
+.cfg-muted{font-size:.8125rem;color:var(--muted)}
+.cfg-after{padding:.75rem 0 0}
+.cfg-inline{display:flex;align-items:center;flex-wrap:wrap;gap:.75rem;align-content:start}
+.cfg-ok{color:var(--success);font-size:.875rem}.cfg-bad{color:var(--danger);font-size:.875rem}
+.cfg-pre{margin:0;max-height:24rem;overflow:auto;padding:1rem;border-radius:var(--field-radius,.625rem);background:var(--surface);border:1px solid var(--border);font:.8125rem/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.cfg-table .table__content{min-width:36rem}
+.cfg-ip-input{max-width:12rem}
+.cfg-dialog-fields{display:grid;gap:1rem}
+@media(max-width:960px){.cfg-group{grid-template-columns:1fr;gap:1rem}.cfg-fields,.cfg-info{grid-template-columns:1fr}.cfg-diff li{grid-template-columns:1fr;gap:.25rem}}
+
+/* Instance list: the search sits in the filter bar right after the status filter. */
+.filter-bar .filter-search{width:16rem;max-width:100%}
+@media(max-width:640px){.filter-bar .filter-search{width:100%}}
+
+/* 回收站 */
+.recycle-name{display:grid;gap:.125rem;min-width:10rem}.recycle-name strong{font-weight:600}.recycle-name small{font-size:.75rem;color:var(--muted)}
+.recycle-expire{display:grid;gap:.125rem;white-space:nowrap}.recycle-expire small{font-size:.75rem;color:var(--muted)}.recycle-expire small.is-soon{color:var(--danger);font-weight:500}
+.recycle-table .row-actions{gap:.25rem;flex-wrap:nowrap}
+.row-actions .button.is-danger,.recycle-purge{color:var(--danger)}
+.recycle-list{list-style:none;margin:.75rem 0 0;padding:0;display:grid;gap:.375rem;max-height:16rem;overflow:auto}
+.recycle-list li{display:flex;justify-content:space-between;gap:1rem;padding:.5rem .75rem;border-radius:.5rem;background:var(--default);font-size:.875rem}
+.recycle-list li span{color:var(--muted);font-size:.8125rem}.recycle-list .recycle-error{color:var(--danger)}
+
+/* Empty states: isometric illustration (public/empty), title, reason, next step. */
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:2.75rem 1.5rem 3rem}
+.empty .empty-art{display:block;margin:0 0 1.125rem;user-select:none}
+.empty h3{margin:0;font-size:1rem;font-weight:600;color:var(--foreground)}
+.empty p{margin:.375rem 0 0;max-width:28rem;font-size:.8125rem;line-height:1.6;color:var(--muted)}
+.empty p strong{color:var(--foreground);font-weight:600}
+.empty-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;margin-top:1.125rem}
+.empty.empty-sm{padding:1rem .75rem 1.25rem}
+.empty.empty-sm .empty-art{margin-bottom:.75rem}
+.empty.empty-sm h3{font-size:.875rem}
+
+/* 设计规范 · 空状态 */
+.guide-empty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(8rem,1fr));gap:1.25rem .75rem}
+.guide-empty-grid figure{margin:0;display:grid;justify-items:center;gap:.375rem;text-align:center}
+.guide-empty-grid figcaption{display:grid;font-size:.8125rem}.guide-empty-grid small{font-size:.6875rem;color:var(--muted);font-family:ui-monospace,Menlo,monospace}
+.guide-empty-samples{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-top:1.5rem}
+.guide-empty-card{background:var(--surface);border-radius:14px;box-shadow:0 0 0 1px var(--border)}
+.guide-empty-card .empty{padding:1.75rem 1rem 2rem}
+@media(max-width:960px){.guide-empty-samples{grid-template-columns:1fr}}
+/* List-level empty states sit in a white card so an empty page is not a bare grey field. */
+.empty.empty-md{background:var(--surface);border-radius:14px;box-shadow:0 0 0 1px color-mix(in srgb,var(--border) 70%,transparent),0 1px 2px rgb(0 0 0 / .03);padding:3rem 1.5rem 3.25rem;min-height:18rem;justify-content:center}
+.guide-empty-card .empty.empty-md{background:none;box-shadow:none;min-height:0;border-radius:0}
+/* Empty states fade up once when they appear; the illustration carries its own slow loop. */
+.empty{animation:empty-in .36s cubic-bezier(.2,.7,.3,1) both}
+@keyframes empty-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.empty{animation:none}}
+/* 设计规范示例卡片：三张卡片内容一致地上下居中 */
+.guide-empty-card{display:flex;align-items:center;justify-content:center}
+.guide-empty-card .empty{width:100%;justify-content:center}
+
+/* Instance list: copy button after the main IP, revealed on row hover / keyboard focus. */
+.cloud-ip-cell{display:inline-flex;align-items:center;gap:.25rem}
+.ip-copy.button{width:1.5rem;height:1.5rem;min-width:1.5rem;padding:0;color:var(--muted);opacity:0;transition:opacity .12s,color .12s}
+.ip-copy.button:hover{color:var(--accent)}
+.ip-copy.is-done.button{color:var(--success)}
+tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{opacity:1}
+@media (hover:none){.ip-copy.button{opacity:1}}
+
+/* Reinstall: login method and its password / key share one row; both fields top-aligned. */
+.batch-row{align-items:start}
+/* Login method is a short choice: a narrow first column leaves the password / key field room. */
+.batch-grid.batch-row{grid-template-columns:8.5rem minmax(0,1fr)}
+@media(max-width:640px){.batch-grid.batch-row{grid-template-columns:1fr}}
+
+/* Disk section: edit / delete per disk; compress picks disks from a list. */
+.inst-row-actions{display:inline-flex;align-items:center;gap:.125rem}
+.inst-disabled-icon{display:inline-grid;place-items:center;width:2rem;height:2rem;border:0;background:none;color:var(--border);cursor:not-allowed}
+.disk-pick{display:grid;gap:.5rem;padding:.75rem;border-radius:var(--field-radius,.625rem);background:var(--default)}
+.disk-pick small{color:var(--muted);font-weight:400}
+.batch-grid.batch-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:640px){.batch-grid.batch-grid-3{grid-template-columns:1fr}}
+
+/* Network section: one row per kind; the address opens the full list (gateway, mask, extra IPs). */
+.inst-ip-line{display:inline-flex;align-items:center;gap:.375rem;flex-wrap:wrap}
+.inst-ip-link{border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--foreground);cursor:pointer;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .12s,color .12s}
+.inst-ip-link:hover,.inst-ip-link:focus-visible{color:var(--accent);text-decoration-color:currentColor}
+.inst-ip-more{display:inline-grid;place-items:center;min-width:1.5rem;height:1.25rem;padding:0 .375rem;border:0;border-radius:999px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);font:600 .6875rem/1 inherit;cursor:pointer}
+.inst-ip-more:hover{background:color-mix(in srgb,var(--accent) 20%,var(--surface))}
+.inst-extra{font-size:.6875rem;padding:.0625rem .375rem;border-radius:999px;background:var(--default);color:var(--muted)}
+.inst-ip-table .table__content{min-width:34rem}
+/* The IP list dialog needs room for address, gateway, mask and actions. */
+.modal__dialog:has(.inst-ip-table){max-width:none;width:min(44rem,calc(100vw - 2rem))}
+.inst-ip-table .table__content{min-width:0}
+
+/* Instance detail, lower area: left column IP · 网络 · 磁盘 · 监控; right column 日志 only. */
+.inst-lower{grid-template-columns:minmax(0,1.75fr) minmax(0,1fr)}
+.inst-col{display:grid;gap:1.75rem;align-content:start;min-width:0}
+@media(max-width:1100px){.inst-lower{grid-template-columns:1fr}}
+/* IP groups */
+.inst-group-name{font-weight:600}
+.inst-bw{display:inline-flex;align-items:center;gap:.5rem;white-space:nowrap}
+.inst-bw span{display:inline-flex;align-items:center;gap:.125rem}
+.inst-bw svg{color:var(--muted)}
+.inst-bw small{color:var(--muted);font-size:.75rem}
+.inst-group-bw{margin:0 0 .75rem}
+.ip-pick{display:grid;gap:.75rem;max-height:20rem;overflow:auto;padding:.75rem;border-radius:var(--field-radius,.625rem);background:var(--default)}
+.ip-pick-seg{display:grid;gap:.5rem}
+.ip-pick-name{font-size:.75rem;font-weight:600;color:var(--muted)}
+.ip-pick-seg>div{display:grid;grid-template-columns:repeat(auto-fill,minmax(11rem,1fr));gap:.375rem .75rem}
+.ip-pick small{color:var(--muted);font-weight:400}
+/* Network facts */
+.inst-kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:0;background:var(--surface);border-radius:14px;box-shadow:0 0 0 1px color-mix(in srgb,var(--border) 70%,transparent);overflow:hidden}
+.inst-kv>div{display:grid;gap:.25rem;padding:.875rem 1rem;border-top:1px solid var(--border);border-left:1px solid var(--border);margin:-1px 0 0 -1px}
+.inst-kv dt{font-size:.75rem;color:var(--muted)}
+.inst-kv dd{margin:0;font-size:.875rem;overflow-wrap:anywhere}
+.inst-state{display:inline-flex;align-items:center;gap:.375rem;font-size:.8125rem;font-weight:500}
+.inst-state::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:currentColor}
+.inst-state.is-on{color:var(--success)}.inst-state.is-off{color:var(--danger)}
+@media(max-width:640px){.inst-kv{grid-template-columns:1fr}}
+/* Monitor empty state: 96px art inside the section, no extra frame. */
+.inst-section .empty.empty-md{background:none;box-shadow:none;min-height:15rem}
+.button.is-danger-outline{color:var(--danger)}
+.button.is-danger-outline:hover{background:color-mix(in srgb,var(--danger) 8%,var(--surface))}
+/* Lower columns line up with the cards above (same tracks and column gap as .inst-grid). */
+.inst-lower{grid-template-columns:minmax(0,2fr) minmax(17rem,1fr);column-gap:1.25rem}
+@media(max-width:1100px){.inst-lower{grid-template-columns:1fr}}
+/* Facts now hold three items in one row: no bottom rule. In the two-column layout only the first row keeps one. */
+.inst-facts dl>div,.inst-facts dl>div:nth-child(n){border-bottom:0}
+@media(max-width:640px){.inst-facts dl>div:nth-child(-n+2){border-bottom:1px solid var(--border)}}
+
+/* Instance detail skeleton: bars sized like the real content. */
+.sk-title{height:1.25rem}.sk-pill{height:1.75rem;border-radius:999px}.sk-btn{height:2.25rem;border-radius:var(--field-radius,.625rem)}
+.sk-os{width:3rem;height:3rem;border-radius:.75rem}
+.sk-track{height:.5rem;border-radius:999px;margin-top:.5rem}
+.sk-spark{height:5.5rem;border-radius:.5rem;margin-top:.75rem}
+.sk-chart{width:100%;height:13rem;border-radius:.75rem}
+.inst-chart-loading{place-items:stretch}
+.inst-tile-sk{display:flex;align-items:center;gap:.625rem;height:2.75rem;padding:0 .875rem;border-radius:var(--field-radius,.625rem);box-shadow:inset 0 0 0 1px var(--border)}
+.sk-bar,.sk-square,.sk-os,.sk-track,.sk-spark,.sk-chart{display:block;flex:none;max-width:100%}
+.inst-facts dd .sk-bar,.inst-kv dd .sk-bar{height:.875rem}
+.inst-page .inst-traffic-row .sk-bar,.inst-page .inst-tile-sk .sk-bar{height:.75rem;min-height:.75rem}
+.inst-page .inst-tile-sk .sk-square{width:1.125rem;height:1.125rem;min-height:1.125rem}
+/* CPU card: the sparkline is a layer under the figure, pinned to the card's bottom edge; it takes no height of
+   its own, so the card is as tall as its grid row (the actions card beside it). */
+.inst-cpu{position:relative;overflow:hidden}
+.inst-cpu>*:not(.inst-spark){position:relative;z-index:1}
+.inst-cpu .inst-spark{position:absolute;left:0;right:0;bottom:0;min-height:0;height:auto;margin:0;z-index:0;pointer-events:auto}
+.inst-cpu .inst-spark>small{position:absolute;left:0;bottom:0}
+.inst-cpu .sk-spark{position:absolute;left:0;right:0;bottom:0;margin:0;height:4.5rem;border-radius:0}
+.ip-pick-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.ip-pick-all{border:0;background:none;padding:0;font:inherit;font-size:.75rem;color:var(--accent);cursor:pointer}
+.ip-pick-all:hover{text-decoration:underline}
+
+/* IP multi-select: tags in the field, a grouped dropdown. */
+.ip-select{width:100%}
+.ip-select .ip-select-trigger{min-height:2.25rem;height:auto;padding-block:.3125rem;align-items:center}
+.ip-select .select__value{white-space:normal}
+.ip-select-ph{color:var(--muted)}
+.ip-tags{display:flex;flex-wrap:wrap;gap:.25rem}
+.ip-tag{display:inline-flex;align-items:center;gap:.25rem;height:1.5rem;padding:0 .25rem 0 .5rem;border-radius:.375rem;background:color-mix(in srgb,var(--accent) 10%,var(--surface));color:var(--foreground);font-size:.8125rem}
+.ip-tag-x{display:inline-grid;place-items:center;width:1.125rem;height:1.125rem;border-radius:.25rem;color:var(--muted);cursor:pointer}
+.ip-tag-x:hover{background:color-mix(in srgb,var(--accent) 18%,var(--surface));color:var(--foreground)}
+.ip-select-popover{max-height:18rem}
+.ip-select-group{padding:.375rem .625rem .25rem;font-size:.75rem;font-weight:600;color:var(--muted)}
+.ip-select-note{margin-left:.375rem;font-size:.6875rem;color:var(--muted)}
+
+/* HeroUI Toast.Provider: keep the stack clear of the 56px dark header. */
+.toast-region,[data-slot="toast-region"]{top:4.25rem}
+
+/* 修改配置: HeroUI NumberField steppers fill their grid column. */
+.cfg-stepper{width:100%}.cfg-stepper .number-field__group{width:100%}
+
+/* IP 多选下拉：每项左侧为 HeroUI Checkbox（仅显示，点击整行选择）。 */
+.ip-select-item{display:flex;align-items:center;gap:.625rem}.ip-select-check{pointer-events:none;flex:none}
+
+/* 实例详情头部的当前任务：蓝色胶囊，转圈 + 任务名 + 细进度条 + 百分比。 */
+.inst-task{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--border));background:color-mix(in srgb,var(--accent) 6%,var(--background));cursor:default}
+.inst-task .inst-task-name{max-width:12rem;overflow:hidden;text-overflow:ellipsis}
+.inst-task-bar{width:4rem;height:.375rem;border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,transparent);overflow:hidden}
+.inst-task-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent);transition:width .6s ease}
+.inst-task .num{font-variant-numeric:tabular-nums;min-width:2.25rem;text-align:right}
+.inst-task-wait{color:var(--muted);font-weight:400}
+
+/* 迁移队列 */
+.migrate-progress{display:grid;gap:.25rem;min-width:14rem}
+.migrate-line{display:flex;align-items:center;gap:.5rem}
+.migrate-bar{flex:1;height:.375rem;border-radius:999px;background:color-mix(in srgb,var(--accent) 14%,transparent);overflow:hidden}
+.migrate-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent);transition:width .6s ease}
+.migrate-line .num{min-width:2.5rem;text-align:right;font-size:.8125rem;font-weight:600;color:var(--accent)}
+.migrate-progress small{color:var(--muted);font-size:.75rem}
+.migrate-table .chip{gap:.375rem}
+.link-button{padding:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-align:left}.link-button:hover strong{color:var(--accent)}.link-button:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:.25rem}
+.migrate-summary{margin-right:auto;color:var(--muted);font-size:.8125rem}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* 控件统一 36px：页头按钮、筛选栏（下拉、搜索框）、列表底部（批量操作、取消选择、每页条数、分页）。 */
+.heading-actions .button,.list-footer .button,.list-footer .select__trigger,.filter-bar .select__trigger{height:2.25rem;min-height:2.25rem}
+.heading-actions .button--icon-only,.list-footer .button--icon-only{width:2.25rem;min-width:2.25rem}
+.filter-bar .input-group.resource-search,.heading-actions .input-group.resource-search{height:2.25rem;min-height:2.25rem}
+.modal__dialog:has(.migrate-table){width:min(48rem,calc(100vw - 2rem));max-width:none}
+.migrate-table .chip{white-space:nowrap;flex-wrap:nowrap}
+.migrate-table .migrate-progress{min-width:12rem}
+
+/* 实例列表：刷新 / 新建 / 回收站 / 迁移队列 跟在搜索框右侧；“共 N 条”在分页的每页条数左侧。 */
+.filter-actions{display:flex;align-items:center;gap:.5rem;flex:none;margin-left:auto}
+.filter-actions .button{height:2.25rem;min-height:2.25rem}.filter-actions .button--icon-only{width:2.25rem;min-width:2.25rem}
+.pager-total{color:var(--muted);font-size:.875rem;white-space:nowrap;margin-right:.25rem}
+
+/* 页面标题：所有页面只有主标题，标题行固定 36px 高（与右侧按钮同高），上方由 page-content 内边距决定，下方统一 20px。 */
+.page-heading{min-height:2.25rem;margin:0 0 1.25rem;align-items:center}
+.page-heading h1{line-height:2.25rem;min-height:2.25rem;margin:0}
+.page-heading>div:first-child{display:flex;align-items:center;min-height:2.25rem}
+.filter-bar:has(.filter-actions) .filters{flex:1 1 auto;min-width:0}
+.filter-bar:has(.filter-actions) .filter-search{flex:1 1 12rem;width:auto;min-width:12rem;max-width:24rem}
+
+/* 批量操作菜单：20 项分两列显示（按列从上到下，顺序不变），不再需要滚动，迁移等靠后的项一眼可见。 */
+.batch-popover{min-width:20rem;max-height:none}
+.batch-popover .menu,.batch-popover [role="menu"]{max-height:none;overflow:visible;column-count:2;column-gap:.25rem;display:block;padding:.375rem}
+.batch-popover [role="menuitem"]{break-inside:avoid;width:100%}
+@media (max-width:640px){.batch-popover .menu,.batch-popover [role="menu"]{column-count:1;max-height:min(32rem,60vh);overflow-y:auto}}
+
+/* 任务状态：只显示图标（18px），悬停显示状态名称；执行失败时同时显示失败原因。 */
+.task-status-trigger.button{width:1.75rem;min-width:1.75rem;height:1.75rem;min-height:1.75rem;padding:0;cursor:default;border-radius:999px}
+.task-status-trigger .spinner{width:18px;height:18px}
+.task-status-trigger:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.task-status-unknown{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:999px;background:#71717a;color:#fff;font-size:.6875rem;font-weight:700}
+.task-status-tip{max-width:22rem;white-space:normal}
+
+/* 实例列表：区域 + 节点合并的级联筛选（先选区域，再在子菜单里选节点）。 */
+.filter-bar .location-filter{min-width:11rem;max-width:18rem;justify-content:flex-start;font-weight:400}
+.location-filter .location-filter-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.location-filter>svg:first-child{color:var(--muted)}
+.location-filter.is-active{border-color:color-mix(in srgb,var(--accent) 45%,var(--border));color:var(--accent)}
+.location-popover{min-width:13rem;max-height:min(28rem,70vh);overflow-y:auto}
+.location-count{margin-left:auto;color:var(--muted);font-size:.75rem;padding-left:.75rem}
+
+/* 批量迁移：逐台提交的进度（总进度条 + 每台状态）。 */
+.batch-progress{display:grid;gap:.625rem}
+.batch-progress-head{display:flex;align-items:center;justify-content:space-between;font-size:.875rem}
+.batch-progress-head .num{color:var(--muted);font-variant-numeric:tabular-nums}
+.batch-progress-bar{height:.375rem;border-radius:999px;background:color-mix(in srgb,var(--accent) 14%,transparent);overflow:hidden}
+.batch-progress-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent);transition:width .4s ease}
+.batch-progress-list{display:grid;gap:.125rem;max-height:18rem;overflow-y:auto;margin:0;padding:0;list-style:none}
+.batch-progress-list li{display:flex;align-items:center;gap:.5rem;min-height:2.25rem;padding:0 .5rem;border-radius:.5rem}
+.batch-progress-list li.is-run{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.batch-progress-name{font-weight:500;font-size:.875rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.batch-progress-list small{margin-left:auto;color:var(--muted);font-size:.75rem;white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.batch-progress-list li.is-fail small{color:#991b1b}
+.batch-progress-list li.is-ok small{color:#15803d}
+
+/* 网络管理（IPv4 / IPv6 / ADSL）：双行单元格、数量列、已用/总数细条。 */
+.net-cell-lock,.net-cell-used,.net-cell-free,.net-cell-total{min-width:2.5rem;font-variant-numeric:tabular-nums}
+.net-cell-ip_name,.net-cell-name{white-space:nowrap}
+.net-table .table__column{white-space:nowrap}
+.net-two{display:grid;gap:.125rem;min-width:0}
+.net-two>small{font-size:.75rem;color:var(--muted);overflow-wrap:anywhere}
+.net-two>small.mono,.net-two>small .mono{font-size:.75rem}
+.net-cell{line-height:1.5;max-width:22rem}
+.net-cell-remark{max-width:16rem;overflow-wrap:anywhere}
+.net-cell-ipv6,.net-cell-block,.net-cell-username{min-width:12rem}
+.net-cell-usage{min-width:7.5rem}
+.net-ratio>strong small{font-weight:400;color:var(--muted);font-size:.75rem}
+.net-ratio-extra{font-size:.75rem;color:var(--muted);white-space:nowrap}
+.net-muted{color:var(--muted)}
+.net-more{display:inline-grid;place-items:center;margin-left:.375rem;min-width:1.5rem;height:1.25rem;padding:0 .375rem;border-radius:999px;background:var(--default);font-size:.6875rem;font-weight:600;font-variant-numeric:tabular-nums}
+.net-links{display:flex;flex-wrap:wrap;gap:.25rem .625rem}
+.net-field{display:grid;gap:.375rem}
+.net-label{font-size:.875rem;font-weight:500}
+.net-gateway{display:grid;gap:1rem}
+.net-gateway .cfg-note{margin-top:0}
+.net-targets{margin-bottom:1rem}
+#net-form .native-field,.net-gateway .native-field{display:grid;gap:.375rem;font-size:.875rem;font-weight:500}
+#net-form .native-field .select{font-weight:400}
+
+/* 页头网站名称：来自网站配置，过长时截断。 */
+.brand-name{max-width:16rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:960px){.brand-name{max-width:10rem}}
+
+/* 列表页工具栏（所有列表页统一）：左侧筛选 → 搜索；右侧 .filter-actions 为刷新 → 主操作 → 其他按钮；
+   不放说明文字；标题行只放标题。规则见 DESIGN.md「列表页」。 */
+.filter-bar{justify-content:flex-start}
+.filter-bar .filters{flex:0 1 auto;min-width:0}
+.filter-bar .resource-search{flex:none;width:16rem;max-width:100%}
+.filter-bar .filters .button{height:2.25rem;min-height:2.25rem}
+.filter-bar .filters .button--icon-only{width:2.25rem;min-width:2.25rem}
+.filter-bar>.filter-note,.filter-bar>.list-total{margin-left:auto}
+@media(max-width:640px){.filter-bar .resource-search{width:100%}.filter-bar>.filter-note,.filter-bar>.list-total{margin-left:0}}
+.guide-toolbar{display:grid;gap:.75rem}.guide-toolbar .filter-bar{margin:0}
+/* 所有列表的勾选列：HeroUI Checkbox（className="table-check"），列宽取最小。 */
+:is(.table__column,.table__cell):has(.table-check){width:1%;white-space:nowrap;padding-inline:.75rem .25rem}
+.net-name{display:inline-flex;align-items:center;gap:.375rem;white-space:nowrap}
+/* 按钮组靠右对齐；窄屏换行时回到左边。 */
+.filter-bar>.filter-actions{margin-left:auto}
+@media(max-width:640px){.filter-bar>.filter-actions{margin-left:0}}
+/* 节点列表：CPU、内存、磁盘的进度条撑满单元格宽度。 */
+.nodes-table .usage{width:100%;min-width:6rem}
+.nodes-table .usage-track{width:100%}
+/* 节点“启用”“维护”开关的确认弹窗：节点信息 + 变更（旧值 → 新值）+ 影响说明，只有取消和确认。 */
+.node-switch{display:grid;gap:1rem}
+.node-switch-meta{display:grid;gap:0;margin:0;border-radius:var(--field-radius,.625rem);background:var(--default);padding:.25rem 1rem}
+.node-switch-meta>div{display:grid;grid-template-columns:5rem minmax(0,1fr);align-items:center;gap:.75rem;min-height:2.5rem}
+.node-switch-meta>div+div{border-top:1px solid color-mix(in srgb,var(--foreground) 8%,transparent)}
+.node-switch-meta dt{font-size:.8125rem;color:var(--muted)}
+.node-switch-meta dd{margin:0;display:flex;align-items:center;gap:.5rem;font-size:.875rem;min-width:0;overflow-wrap:anywhere}
+.node-switch-meta dd .num{color:var(--muted);font-size:.8125rem}
+.node-switch-change svg{color:var(--muted)}
+.node-switch .cfg-note{margin-top:0}
+.node-switch-note{display:flex;align-items:flex-start;gap:.5rem;padding:.75rem 1rem;border-radius:var(--field-radius,.625rem);background:color-mix(in srgb,var(--accent) 8%,var(--surface));color:color-mix(in srgb,var(--accent) 70%,var(--foreground));font-size:.875rem;line-height:1.5}
+.node-switch-note svg{flex:none;margin-top:.125rem}
+.node-switch-btn{min-width:6.5rem}
+/* 顶栏下拉菜单（导航分组、窄屏菜单、头像菜单）：沿用顶栏的深海蓝色调。 */
+.dropdown__popover.nav-popover{background:#26476f;border:1px solid #3a5d86;box-shadow:0 14px 36px rgb(4 12 28 / .35);color:#e6eefa}
+.nav-popover .menu-item{color:#e1eaf7}
+.nav-popover .menu-item [data-slot="label"]{color:inherit}
+@media(hover:hover){.nav-popover .menu-item:hover,.nav-popover .menu-item[data-hovered="true"]{background:#30578a;color:#fff}}
+.nav-popover .menu-item[data-focused="true"]{background:#30578a;color:#fff}
+.nav-popover .menu-item[aria-checked="true"],.nav-popover .menu-item[aria-selected="true"],.nav-popover .menu-item[data-selected="true"]{background:#3a6599;color:#fff}
+.nav-popover .menu-item__indicator,.nav-popover .menu-item__indicator--submenu{color:#b5d3ff}
+.nav-popover .menu-item[data-focus-visible="true"]{outline:2px solid #b5d3ff;outline-offset:-2px}
+.nav-popover .account-menu-heading{border-bottom-color:#3a5d86}
+.nav-popover .account-menu-heading strong{color:#fff}
+.nav-popover .account-menu-heading small{color:#b4c7e2}
+/* 顶栏右上角头像：白色圆底 + 蓝色线性用户图标。 */
+.global-header .header-account .avatar.header-avatar{--avatar-bg:#fff;background:#fff;color:#1d4ed8;box-shadow:0 0 0 1px rgb(255 255 255 / .35)}
+.global-header .header-account .avatar.header-avatar [data-slot="avatar-fallback"],.global-header .header-account .avatar.header-avatar .avatar__fallback{background:#fff;color:#1d4ed8}
+.global-header .header-account .avatar.header-avatar svg{display:block}
+
+/* 设计规范页：左侧目录侧边栏（吸顶、高亮当前章节）+ 右侧内容；窄屏时目录变为顶部横向滚动条。 */
+.guide-layout{display:grid;grid-template-columns:12.5rem minmax(0,1fr);gap:2.5rem;align-items:start}
+.guide-nav{position:sticky;top:1.25rem;display:grid;gap:1.125rem;max-height:calc(100vh - 2.5rem);overflow-y:auto;padding:1rem .75rem;border-radius:14px;background:var(--surface);box-shadow:0 0 0 1px var(--border)}
+.guide-nav-group{display:grid;gap:.125rem}
+.guide-nav-group>span{padding:0 .625rem .25rem;font-size:.6875rem;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+.guide-nav a{display:block;padding:.375rem .625rem;border-radius:.5rem;font-size:.8125rem;color:var(--foreground);text-decoration:none;line-height:1.4}
+.guide-nav a:hover{background:var(--default)}
+.guide-nav a.is-active{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);font-weight:600}
+.guide-nav a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.guide-content{min-width:0}
+.guide-content .guide-section{scroll-margin-top:1.25rem}
+.guide-content .guide-section:first-child{border-top:0;padding-top:0}
+@media(max-width:960px){
+ .guide-layout{grid-template-columns:1fr;gap:1.25rem}
+ .guide-nav{position:sticky;top:0;z-index:5;display:flex;gap:.75rem;overflow-x:auto;max-height:none;padding:.5rem;border-radius:12px}
+ .guide-nav-group{display:flex;gap:.25rem;align-items:center;flex:none}
+ .guide-nav-group>span{padding:0 .25rem}
+ .guide-nav a{white-space:nowrap}
+}
+.guide-rules{margin:0;padding-left:1.125rem;display:grid;gap:.375rem;font-size:.8125rem;line-height:1.6;color:var(--muted)}
+.guide-rules code{font-size:.75rem}
+.guide-brand{gap:2rem}
+.guide-brand-bar{display:flex;align-items:center;gap:.625rem;padding:.625rem 1rem;border-radius:10px;background:#102442;color:#edf4ff;font-weight:600}
+.guide-header{min-height:0;padding:.75rem 1rem;border-radius:12px;gap:1.25rem;display:flex;align-items:center}
+.guide-header .header-account{margin-left:auto}
+.guide-header-nav{display:flex;gap:.375rem}
+.guide-popover{position:static;width:13rem;padding:.375rem;display:grid;gap:.125rem;animation:none}
+.guide-task-row{gap:1.25rem}
+.guide-task{display:inline-flex;align-items:center;gap:.25rem;font-size:.8125rem}
+.guide-task small{color:var(--muted);font-size:.8125rem}
+.guide-table{max-width:44rem}
+.guide-arrow{color:var(--muted)}
+.guide-dialogs{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:1rem}
+.guide-dialog{display:grid;gap:1rem;padding:1.25rem;border-radius:16px;background:var(--surface);box-shadow:0 0 0 1px var(--border),0 8px 24px rgb(15 23 42 / .06)}
+.guide-dialog h3{margin:0;font-size:1rem;font-weight:600}
+.guide-dialog .cfg-note{margin-top:0}
+.guide-dialog .recycle-list{margin:0}
+.guide-dialog footer{display:flex;justify-content:flex-end;gap:.5rem}
+/* 系统 / 登录日志：去掉平台返回的 HTML 标签，原标签里的文字用主色标出。 */
+.log-mark{color:var(--accent);font-weight:500}
+/* 节点列表：CPU、内存外层的悬停提示触发区也撑满单元格，进度条才能 100% 宽。 */
+.nodes-table .table__cell>.tooltip__trigger,.nodes-table .table__cell .tooltip__trigger:has(>.usage){display:block;width:100%}
+/* 列表页使用率：进度条上方的数值不加粗、字号略小。 */
+.usage>strong{font-size:.8125rem;font-weight:400}
+
+/* 新建 / 编辑区域与节点弹窗（方案 B）：左侧分组导航，右侧一次一组字段。 */
+.rd{display:flex;gap:1.25rem;min-height:22rem}
+.rd-nav{display:grid;gap:.125rem;align-content:start;width:9.5rem;flex:none;padding-right:1rem;border-right:1px solid var(--border)}
+.rd-nav-item{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5625rem .75rem;border:0;border-radius:.5625rem;background:none;font:inherit;font-size:.8125rem;color:var(--foreground);text-align:left;cursor:pointer}
+.rd-nav-item:hover{background:var(--default)}
+.rd-nav-item.is-active{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);font-weight:600}
+.rd-nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.rd-done{color:var(--success);flex:none}
+.rd-dot{width:.5rem;height:.5rem;border-radius:999px;background:var(--danger);flex:none}
+.rd-body{flex:1;min-width:0;display:grid;gap:1rem;align-content:start}
+.rd-head{display:flex;align-items:baseline;gap:.625rem}.rd-head h3{margin:0;font-size:.875rem;font-weight:600}.rd-head small{font-size:.75rem;color:var(--muted)}
+.rd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.rd-span{grid-column:1/-1}
+.rd-field{display:grid;gap:.375rem;align-content:start}
+.rd-label{font-size:.875rem;font-weight:500}
+.rd-req{color:var(--danger);margin-left:.125rem}
+.rd-static{min-height:2.5rem;display:flex;align-items:center;font-size:.875rem;color:var(--muted)}
+.rd-seg{display:inline-flex;flex-wrap:wrap;gap:.125rem;width:fit-content;padding:.1875rem;border-radius:.625rem;background:var(--default)}
+.rd-seg button{border:0;background:none;font:inherit;font-size:.8125rem;color:var(--muted);padding:.375rem .875rem;border-radius:.5rem;cursor:pointer}
+.rd-seg button.is-on{background:var(--surface);color:var(--foreground);font-weight:500;box-shadow:0 1px 2px rgb(0 0 0 / .08)}
+.rd-seg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.rd-note{display:flex;align-items:flex-start;gap:.5rem;padding:.625rem .75rem;border-radius:.625rem;background:color-mix(in srgb,var(--accent) 8%,var(--surface));color:color-mix(in srgb,var(--accent) 70%,var(--foreground));font-size:.8125rem;line-height:1.5}
+.rd-note svg{flex:none;margin-top:.125rem}
+.rd-btn{min-width:6.5rem}
+.rd-prev{margin-right:auto}
+@media(max-width:720px){.rd{flex-direction:column}.rd-nav{width:auto;display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--border);padding:0 0 .5rem}.rd-nav-item{white-space:nowrap}.rd-grid{grid-template-columns:1fr}}
+
+/* 新建实例页（方案 A）：单页分区 + 右侧吸顶配置摘要。 */
+.ci-crumb{display:flex;align-items:center;gap:.25rem;margin-bottom:.25rem}
+.ci-layout{display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:1.25rem;align-items:start}
+.ci-main{display:grid;gap:1rem;min-width:0}
+.ci-panel{display:grid;gap:1rem;padding:1.25rem 1.375rem;border-radius:16px;background:var(--surface);box-shadow:0 0 0 1px var(--border);scroll-margin-top:1rem}
+.ci-panel>h2{margin:0;display:flex;align-items:center;gap:.625rem;font-size:.9375rem;font-weight:600}
+.ci-panel>h2 em{font-style:normal;display:grid;place-items:center;width:1.375rem;height:1.375rem;border-radius:999px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent);font-size:.75rem}
+.ci-panel>.field-error{margin:-.5rem 0 0}
+.ci-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.ci-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ci-field{display:grid;gap:.375rem;align-content:start;min-width:0}
+.ci-span{grid-column:1/-1}
+.ci-label{font-size:.875rem;font-weight:500}
+.ci-areas{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:.625rem}
+.ci-area{display:grid;gap:.125rem;padding:.75rem .875rem;border:1px solid var(--field-border,#d4d4d8);border-radius:12px;background:var(--surface);text-align:left;font:inherit;cursor:pointer}
+.ci-area strong{display:flex;align-items:center;gap:.375rem;font-size:.875rem;font-weight:600}
+.ci-area small{font-size:.75rem;color:var(--muted)}
+.ci-area:hover{border-color:color-mix(in srgb,var(--accent) 45%,#d4d4d8)}
+.ci-area.is-on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.ci-area:focus-visible,.ci-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ci-chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.ci-inline{display:flex;align-items:flex-end;flex-wrap:wrap;gap:.5rem}
+.ci-chip{height:2.25rem;padding:0 .875rem;border:1px solid #d4d4d8;border-radius:var(--field-radius,.625rem);background:var(--surface);font:inherit;font-size:.8125rem;color:var(--foreground);cursor:pointer;font-variant-numeric:tabular-nums}
+.ci-chip:hover{border-color:color-mix(in srgb,var(--accent) 45%,#d4d4d8)}
+.ci-chip.is-on{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--surface));font-weight:500}
+.ci-stepper{display:grid;gap:.375rem;width:12rem;max-width:100%}
+.ci-stepper .number-field__group{width:100%}
+.ci-data .ci-field{flex:none}
+.ci-add{justify-self:start;color:var(--accent)}
+.ci-image .batch-field{display:grid;gap:.375rem}
+.ci-user{display:grid;gap:.375rem}
+.ci-user-search{height:2.25rem}
+.ci-summary{position:sticky;top:1rem;display:grid;gap:.875rem;padding:1.25rem;border-radius:16px;background:var(--surface);box-shadow:0 0 0 1px var(--border)}
+.ci-summary h2{margin:0;font-size:.9375rem;font-weight:600}
+.ci-summary dl{margin:0;display:grid;gap:.5rem;padding-bottom:.875rem;border-bottom:1px solid var(--border)}
+.ci-summary dl div{display:flex;justify-content:space-between;gap:.75rem;font-size:.8125rem}
+.ci-summary dt{color:var(--muted);flex:none}
+.ci-summary dd{margin:0;text-align:right;font-weight:500;overflow-wrap:anywhere}
+.ci-submit{width:100%}
+@media(max-width:1100px){.ci-layout{grid-template-columns:1fr}.ci-summary{position:static}}
+@media(max-width:720px){.ci-grid,.ci-grid-3{grid-template-columns:1fr}}
+/* 新建 / 编辑区域与节点弹窗：加宽到 56rem（窄屏贴边），左侧导航 11rem，右侧字段区更宽松。 */
+.modal__dialog:has(.rd){width:min(56rem,calc(100vw - 2rem));max-width:none}
+.modal__dialog:has(.rd) .rd{gap:1.75rem;min-height:26rem}
+.modal__dialog:has(.rd) .rd-nav{width:11rem;padding-right:1.25rem}
+.modal__dialog:has(.rd) .rd-grid{gap:1.125rem 1.5rem}
+.lookup-picker{display:grid;gap:.375rem}
+.lookup-search{height:2.25rem}
+/* 业务管理：私钥展示、密钥绑定实例。 */
+.key-block{margin:0;max-height:20rem;overflow:auto;padding:.875rem 1rem;border-radius:var(--field-radius,.625rem);background:#0f172a;color:#e2e8f0;font-size:.75rem;line-height:1.5;white-space:pre-wrap;word-break:break-all}
+.key-bind-add{display:flex;align-items:flex-end;gap:.5rem}.key-bind-add .lookup-picker{flex:1;min-width:0}
+.key-bind-row{display:inline-flex;align-items:center;gap:.5rem}
+
+/* VPC 网络：网段 / 网内主机为 Soft Chip，只显示第一项，其余在“+N”的 tooltip 里 */
+.vpc-first{display:flex;align-items:center;gap:0;min-width:0}
+.vpc-host-chip{display:inline-flex;border-radius:999px;text-decoration:none}.vpc-host-chip:hover .chip,.vpc-host-chip:hover>span{filter:brightness(.96);text-decoration:underline}.vpc-host-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vpc-more-list{display:flex;flex-direction:column;align-items:flex-start;gap:.375rem;max-width:22rem;max-height:16rem;overflow:auto}
+.net-vpcs .net-cell-username{min-width:0}
+.net-vpcs .net-cell-mac .mono{color:var(--muted);font-size:.75rem}
+.net-vpcs .net-cell-ips .chip,.net-vpcs .net-cell-ips .chip *{font-family:monospace;color:var(--muted);font-size:.75rem}
+.disk-image{display:inline-block;max-width:14rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom;font-size:.75rem;color:var(--muted)}
+.vpc-more-list .cloud-ip-cell:hover .ip-copy.button,.vpc-more-list .ip-copy.button:focus-visible{opacity:1}
+.recycle-list li:hover .ip-copy.button{opacity:1}
+/* 表头排序（方案 B）：整个表头格可点，常驻上下小三角，当前方向的三角为主色 */
+.clouds-table .table__column:has(.sort-head){padding:0}
+.sort-head.button{display:flex;width:100%;height:100%;min-height:2.5rem;min-width:0;justify-content:flex-start;gap:.375rem;padding-inline:.625rem;border-radius:0;font:inherit;color:inherit;background:transparent}
+.sort-head.button:hover{background:color-mix(in srgb,var(--foreground) 5%,transparent)}
+.sort-head.button:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+.sort-head.is-active{color:var(--accent)}
+.sort-tri{display:inline-flex;flex-direction:column;gap:1px;flex:none;color:var(--muted);opacity:.7}.sort-head.button .sort-tri svg{display:block;width:6px;height:4px;margin:0;flex:none}.sort-tri .is-on{color:var(--accent)}.sort-head.is-active .sort-tri,.sort-head:hover .sort-tri{opacity:1}
+/* 实例详情页头卡片：从左上到右下浅浅的蓝色渐变到白色（跟随主题色与卡片底色，暗色模式同样适用） */
+.inst-card.inst-hero{background:linear-gradient(to bottom right,color-mix(in srgb,var(--accent) 8%,var(--surface,var(--background))) 0%,var(--surface,var(--background)) 100%)}
+/* 实例详情上半部分（页头与首行卡片）：外框加浅色 1px 边框 */
+.inst-card.inst-hero,.inst-grid>.inst-card{border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+/* 实例详情：去掉首行右侧 CPU 卡片后，流量计费统计占右侧两行；基本信息为两行三项（操作系统 · 节点 · 实例密码 / 实例 ID · 所属用户 · 创建时间） */
+.inst-grid{grid-template-areas:"facts traffic" "actions traffic"}
+.inst-facts dl>div:nth-child(-n+3){border-bottom:1px solid var(--border)}
+@media(max-width:1100px){.inst-grid{grid-template-areas:"facts" "traffic" "actions"}}
+@media(max-width:640px){.inst-facts dl>div:nth-child(-n+4){border-bottom:1px solid var(--border)}.inst-facts dl>div:nth-child(n+5){border-bottom:0}}
+/* 流量计费统计（方案 C）：汇总数字 + 三个时段的小表 */
+.inst-traffic-big{font-size:1.625rem;font-weight:600;line-height:1.2}.inst-traffic-big small{font-size:.8125rem;font-weight:400;color:var(--muted)}
+.inst-traffic-table{width:calc(100% - 2.5rem);border-collapse:collapse;font-size:.8125rem;margin-top:.375rem}
+.inst-traffic-table th,.inst-traffic-table td{padding:.5rem 0 .5rem .5rem;text-align:right;white-space:nowrap}
+.inst-traffic-table :is(th,td):first-child{text-align:left;padding-left:0}
+.inst-traffic-table thead th{font-weight:400;color:var(--muted);padding-top:.25rem}
+.inst-traffic-table tbody :is(th,td){border-top:1px solid var(--border)}.inst-traffic-table tbody th{font-weight:400;color:var(--foreground)}
+.inst-traffic-table .is-in{color:var(--accent)}.inst-traffic-table .is-out{color:var(--success)}
+.inst-traffic-foot{font-size:.8125rem;color:var(--muted)}.inst-traffic-foot:empty{display:none}
+/* 实例详情页不用粗体：页内所有文字（标题、主机名、数值、标签、按钮）统一常规字重。用 !important 压过上面各处 500 / 600 / 700 的设置。弹窗在页外渲染，不受影响。 */
+.inst-page,.inst-page *{font-weight:400!important}
+/* 实例详情操作区（方案 B）：图标在上、文字在下的磁贴，宽屏 6 列，两行排满 11 个 */
+.inst-action-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:.625rem}
+.inst-tile.button{height:auto;min-height:4.75rem;flex-direction:column;justify-content:center;align-items:center;gap:.5rem;padding:.75rem .375rem;border-radius:.875rem;font-size:.8125rem;text-align:center;white-space:normal}
+.inst-tile-icon{width:2rem;height:2rem;border-radius:.625rem;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.inst-tile-label{line-height:1.2}
+.inst-tile-sk{height:4.75rem;flex-direction:column;justify-content:center;padding:.5rem}
+@media(max-width:1300px){.inst-action-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:640px){.inst-action-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* 实例设置弹窗：每行左标签右控件 */
+.set-list{display:grid}.set-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:3rem;padding:.375rem 0;border-bottom:1px solid color-mix(in srgb,var(--border) 60%,transparent)}.set-list>.set-row:last-child{border-bottom:0}
+.set-label{display:grid;gap:.125rem;font-size:.875rem}.set-label small{font-size:.75rem;color:var(--muted)}
+.set-control{display:flex;justify-content:flex-end;min-width:0}.set-control select,.set-control .native-select{min-width:15rem}
+.set-inline{display:inline-flex;align-items:center;gap:.5rem}.set-num{width:5.5rem}.set-mid{width:12rem}.set-muted{font-size:.8125rem;color:var(--muted)}
+.set-ro{margin-left:.375rem;font-size:.75rem;color:var(--muted);background:var(--default);border-radius:999px;padding:.0625rem .5rem}
+.set-iso{display:inline-flex;align-items:center;gap:.5rem;max-width:22rem}.set-iso>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.set-triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;padding:.25rem 0 .75rem}
+.set-xml{margin:0;max-height:60vh;overflow:auto;padding:1rem;border-radius:.75rem;background:#0f172a;color:#e2e8f0;font-size:.75rem;line-height:1.5;white-space:pre-wrap;word-break:break-all}
+.set-count{margin-right:auto;font-size:.8125rem;color:var(--muted)}.set-loading{padding:2rem;color:var(--muted)}
+/* 快照 / 备份 / 计划任务弹窗 */
+.snap-create,.cron-form{display:flex;flex-wrap:wrap;align-items:center;gap:.625rem;margin-bottom:1rem}.snap-create>:nth-child(2){flex:1;min-width:10rem}
+.cron-disks{display:flex;flex-wrap:wrap;gap:.75rem;flex-basis:100%}
+.snap-making{color:var(--accent)}.snap-done{color:var(--success)}
+/* 首页：左 1/3 最近七天操作（堆叠横条），右 2/3 区域分布（点阵世界地图） */
+.home-primary-grid{grid-template-columns:minmax(0,1fr) minmax(0,2fr);align-items:stretch;gap:1.25rem}
+@media(max-width:1100px){.home-primary-grid{grid-template-columns:minmax(0,1fr)}}
+.sd{display:grid;gap:.875rem}
+.sd-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem}.sd-kpi>div{display:grid;gap:.125rem;padding:.625rem .75rem;border-radius:.75rem;background:var(--app-bg)}.sd-kpi span{font-size:.75rem;color:var(--muted)}.sd-kpi b{font-size:1.375rem;font-weight:500}
+.sd-legend{display:flex;align-items:center;gap:.875rem;font-size:.8125rem;color:var(--muted)}.sd-legend i,.sd-swatch{display:inline-block;width:.5625rem;height:.5625rem;border-radius:.1875rem;margin-right:.3125rem}.sd-legend small{margin-left:auto}
+.sd-rows{display:grid;gap:.25rem}
+.sd-row{display:grid;grid-template-columns:2.75rem minmax(0,1fr) 2rem;align-items:center;gap:.625rem;padding:.375rem .25rem;border-radius:.5rem;cursor:default}.sd-row:hover,.sd-row:focus-visible{background:var(--app-bg);outline:none}
+.sd-date{font-size:.8125rem;color:var(--muted)}.sd-total{text-align:right;font-weight:500}
+.sd-track{display:block}.sd-bar{display:flex;height:.875rem;min-width:.375rem;border-radius:999px;overflow:hidden;background:var(--default)}.sd-bar i{display:block;min-width:2px}
+.is-create{background:var(--accent)}.is-recycle{background:var(--danger)}.is-suspend{background:var(--warning)}
+.rm{display:grid;gap:.75rem}
+.rm-map{position:relative;aspect-ratio:144/56;width:100%}
+.rm-map svg{position:absolute;inset:0;width:100%;height:100%;fill:#dfe3ea}
+.rm-pin.button{position:absolute;transform:translate(-.75rem,-50%);display:flex;align-items:center;gap:.375rem;height:auto;min-width:0;padding:0;background:transparent;border-radius:999px}
+.rm-pin.button:hover,.rm-pin.button[data-hovered]{background:transparent}
+.rm-pin.is-left{flex-direction:row-reverse;transform:translate(calc(-100% + .75rem),-50%)}
+.rm-dot{position:relative;display:grid;place-items:center;flex:none;border-radius:50%;background:var(--accent);box-shadow:0 0 0 .4rem color-mix(in srgb,var(--accent) 16%,transparent)}.rm-dot i{width:.3125rem;height:.3125rem;border-radius:50%;background:#fff}
+.rm-label{display:inline-flex;align-items:center;gap:.5rem;padding:.1875rem .625rem;border:1px solid var(--border);border-radius:999px;background:var(--surface,#fff);font-size:.75rem;color:var(--foreground);white-space:nowrap;box-shadow:0 1px 2px #0000000d}.rm-label b{color:var(--accent);font-weight:500}
+.rm-pin:hover .rm-label,.rm-pin:focus-visible .rm-label{border-color:var(--accent)}
+.rm-tooltip{padding:0!important;background:var(--surface,#fff)!important;color:var(--foreground)!important;border:1px solid var(--border);border-radius:.875rem!important;box-shadow:0 12px 30px #0000001f!important}
+.rm-card{width:15.5rem;padding:.75rem .875rem;display:grid;gap:.5rem;font-size:.8125rem}
+.rm-card-title{display:flex;align-items:center;gap:.4375rem;font-size:.875rem;font-weight:500}
+.rm-card-stats{display:flex;gap:.75rem;font-size:.75rem;color:var(--muted)}.rm-card-stats b{color:var(--foreground);font-weight:500}
+.rm-card-nodes{display:grid}.rm-node{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.25rem .5rem;padding:.4375rem 0;border-top:1px solid var(--border)}.rm-node>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rm-node small{font-size:.75rem;color:var(--muted)}
+.rm-bar{grid-column:1/-1;height:.25rem;border-radius:999px;background:var(--default);overflow:hidden}.rm-bar i{display:block;height:100%;background:var(--success)}
+.rm-card-note,.rm-card-foot{font-size:.75rem;color:var(--muted)}.rm-card-foot{padding-top:.375rem;border-top:1px solid var(--border)}
+.rm-unplaced{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .5rem;font-size:.8125rem;color:var(--muted)}.rm-unplaced .button{gap:.375rem}.rm-unplaced b{color:var(--accent);font-weight:500}
+/* 首页底部：左为实例用量排行，右为最新创建的实例，各占一半 */
+.home-ranking{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;align-items:start}.home-ranking>.data-panel{min-width:0;margin:0}
+@media(max-width:1100px){.home-ranking{grid-template-columns:minmax(0,1fr)}}
+.home-area{display:inline-flex;align-items:center;gap:.375rem;white-space:nowrap}.home-recent .cloud-ip-cell .mono{white-space:nowrap}
+/* 首页上排：左右两栏各自为白底、浅色边框的卡片，只保留主标题；与下排之间不用分隔线 */
+.home-primary-grid{gap:1.25rem}
+.home-primary-grid>.data-panel{padding:.875rem 1rem;background:var(--surface,#fff);border:1px solid color-mix(in srgb,var(--border) 70%,transparent);border-radius:1rem}
+.home-primary-grid .panel-heading{margin-bottom:.625rem}
+.home-ranking{margin-top:1.75rem;padding-top:0;border-top:0}
+.rm-label small{font-size:.6875rem;color:var(--muted)}.rm-card-count{margin-left:auto;font-size:.75rem;color:var(--muted);font-weight:400}
+.rm-area{display:grid;gap:.125rem;padding:.4375rem 0;border-top:1px solid var(--border)}.rm-area small{font-size:.75rem;color:var(--muted)}
+.rm-area{display:grid;gap:.125rem;padding:.375rem 0;border-top:1px solid var(--border)}.rm-area b{color:var(--foreground);font-weight:500}.rm-card-title+.rm-area{border-top:0;padding-top:0}
+/* 地图悬停卡片（版本 A）：标题行、蓝色大号实例数、一行节点小字；多区域逐行列出并配占比细条，不用分隔线 */
+.rm-tooltip{padding:0!important;background:var(--surface,#fff)!important;color:var(--foreground)!important;border:0!important;border-radius:.875rem!important;box-shadow:0 12px 32px #0f172a24,0 2px 6px #0f172a12!important}
+.rm-card{width:14.75rem;padding:.875rem 1rem;display:block}
+.rm-card-title{display:flex;align-items:center;gap:.5rem;font-size:.84375rem;color:#3f3f46}
+.rm-card-title .country-flag{width:1.25rem;height:.9375rem;border-radius:.1875rem;box-shadow:0 0 0 1px #0000000f}
+.rm-card-count{margin-left:auto;font-size:.71875rem;color:#a1a1aa}
+.rm-big{display:flex;align-items:baseline;gap:.375rem;margin:.625rem 0 .125rem}.rm-big b{font-size:1.875rem;line-height:1;color:var(--accent);font-weight:500}.rm-big span{font-size:.78125rem;color:var(--muted)}
+.rm-sub{font-size:.78125rem;color:var(--muted)}.rm-sub b{color:var(--foreground);font-weight:500}
+.rm-rows{display:grid;gap:.5625rem;margin-top:.875rem}
+.rm-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.25rem .625rem;font-size:.78125rem}.rm-row>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rm-row small{font-size:.75rem;color:var(--muted)}.rm-row small b{color:var(--foreground);font-weight:500}
+.rm-share{grid-column:1/-1;height:.25rem;border-radius:999px;background:#eef2f8;overflow:hidden}.rm-share i{display:block;height:100%;border-radius:999px;background:var(--accent)}
+/* 首页下排两张表统一：同一表格样式、行高，实例名同为主色链接，数值等宽不换行，最多 6 行 */
+.home-table .table__column{white-space:nowrap}
+.home-table .table__cell{padding-block:.625rem;white-space:nowrap}
+.home-table .num{font-variant-numeric:tabular-nums}
+.home-host{color:var(--accent);text-decoration:none;font-weight:500;border-radius:.25rem}.home-host:hover{text-decoration:underline}.home-host:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.home-table .node-status-icon{display:inline-flex}
+/* 首页下排两张表行高一致：固定 44px，IP 后的复制按钮不撑高行（按钮 20px，上下负外边距） */
+.home-table .table__cell{height:2.75rem;padding-block:0;line-height:1.25rem}
+.home-table .cloud-ip-cell{height:1.25rem}
+.home-table .ip-copy.button{width:1.25rem;height:1.25rem;min-width:1.25rem;margin-block:-.125rem}
+/* 区域分布：标签里的国旗；区域间的传输光轨与流光；圆点外的涟漪 */
+.rm-label .country-flag{width:1rem;height:.75rem;border-radius:.125rem;box-shadow:0 0 0 1px #0000000f;margin-right:-.125rem}
+.rm-links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.rm-arc{fill:none;stroke-width:1px;vector-effect:non-scaling-stroke}
+.rm-comet path{fill:none;stroke-linecap:round;stroke-dasharray:0 200}
+.rm-comet-tail{stroke:var(--accent);stroke-opacity:.16;stroke-width:.55}
+.rm-comet-body{stroke:var(--accent);stroke-opacity:.45;stroke-width:.36}
+.rm-comet-head{stroke:var(--accent);stroke-width:.5;filter:drop-shadow(0 0 .6px var(--accent))}
+/* 每束流光的时长、延迟写在 <g> 的行内样式上，三层路径继承它们，保持头尾同步 */
+.rm-comet{animation-duration:5.6s}.rm-comet path{animation-duration:inherit;animation-delay:inherit;animation-timing-function:cubic-bezier(.45,.05,.35,1);animation-iteration-count:infinite}
+.rm-comet .rm-comet-tail{animation-name:rm-tail}.rm-comet .rm-comet-body{animation-name:rm-body}.rm-comet .rm-comet-head{animation-name:rm-head}
+@keyframes rm-tail{0%{stroke-dasharray:0 200;stroke-dashoffset:0;opacity:0}6%{opacity:1}55%{stroke-dasharray:16 200;stroke-dashoffset:-84;opacity:1}62%,100%{stroke-dasharray:0 200;stroke-dashoffset:-100;opacity:0}}
+@keyframes rm-body{0%{stroke-dasharray:0 200;stroke-dashoffset:0;opacity:0}6%{opacity:1}55%{stroke-dasharray:7 200;stroke-dashoffset:-93;opacity:1}62%,100%{stroke-dasharray:0 200;stroke-dashoffset:-100;opacity:0}}
+@keyframes rm-head{0%{stroke-dasharray:0 200;stroke-dashoffset:0;opacity:0}6%{opacity:1}55%{stroke-dasharray:1.2 200;stroke-dashoffset:-98.8;opacity:1}62%,100%{stroke-dasharray:0 200;stroke-dashoffset:-100;opacity:0}}
+.rm-dot::before{content:"";position:absolute;inset:0;border-radius:50%;border:1px solid var(--accent);opacity:0;animation:rm-ripple 3.2s ease-out infinite}
+@keyframes rm-ripple{0%{transform:scale(1);opacity:.45}100%{transform:scale(2.8);opacity:0}}
+@media (prefers-reduced-motion:reduce){.rm-comet{display:none}.rm-dot::before{animation:none}}
+.updated-refresh.button{width:1.5rem;height:1.5rem;min-width:1.5rem;padding:0;color:var(--muted)}.updated-refresh.button:hover{color:var(--accent)}
+/* 页面骨架屏（PageSkeleton.tsx） */
+.psk-bar{border-radius:4px;flex:none}.psk-field{border-radius:var(--field-radius,.625rem)}.psk-pill{border-radius:999px}
+.psk-form{display:grid;gap:1rem;max-width:44rem}.psk-form-row{display:grid;gap:.5rem}
+.psk-blocks{display:grid;gap:1rem}.psk-card{display:grid;gap:1rem;padding:1.25rem;border-radius:1rem;background:var(--surface,#fff);border:1px solid color-mix(in srgb,var(--border) 70%,transparent)}.psk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
+.psk-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin-bottom:1rem}
+.psk-rows{display:grid;gap:.875rem}.psk-row{display:grid;grid-template-columns:2.75rem minmax(0,1fr);gap:.625rem;align-items:center}
+.psk-map{aspect-ratio:144/56;width:100%;border-radius:.75rem;background-image:radial-gradient(var(--default) 1.6px,transparent 1.7px);background-size:.6rem .6rem;animation:psk-pulse 1.6s ease-in-out infinite}
+@keyframes psk-pulse{50%{opacity:.55}}@media (prefers-reduced-motion:reduce){.psk-map{animation:none}}
+/* 首页标题行：右侧“最后更新 + 刷新”与标题上下居中 */
+.page-heading>.updated-note{margin:0;margin-left:auto;align-self:center;height:2.25rem;color:var(--muted)}
+/* 页面标题上下边距一致：内容区顶部 20px = 标题下方 20px（所有页面） */
+.workspace-main>.page-content{padding-top:1.25rem}
+/* 全局搜索：搜索中显示三行结果骨架，不转圈 */
+.gs-skeleton{display:grid;gap:.25rem;padding:.5rem}.gs-sk-row{display:flex;align-items:center;gap:.625rem;padding:.5rem}.gs-sk-row>span{flex:1;display:grid;gap:.375rem}
+.gs-sk-icon{width:1.75rem;height:1.75rem;border-radius:.5rem;flex:none}.gs-sk-line{height:.625rem;border-radius:4px}.gs-sk-line.is-sub{height:.5rem;opacity:.7}
