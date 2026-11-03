@@ -87,6 +87,8 @@ docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped cubemanage
 
 客户端基于 Electron，把页面和本机服务打包在一起：双击打开即可使用，不需要安装 Node，也不需要配置 HTTPS。服务只在本机 `127.0.0.1` 上运行，请求直接从你的电脑发往平台。安装包在 [Releases](https://github.com/DigitalVirt/CubeManage/releases) 页面下载，也可以自己打包：
 
+安装包暂未使用 Apple 开发者证书签名。macOS 第一次打开时如果提示“无法验证开发者”，到“系统设置 → 隐私与安全性”点“仍要打开”；如果提示“已损坏，无法打开”，在终端运行 `xattr -cr /Applications/CubeManage.app` 后再打开。Windows 出现“Windows 已保护你的电脑”时，点“更多信息”→“仍要运行”。
+
 ```bash
 pnpm desktop        # 构建页面并打开桌面窗口（调试用）
 pnpm desktop:dist   # 打包安装包，输出到 release/（macOS 上生成 .dmg，Windows 上生成 .exe）
