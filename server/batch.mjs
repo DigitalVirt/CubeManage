@@ -21,6 +21,27 @@ function nativeResults(ids,result){
  return ids.map(id=>failed.has(id)?{id,ok:false,error:failed.get(id)}:{id,ok:true});
 }
 
+// 一次最多选择的实例数；平台批量接口每次最多 100 个，超过时按 100 个一批依次提交。
+const MAX_IDS=1000,CHUNK=100;
+
+/**
+ * Run a native batch call in chunks of CHUNK ids and merge the per-instance results.
+ * A single chunk behaves exactly like one call (errors propagate). With several chunks a failed chunk
+ * marks its own instances failed and the rest continue; an expired platform session (401) still stops everything.
+ */
+async function inChunks(ids,call){
+ if(ids.length<=CHUNK){const r=await call(ids);return {results:nativeResults(ids,r),raw:[r]};}
+ const results=[],raw=[];
+ for(let i=0;i<ids.length;i+=CHUNK){
+  const part=ids.slice(i,i+CHUNK);
+  try{const r=await call(part);raw.push(r);results.push(...nativeResults(part,r));}
+  catch(e){if(e?.status===401)throw e;results.push(...part.map(id=>({id,ok:false,error:e.message})));}
+ }
+ return {results,raw};
+}
+const listOf=(r,key)=>Array.isArray(r?.[key])?r[key]:Array.isArray(r?.data?.[key])?r.data[key]:[];
+const sumNum=raw=>{const n=raw.map(r=>r?.num??r?.data?.num).filter(x=>x!==undefined&&x!==null);return n.length?n.reduce((a,b)=>a+Number(b||0),0):undefined;};
+
 export function registerBatch(app,{asyncRoute}){
  // 迁移队列: 获取迁移实例列表 (v1/clouds/migrate); instances being migrated also get 获取实例冷迁移进度 (v1/clouds/:id/migrate).
  app.get('/api/clouds/migrate_queue',asyncRoute(async(req,res)=>{
@@ -40,34 +61,35 @@ export function registerBatch(app,{asyncRoute}){
   const op=req.params.op,b=req.body,client=req.session.client;
   if(!titles[op])throw new HttpError(404,'批量操作不存在');
   const ids=b.ids;
-  if(!Array.isArray(ids)||!ids.length||ids.length>100||ids.some(id=>!Number.isSafeInteger(id)||id<1)||new Set(ids).size!==ids.length)throw new HttpError(400,'请选择 1～100 个有效实例');
+  if(!Array.isArray(ids)||!ids.length||ids.length>MAX_IDS||ids.some(id=>!Number.isSafeInteger(id)||id<1)||new Set(ids).size!==ids.length)throw new HttpError(400,`请选择 1～${MAX_IDS} 个有效实例`);
   if(Number(b.count)!==ids.length)throw new HttpError(400,'所选实例数量与提交的不一致，请刷新列表后重试');
   const done=async(results,extra={})=>{const success=results.filter(r=>r.ok).length;res.json({ok:true,op,title:titles[op],total:results.length,success,failed:results.length-success,results,...extra});};
-  const native=(method,route,body)=>client.request(method,route,{body});
+  // Native batch endpoint, sent CHUNK ids at a time; bodyFor(part) builds the body for each chunk.
+  const native=(method,route,bodyFor)=>inChunks(ids,part=>client.request(method,route,{body:bodyFor(part)}));
 
   if(perInstance[op]){
    const results=[];
    for(const id of ids){try{const r=await client.request('POST',`clouds/${id}/${perInstance[op]}`,{body:{}});results.push({id,ok:true,task:r?.taskid??r?.task_id??r?.data?.taskid});}catch(e){results.push({id,ok:false,error:e.message});}}
    return done(results);
   }
-  if(op==='delete'||op==='force_delete'){const r=await native('DELETE','clouds',{id:ids,force:op==='force_delete'?1:0});return done(nativeResults(ids,r));}
+  if(op==='delete'||op==='force_delete'){const {results}=await native('DELETE','clouds',part=>({id:part,force:op==='force_delete'?1:0}));return done(results);}
   // 回收站: 从回收站恢复 (DELETE v1/recycle_bin) and 回收站彻底删除实例 (DELETE v1/clouds/recycle_bin).
-  if(op==='restore'){const r=await native('DELETE','recycle_bin',{id:ids});return done(nativeResults(ids,r));}
-  if(op==='purge'){const r=await native('DELETE','clouds/recycle_bin',{id:ids});return done(nativeResults(ids,r));}
-  if(op==='rebuild'){const r=await native('PUT','clouds/rebuild',{id:ids});return done(nativeResults(ids,r),{submitted:r?.num??r?.data?.num});}
-  if(op==='cancel_migrate'){const r=await native('DELETE','clouds/migrate',{id:ids});return done(nativeResults(ids,r));}
+  if(op==='restore'){const {results}=await native('DELETE','recycle_bin',part=>({id:part}));return done(results);}
+  if(op==='purge'){const {results}=await native('DELETE','clouds/recycle_bin',part=>({id:part}));return done(results);}
+  if(op==='rebuild'){const {results,raw}=await native('PUT','clouds/rebuild',part=>({id:part}));return done(results,{submitted:sumNum(raw)});}
+  if(op==='cancel_migrate'){const {results}=await native('DELETE','clouds/migrate',part=>({id:part}));return done(results);}
   if(op==='password'){
-   const same=flag(b.same);const body={id:ids,password:password(b.password,'新密码'),this_same_pass:same};
-   const r=await native('PUT','clouds/password',body);const rows=Array.isArray(r?.data)?r.data:Array.isArray(r)?r:[];
+   const same=flag(b.same);const pass=password(b.password,'新密码');
+   const {results,raw}=await native('PUT','clouds/password',part=>({id:part,password:pass,this_same_pass:same}));const rows=raw.flatMap(r=>Array.isArray(r?.data)?r.data:Array.isArray(r)?r:[]);
    // Random passwords are shown once so the operator can hand them over; the old ones never leave the BFF.
    const passwords=same?[]:rows.map(x=>({id:Number(x.id),password:String(x.new_pass??'')})).filter(x=>x.password);
-   return done(nativeResults(ids,r),{passwords});
+   return done(results,{passwords});
   }
   if(op==='reinstall'){
-   const type=flag(b.password_type);const body={id:ids,os:int(b.os,'系统镜像',{min:1}),format_data_disk:flag(b.format_data_disk),password_type:type};
+   const type=flag(b.password_type);const body={os:int(b.os,'系统镜像',{min:1}),format_data_disk:flag(b.format_data_disk),password_type:type};
    if(type===1)body.ssh_key=int(b.ssh_key,'SSH 密钥',{min:1});else if(b.password)body.password=password(b.password,'新密码');
    const preset=int(b.app_preset_id,'应用预设',{optional:true});if(preset!==undefined)body.app_preset_id=preset;
-   const r=await native('PUT','clouds/reinstall',body);return done(nativeResults(ids,r),{submitted:r?.num??r?.data?.num});
+   const {results,raw}=await native('PUT','clouds/reinstall',part=>({id:part,...body}));return done(results,{submitted:sumNum(raw)});
   }
   // 迁移: one 迁移实例 call per instance (POST v1/clouds/:id/migrate), in order — not the batch migrate queue.
   // hot_migrate is only sent when chosen (the platform defaults to hot migration first).
@@ -89,10 +111,10 @@ export function registerBatch(app,{asyncRoute}){
    }
    return done(results);
   }
-  if(op==='rules'){const body={id:ids};const bw=int(b.advanced_bw,'智能带宽规则',{min:1,optional:true}),cpu=int(b.advanced_cpu,'智能 CPU 规则',{min:1,optional:true});if(bw===undefined&&cpu===undefined)throw new HttpError(400,'请至少选择一条规则');if(bw!==undefined)body.advanced_bw=bw;if(cpu!==undefined)body.advanced_cpu=cpu;const r=await native('PUT','clouds/advanced_rule',body);return done(nativeResults(ids,r));}
-  if(op==='ipv6'){const r=await native('POST','clouds/ipv6',{ids,num:int(b.num,'IPv6 数量',{min:1,max:1000})});const added=(r?.success_list||r?.data?.success_list||[]).map(x=>({id:Number(x.host_id),ipv6:x.added_ipv6||[]}));return done(nativeResults(ids,r),{ipv6:added});}
-  if(op==='replace_ip'){const body={ids,num:int(b.num,'IPv4 数量',{min:1,max:256})};const group=int(b.ip_group,'IP 分组',{min:1,optional:true});if(group!==undefined)body.ip_group=group;const r=await native('PUT','clouds/ip/change',body);return done(nativeResults(ids,r));}
-  if(op==='settings'){const body={id:ids};for(const k of settingFields){const v=int(b[k],k,{optional:true});if(v!==undefined)body[k]=v;}if(Object.keys(body).length===1)throw new HttpError(400,'请至少填写一项设置');const r=await native('PUT','clouds',body);return done(nativeResults(ids,r));}
+  if(op==='rules'){const body={};const bw=int(b.advanced_bw,'智能带宽规则',{min:1,optional:true}),cpu=int(b.advanced_cpu,'智能 CPU 规则',{min:1,optional:true});if(bw===undefined&&cpu===undefined)throw new HttpError(400,'请至少选择一条规则');if(bw!==undefined)body.advanced_bw=bw;if(cpu!==undefined)body.advanced_cpu=cpu;const {results}=await native('PUT','clouds/advanced_rule',part=>({id:part,...body}));return done(results);}
+  if(op==='ipv6'){const num=int(b.num,'IPv6 数量',{min:1,max:1000});const {results,raw}=await native('POST','clouds/ipv6',part=>({ids:part,num}));const added=raw.flatMap(r=>listOf(r,'success_list')).map(x=>({id:Number(x.host_id),ipv6:x.added_ipv6||[]}));return done(results,{ipv6:added});}
+  if(op==='replace_ip'){const body={num:int(b.num,'IPv4 数量',{min:1,max:256})};const group=int(b.ip_group,'IP 分组',{min:1,optional:true});if(group!==undefined)body.ip_group=group;const {results}=await native('PUT','clouds/ip/change',part=>({ids:part,...body}));return done(results);}
+  if(op==='settings'){const body={};for(const k of settingFields){const v=int(b[k],k,{optional:true});if(v!==undefined)body[k]=v;}if(!Object.keys(body).length)throw new HttpError(400,'请至少填写一项设置');const {results}=await native('PUT','clouds',part=>({id:part,...body}));return done(results);}
   throw new HttpError(404,'批量操作不存在');
  }));
 

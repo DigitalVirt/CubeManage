@@ -46,6 +46,11 @@ test('批量操作：真实代理按文档调用平台接口、汇总结果',asy
  r=await batch('force_delete');assert.equal(r.calls[0].body.get('force'),'1');
  r=await batch('rebuild');assert.equal(r.calls[0].method+' '+r.calls[0].route,'PUT clouds/rebuild');
  r=await batch('cancel_migrate');assert.equal(r.calls[0].method+' '+r.calls[0].route,'DELETE clouds/migrate');
+ // 超过 100 个实例：按平台上限每 100 个一批依次提交，结果合并；重装等操作的每批都带上同样的参数。
+ const many=Array.from({length:134},(_,i)=>1000+i);
+ r=await batch('cancel_migrate',{},many);assert.equal(r.status,200);assert.equal(r.calls.length,2);assert.deepEqual(r.calls.map(c=>arr(c.body,'id').length),[100,34]);assert.equal(arr(r.calls[1].body,'id')[0],'1100');assert.equal(r.body.total,134);assert.equal(r.body.success,134);
+ r=await batch('reinstall',{os:2,password_type:0,password:'Secret-123'},many);assert.equal(r.calls.length,2);assert.ok(r.calls.every(c=>c.body.get('os')==='2'&&c.body.get('password')==='Secret-123'));assert.equal(r.body.submitted,4);
+ r=await batch('cancel_migrate',{},Array.from({length:1001},(_,i)=>i+1));assert.equal(r.status,400);assert.match(r.body.error,/1～1000/);assert.equal(r.calls.length,0);
  // 迁移: one 迁移实例 call per instance, never the batch queue; a failed instance does not stop the rest.
  r=await batch('migrate',{node:3});assert.deepEqual(r.calls.map(c=>c.method+' '+c.route),['POST clouds/7/migrate','POST clouds/9/migrate']);assert.equal(r.calls[0].body.get('node'),'3');assert.equal(r.calls[0].body.get('hot_migrate'),null);assert.equal(r.body.success,2);
  r=await batch('migrate',{node:3,mode:'0'},[5,9]);assert.equal(r.calls[1].body.get('hot_migrate'),'0');assert.equal(r.body.failed,1);assert.equal(r.body.success,1);assert.equal(r.calls.length,2);

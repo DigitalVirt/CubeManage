@@ -161,6 +161,7 @@ CubeManage 由 DigitalVirt 开发，并以 [MIT 许可证](LICENSE) 开源：可
 
 | 版本 | 内容 |
 | --- | --- |
+| 0.1.70 | 批量操作一次最多可选 1000 个实例（原来 100 个）：平台批量接口（取消迁移、删除、重装、重置密码、恢复 / 彻底删除、规则、IPv6、替换 IP、实例设置、一键重建）每次最多 100 个，超过时按 100 个一批依次提交并合并结果；某一批失败只标记该批实例，登录过期时立即停止 |
 | 0.1.69 | 新增桌面客户端（Electron）：本机运行服务并打开窗口，外部链接用系统浏览器打开，只允许一个实例；electron-builder 打包 macOS（dmg，arm64 / x64）与 Windows（nsis 安装包），GitHub Actions 自动打包并发布 Release；前端依赖移到 devDependencies，运行依赖只剩 express、dotenv |
 | 0.1.68 | 去掉 `APP_ORIGIN` 配置：程序信任本机 / 局域网 / Docker 内网上的反向代理，自动识别 HTTPS（Cookie 带 Secure）和原始域名（来源校验），任何部署方式都无需配置 |
 | 0.1.67 | 新增 Docker 部署：Dockerfile（两阶段构建，运行阶段只带运行依赖和打包好的页面，以非 root 用户运行，带健康检查）、docker-compose.yml、.dockerignore；package.json 指定 pnpm 版本 |
