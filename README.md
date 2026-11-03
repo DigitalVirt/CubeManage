@@ -84,7 +84,7 @@ pnpm desktop        # 构建页面并打开桌面窗口（调试用）
 pnpm desktop:dist   # 打包安装包，输出到 release/（macOS 上生成 .dmg，Windows 上生成 .exe）
 ```
 
-- **自动打包**：推送 `v` 开头的标签（如 `git tag v0.1.69 && git push --tags`），GitHub Actions 会在 macOS 和 Windows 上分别打包，并创建一个草稿 Release 附上安装包；也可以在 Actions 页面手动运行 “Desktop”，在本次运行的 Artifacts 里下载。
+- **自动打包与发布**：推送 `v` 开头的标签（如 `git tag v0.1.69 && git push --tags`），或在 Actions 页面手动运行 “Desktop” 并勾选“发布 Release”，GitHub Actions 会在 macOS 和 Windows 上分别打包，然后按版本号创建 Release 并附上安装包。Release 正文取自 `.github/release-notes/v<版本号>.md`。只手动运行、不勾选时，安装包在本次运行的 Artifacts 里下载。
 - **签名（可选）**：在仓库 Secrets 里配置证书后自动签名，macOS 还会公证，变量见 `.github/workflows/desktop.yml` 开头。未签名的安装包也能用，但 macOS 首次打开需要在“系统设置 → 隐私与安全性”里允许，Windows 会提示“未知发布者”。
 - 图标在 `build/icon.png`（1024×1024），打包配置在 `electron-builder.yml`。
 
@@ -151,7 +151,7 @@ CubeManage 由 DigitalVirt 开发，并以 [MIT 许可证](LICENSE) 开源：可
 
 | 版本 | 内容 |
 | --- | --- |
-| 0.1.69 | 新增桌面客户端（Electron）：本机运行服务并打开窗口，外部链接用系统浏览器打开，只允许一个实例；electron-builder 打包 macOS（dmg，arm64 / x64）与 Windows（nsis 安装包），GitHub Actions 推送标签时自动打包并发布草稿 Release；前端依赖移到 devDependencies，运行依赖只剩 express、dotenv |
+| 0.1.69 | 新增桌面客户端（Electron）：本机运行服务并打开窗口，外部链接用系统浏览器打开，只允许一个实例；electron-builder 打包 macOS（dmg，arm64 / x64）与 Windows（nsis 安装包），GitHub Actions 自动打包并发布 Release；前端依赖移到 devDependencies，运行依赖只剩 express、dotenv |
 | 0.1.68 | 去掉 `APP_ORIGIN` 配置：程序信任本机 / 局域网 / Docker 内网上的反向代理，自动识别 HTTPS（Cookie 带 Secure）和原始域名（来源校验），任何部署方式都无需配置 |
 | 0.1.67 | 新增 Docker 部署：Dockerfile（两阶段构建，运行阶段只带运行依赖和打包好的页面，以非 root 用户运行，带健康检查）、docker-compose.yml、.dockerignore；package.json 指定 pnpm 版本 |
 | 0.1.66 | 不再转圈：打开网站检查登录状态时显示顶栏 + 页面骨架，全局搜索中显示结果骨架；没有登录状态或会话过期时提示并回到登录页；首页改名为“控制台” |

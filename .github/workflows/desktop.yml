@@ -1,6 +1,8 @@
 # 自动打包桌面客户端：
 # - 推送 v 开头的标签（如 v0.1.69）时，分别在 macOS 和 Windows 上打包，并把安装包发布到 GitHub Releases；
-# - 也可以在 Actions 页面手动运行（只生成安装包，在本次运行的 Artifacts 里下载，不发布）。
+# - 也可以在 Actions 页面手动运行：默认只生成安装包（在本次运行的 Artifacts 里下载）；
+#   勾选“发布 Release”后，按 package.json 的版本号创建 v 标签和 Release。
+# Release 正文取自 .github/release-notes/v<版本号>.md，没有这个文件时用 GitHub 自动生成的更新说明。
 # 签名是可选的：在仓库 Settings → Secrets 里配置下面这些值后自动签名，不配置则生成未签名的安装包。
 #   macOS：CSC_LINK（Developer ID 证书 .p12 的 base64）、CSC_KEY_PASSWORD、APPLE_ID、APPLE_APP_SPECIFIC_PASSWORD、APPLE_TEAM_ID（公证用）
 #   Windows：WIN_CSC_LINK（代码签名证书 .pfx 的 base64）、WIN_CSC_KEY_PASSWORD
@@ -10,6 +12,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      release:
+        description: 发布 Release（按 package.json 的版本号创建标签）
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -80,11 +87,37 @@ jobs:
             release/*.exe
           if-no-files-found: error
 
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 读取版本号
+        id: meta
+        shell: bash
+        run: |
+          v=$(node -p "require('./package.json').version")
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+          notes=".github/release-notes/v$v.md"
+          [ -f "$notes" ] && echo "notes=$notes" >> "$GITHUB_OUTPUT" || true
+
+      - name: 下载安装包
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-release
+          merge-multiple: true
+
       - name: 发布到 Releases
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || steps.meta.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: CubeManage ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || steps.meta.outputs.tag }}
+          body_path: ${{ steps.meta.outputs.notes }}
+          generate_release_notes: ${{ steps.meta.outputs.notes == '' }}
           files: |
-            release/*.dmg
-            release/*.exe
-          draft: true
+            dist-release/*.dmg
+            dist-release/*.exe
+          draft: false
