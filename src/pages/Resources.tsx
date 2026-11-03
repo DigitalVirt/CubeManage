@@ -58,22 +58,26 @@ export function Resources({kind,catalog,notify}:{kind:string;catalog:Record<stri
  const [cloudMetrics,setCloudMetrics]=useState<Record<number,Row>>({}),[cloudPending,setCloudPending]=useState<Record<number,boolean>>({});
  const cloudIds=kind==='clouds'?(result?.data||[]).map(row=>Number(row.id)).join(','):'';
  useEffect(()=>{if(!cloudIds)return;let active=true,pending=false;const ids=cloudIds.split(',').map(Number);const load=async()=>{if(pending)return;pending=true;try{const value=await api('/clouds/metrics',send('POST',{id:ids}));const rows=Array.isArray(value)?value:value.data;if(active&&Array.isArray(rows))setCloudMetrics(v=>({...v,...Object.fromEntries(rows.filter(row=>ids.includes(Number(row.id))).map(row=>[row.id,row]))}));}catch(e){if(active)notify((e as Error).message,'danger');}finally{pending=false;}};load();const timer=setInterval(load,30000);return()=>{active=false;clearInterval(timer);};},[cloudIds,revision]);
- // 表头的刷新：不重新加载列表，只逐个查询本页实例的实时状态（v1/clouds/:id/status），每次 5 个，结果逐行更新。
+ // 表头的刷新：不重新加载列表，本页实例每 5 个一批：并发 5 个实例状态请求（v1/clouds/:id/status，平台没有批量接口），
+ // 同时用一个 v1/clouds/real_data 请求拿这 5 个实例的 CPU、内存和带宽；结果逐行更新。
  const [statesBusy,setStatesBusy]=useState(false);
  async function refreshCloudStates(){
   const list=(result?.data||[]).map(r=>Number(r.id)).filter(Boolean);if(!list.length||statesBusy)return;
   setStatesBusy(true);setCloudPending(v=>({...v,...Object.fromEntries(list.map(id=>[id,true]))}));let failed=0;
   try{
    for(let i=0;i<list.length;i+=5){
-    await Promise.all(list.slice(i,i+5).map(async id=>{
+    const part=list.slice(i,i+5);
+    const metrics=api('/clouds/metrics',send('POST',{id:part})).then(r=>{const rows:Row[]=Array.isArray(r)?r:Array.isArray(r?.data)?r.data:[];
+     setCloudMetrics(value=>{const next={...value};for(const m of rows){const id=Number(m.id);if(part.includes(id))next[id]={...next[id],...m};}return next;});}).catch(()=>{failed++;});
+    await Promise.all([metrics,...part.map(async id=>{
      try{const current=unwrap(await api('/clouds/'+id+'/state'));
       setResult(value=>value?{...value,data:value.data.map(item=>Number(item.id)===id?{...item,...current}:item)}:value);
       setCloudMetrics(value=>({...value,[id]:{...value[id],...current}}));}
      catch{failed++;}
      finally{setCloudPending(v=>({...v,[id]:false}));}
-    }));
+    })]);
    }
-   if(failed)notify(`${failed} 个实例的状态获取失败，可稍后再试`,'danger');
+   if(failed)notify(`有 ${failed} 个请求失败，部分实例的状态或 CPU、内存、带宽没有更新，可稍后再试`,'danger');
   }finally{setStatesBusy(false);}
  }
  async function refreshCloud(row:Row){setCloudPending(v=>({...v,[row.id]:true}));try{const [record,state,metrics]=await Promise.all([api('/resources/clouds/'+row.id),api('/clouds/'+row.id+'/state'),api('/clouds/metrics',send('POST',{id:[Number(row.id)]}))]);const fresh=unwrap(record),current=unwrap(state),rows=Array.isArray(metrics)?metrics:metrics.data;setResult(value=>value?{...value,data:value.data.map(item=>item.id===row.id?{...item,...fresh,...current}:item)}:value);setCloudMetrics(value=>({...value,[row.id]:{...value[row.id],...(Array.isArray(rows)?rows.find(item=>Number(item.id)===Number(row.id)):{}),...current}}));}catch(e){notify((e as Error).message,'danger');}finally{setCloudPending(v=>({...v,[row.id]:false}));}}
@@ -131,7 +135,7 @@ export function Resources({kind,catalog,notify}:{kind:string;catalog:Record<stri
   <Table><Table.ScrollContainer className="table-scroll"><Table.Content aria-label={(descriptor?.title||'资源')+'列表'} className={kind==='nodes'?'nodes-table':kind==='areas'?'areas-table':'clouds-table'}>
    <Table.Header>
     {kind==='clouds'&&<Table.Column aria-label="选择"><Checkbox slot={null} className="table-check" aria-label="选择本页全部实例" isSelected={allSelected} isIndeterminate={someSelected} onChange={on=>setSelected(on?new Set(pageIds):new Set())}><Checkbox.Content><Checkbox.Control><Checkbox.Indicator/></Checkbox.Control></Checkbox.Content></Checkbox></Table.Column>}
-    {kind==='nodes'?<><Table.Column aria-label="状态及刷新"><span className="status-column-heading"><Button size="sm" variant="ghost" isIconOnly aria-label="刷新所有节点信息" isDisabled={loading||ordering} onPress={refresh}><RefreshCw size={13}/></Button></span></Table.Column><Table.Column isRowHeader className="node-auto-column">节点名称</Table.Column></>:kind==='areas'?<><Table.Column aria-label="区域状态">状态</Table.Column><Table.Column isRowHeader>区域</Table.Column></>:<><Table.Column aria-label="实例状态及刷新"><span className="status-column-heading"><Button size="sm" variant="ghost" isIconOnly aria-label="刷新本页实例的实时状态" isDisabled={loading||statesBusy} onPress={refreshCloudStates}><RefreshCw size={13}/></Button></span></Table.Column><Table.Column isRowHeader>实例</Table.Column></>}
+    {kind==='nodes'?<><Table.Column aria-label="状态及刷新"><span className="status-column-heading"><Button size="sm" variant="ghost" isIconOnly aria-label="刷新所有节点信息" isDisabled={loading||ordering} onPress={refresh}><RefreshCw size={13}/></Button></span></Table.Column><Table.Column isRowHeader className="node-auto-column">节点名称</Table.Column></>:kind==='areas'?<><Table.Column aria-label="区域状态">状态</Table.Column><Table.Column isRowHeader>区域</Table.Column></>:<><Table.Column aria-label="实例状态及刷新"><span className="status-column-heading"><Button size="sm" variant="ghost" isIconOnly aria-label="刷新本页实例的实时状态、CPU、内存和带宽" isDisabled={loading||statesBusy} onPress={refreshCloudStates}><RefreshCw size={13}/></Button></span></Table.Column><Table.Column isRowHeader>实例</Table.Column></>}
     {kind==='clouds'?<><Table.Column aria-sort={orderby==='mainip'?(sort==='asc'?'ascending':'descending'):undefined}><SortHead id="mainip" title="主 IP" orderby={orderby} sort={sort} onSort={sortBy}/></Table.Column><Table.Column aria-sort={orderby==='cpu'?(sort==='asc'?'ascending':'descending'):undefined}><SortHead id="cpu" title="配置" orderby={orderby} sort={sort} onSort={sortBy}/></Table.Column><Table.Column aria-sort={orderby==='os'?(sort==='asc'?'ascending':'descending'):undefined}><SortHead id="os" title="镜像" orderby={orderby} sort={sort} onSort={sortBy}/></Table.Column><Table.Column aria-sort={orderby==='cpu_usage'?(sort==='asc'?'ascending':'descending'):undefined}><SortHead id="cpu_usage" title="CPU" orderby={orderby} sort={sort} onSort={sortBy}/></Table.Column><Table.Column aria-sort={orderby==='memory_usage'?(sort==='asc'?'ascending':'descending'):undefined}><SortHead id="memory_usage" title="内存" orderby={orderby} sort={sort} onSort={sortBy}/></Table.Column><Table.Column aria-sort={orderby==='current_out_bw'?(sort==='asc'?'ascending':'descending'):undefined}><SortHead id="current_out_bw" title="实时带宽" orderby={orderby} sort={sort} onSort={sortBy}/></Table.Column><Table.Column>带宽</Table.Column><Table.Column aria-sort={orderby==='traffic'?(sort==='asc'?'ascending':'descending'):undefined}><SortHead id="traffic" title="本月流量" orderby={orderby} sort={sort} onSort={sortBy}/></Table.Column></>:kind==='nodes'?<><Table.Column className="node-auto-column">节点地址</Table.Column><Table.Column>实例</Table.Column><Table.Column>CPU</Table.Column><Table.Column>内存</Table.Column><Table.Column>磁盘</Table.Column><Table.Column>带宽</Table.Column><Table.Column>启用</Table.Column><Table.Column>维护</Table.Column></>:<><Table.Column>节点</Table.Column><Table.Column>实例</Table.Column><Table.Column>可用 IP</Table.Column><Table.Column>IP 总计</Table.Column></>}
     {kind!=='clouds'&&<Table.Column>操作</Table.Column>}
    </Table.Header>
