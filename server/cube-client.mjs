@@ -3,6 +3,11 @@ import {readFileSync} from 'node:fs';
 const APP_VERSION=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).version;
 import {normalizeBase} from './config.mjs';
 export class HttpError extends Error{constructor(status,message,details){super(message);this.status=status;this.details=details;}}
+/** A request that never got an answer: timed out (the platform may still be working on it) or could not connect at all. */
+function transportError(e,method){
+ if(e?.name==='TimeoutError'||e?.name==='AbortError')return new HttpError(504,method==='GET'?'平台响应超时，请稍后刷新重试':'平台响应超时：操作可能仍在平台上执行，请稍后刷新查看结果，不要重复提交');
+ return new HttpError(502,'连接平台失败，请检查地址、网络和 TLS 证书');
+}
 const privateField=/(password|rootpass|rootpw|secret|token|accesshash|private[_-]?key|ssh_pass|ssh_key|vncpass|vnc_ssl_key|vnc_ssl_pem|authorization)/i;
 export function scrub(value){
  if(Array.isArray(value))return value.map(scrub);
@@ -33,9 +38,10 @@ export class CubeClient {
   for(const [k,v]of Object.entries(query))if(v!==''&&v!=null){if(Array.isArray(v))v.forEach(item=>url.searchParams.append(k+'[]',String(item)));else url.searchParams.set(k,String(v));}
   const headers={Accept:'application/json','User-Agent':'CubeManage/'+APP_VERSION};
   if(auth)headers['access-token']=this.token;
-  const options={method,headers,redirect:'error',signal:AbortSignal.timeout(20000)};
+  // 读取 30 秒；写操作（取消迁移、删除、重装等批量接口）平台处理较慢，等 120 秒。
+  const options={method,headers,redirect:'error',signal:AbortSignal.timeout(method==='GET'?30000:120000)};
   if(body!==undefined){headers['Content-Type']=this.config.bodyEncoding==='json'?'application/json':'application/x-www-form-urlencoded';options.body=this.config.bodyEncoding==='json'?JSON.stringify(body):formEncode(body);}
-  let response;try{response=await this.transport(url,options);}catch{throw new HttpError(502,'连接平台失败或超时，请检查地址、网络和 TLS 证书');}
+  let response;try{response=await this.transport(url,options);}catch(e){throw transportError(e,method);}
   let result;const text=await response.text();try{result=text.trim()?JSON.parse(text):null;}catch{throw new HttpError(502,`平台返回非 JSON 内容（HTTP ${response.status}），请核对 API 目录或网站防护规则`);}
   if(!response.ok)throw new HttpError(response.status===401?401:response.status===403?403:502,this.redact(typeof result?.error==='string'?result.error:result?.message||`平台请求失败（HTTP ${response.status}）`));
   if(result&&typeof result==='object'&&result.error)throw new HttpError(422,this.redact(typeof result.error==='string'?result.error:JSON.stringify(result.error)));
@@ -53,7 +59,7 @@ export class CubeClient {
    if(!/^[a-zA-Z0-9_/-]+$/.test(route)||route.split('/').some(p=>p==='..'))throw new HttpError(400,'不允许的接口路径');
    const url=new URL(normalizeBase(this.config.baseUrl)+'/v1/'+route);
    for(const [k,v]of Object.entries(query))if(v!==''&&v!=null){if(Array.isArray(v))v.forEach(item=>url.searchParams.append(k+'[]',String(item)));else url.searchParams.set(k,String(v));}
-   let response;try{response=await this.transport(url,{method,headers:{Accept:'text/csv,*/*','User-Agent':'CubeManage/'+APP_VERSION,'access-token':this.token},redirect:'error',signal:AbortSignal.timeout(60000)});}catch{throw new HttpError(502,'连接平台失败或超时，请检查地址、网络和 TLS 证书');}
+   let response;try{response=await this.transport(url,{method,headers:{Accept:'text/csv,*/*','User-Agent':'CubeManage/'+APP_VERSION,'access-token':this.token},redirect:'error',signal:AbortSignal.timeout(60000)});}catch(e){throw transportError(e,'GET');}
    if(response.status===401)throw new HttpError(401,'平台令牌已失效');
    const text=await response.text();
    if(!response.ok)throw new HttpError(502,this.redact(`平台请求失败（HTTP ${response.status}）`));

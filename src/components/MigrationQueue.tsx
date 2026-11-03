@@ -1,15 +1,18 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Button,Checkbox,Chip,Spinner,Table} from '@heroui/react';
 import {ArrowLeft,Ban,RefreshCw} from 'lucide-react';
 import {api,send,type Row} from '../lib/api';
 import {Dialog,Empty,ErrorBox,type Notify} from './Shared';
 import {TableSkeleton} from './TableSkeleton';
+import {BatchProgress} from './BatchProgress';
+import {submitInChunks,type Progress} from '../lib/chunks';
 
 /**
  * 迁移队列 (a Modal opened from the instance list): instances waiting for or in migration (获取迁移实例列表
  * v1/clouds/migrate), with progress for the one migrating (获取实例冷迁移进度). Cancelling uses 批量取消迁移 through
- * POST /api/clouds/batch/cancel_migrate and is confirmed inside the same dialog. Refreshes every 5 s while
+ * POST /api/clouds/batch/cancel_migrate and is confirmed inside the same dialog; the selection is sent 10 at a time
+ * with per-instance progress, and can be stopped between chunks. Polling pauses while cancelling. Refreshes every 5 s while
  * something is migrating, every 20 s otherwise. Every row is selected when the dialog opens (and after a cancel), so
  * “取消迁移” cancels the whole queue unless the user unticks some.
  */
@@ -18,9 +21,10 @@ type Result={total:number;success:number;failed:number;results:{id:number;ok:boo
 export function MigrationQueue({onClose,onChanged,notify}:{onClose:()=>void;onChanged?:()=>void;notify:Notify}){
  const go=useNavigate();
  const [rows,setRows]=useState<Row[]|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
- const [selected,setSelected]=useState<Set<number>>(new Set()),[cancel,setCancel]=useState<Row[]|null>(null),[busy,setBusy]=useState(false),[actionError,setActionError]=useState(''),[done,setDone]=useState<Result|null>(null);
+ const [selected,setSelected]=useState<Set<number>>(new Set()),[cancel,setCancel]=useState<Row[]|null>(null),[busy,setBusy]=useState(false),[actionError,setActionError]=useState(''),[done,setDone]=useState<Result|null>(null),[progress,setProgress]=useState<Progress|null>(null),stopRef=useRef(false),busyRef=useRef(false),[,redraw]=useState(0);
  useEffect(()=>{let live=true,timer:ReturnType<typeof setTimeout>|undefined,first=true; // the first load selects every instance
-  const load=async()=>{setLoading(true);
+  const load=async()=>{if(busyRef.current){timer=setTimeout(load,3000);return;} // 正在取消时不刷新，减轻平台压力
+   setLoading(true);
    try{const r=await api<{data:Row[];running:number}>('/clouds/migrate_queue');if(!live)return;setRows(r.data);setError('');const ids=new Set(r.data.map(x=>Number(x.id)));const all=first;first=false;setSelected(v=>all?ids:new Set([...v].filter(id=>ids.has(id))));timer=setTimeout(load,r.running?5000:20000);}
    catch(e){if(live){setError((e as Error).message);timer=setTimeout(load,20000);}}
    finally{if(live)setLoading(false);}};
@@ -29,19 +33,21 @@ export function MigrationQueue({onClose,onChanged,notify}:{onClose:()=>void;onCh
  const all=ids.length>0&&ids.every(id=>selected.has(id)),some=!all&&ids.some(id=>selected.has(id));
  const toggle=(id:number,on:boolean)=>setSelected(v=>{const n=new Set(v);if(on)n.add(id);else n.delete(id);return n;});
  const ask=(r:Row[])=>{setActionError('');setDone(null);setCancel(r);};
- const back=()=>{setCancel(null);setDone(null);setActionError('');};
+ const back=()=>{setCancel(null);setDone(null);setActionError('');setProgress(null);};
  async function run(){
-  if(!cancel)return;setBusy(true);setActionError('');
-  try{const list=cancel.map(r=>Number(r.id));const r=await api<Result>('/clouds/batch/cancel_migrate',send('POST',{ids:list,count:list.length}));
-   setRevision(v=>v+1);setSelected(new Set());onChanged?.();
+  if(!cancel)return;setBusy(true);busyRef.current=true;stopRef.current=false;setActionError('');
+  try{const list=cancel.map(r=>Number(r.id));
+   const r=await submitInChunks(list,part=>api<Result>('/clouds/batch/cancel_migrate',send('POST',{ids:part,count:part.length})),{onProgress:setProgress,stopped:()=>stopRef.current});
+   setSelected(new Set());onChanged?.();
    if(r.failed)setDone(r);else{back();notify(`已取消 ${r.success} 个实例的迁移`);}
-  }catch(e){setActionError((e as Error).message);}finally{setBusy(false);}
+  }catch(e){setActionError((e as Error).message);}finally{setBusy(false);busyRef.current=false;setProgress(null);setRevision(v=>v+1);}
  }
  const host=(id:number)=>cancel?.find(r=>Number(r.id)===id)?.hostname||'#'+id;
  const running=list.filter(r=>Number(r.status)===1).length;
 
- if(cancel)return <Dialog title={done?'取消迁移结果':'取消 '+cancel.length+' 个实例的迁移'} onClose={()=>{if(!busy)onClose();}} footer={done?<Button onPress={back}>完成</Button>:<><Button variant="outline" isDisabled={busy} onPress={back}><ArrowLeft size={15}/>返回队列</Button><Button variant="danger" isPending={busy} onPress={run}>取消迁移</Button></>}>
-  {done?<><p>成功 {done.success} 个，失败 {done.failed} 个。</p><ul className="recycle-list">{done.results.filter(r=>!r.ok).map(r=><li key={r.id}><strong>{host(r.id)}</strong><span className="recycle-error">{r.error||'平台返回失败'}</span></li>)}</ul></>
+ if(cancel)return <Dialog title={done?'取消迁移结果':'取消 '+cancel.length+' 个实例的迁移'} onClose={()=>{if(!busy)onClose();}} footer={done?<Button onPress={back}>完成</Button>:busy&&progress?<Button variant="outline" isDisabled={stopRef.current} onPress={()=>{stopRef.current=true;redraw(x=>x+1);}}>{stopRef.current?'将在当前这批后停止…':'停止提交'}</Button>:<><Button variant="outline" isDisabled={busy} onPress={back}><ArrowLeft size={15}/>返回队列</Button><Button variant="danger" isPending={busy} onPress={run}>取消迁移</Button></>}>
+  {busy&&progress?<BatchProgress title="正在取消迁移" rows={cancel} progress={progress} okText="已取消"/>
+  :done?<><p>成功 {done.success} 个，失败 {done.failed} 个。</p><ul className="recycle-list">{done.results.filter(r=>!r.ok).map(r=><li key={r.id}><strong>{host(r.id)}</strong><span className="recycle-error">{r.error||'平台返回失败'}</span></li>)}</ul></>
   :<><p>{cancel.some(r=>Number(r.status)===1)?'正在迁移的实例取消可能需要一些时间，实例会留在原节点。':'实例会移出迁移队列，留在原节点。'}</p>
    <ul className="recycle-list">{cancel.map(r=><li key={r.id}><strong>{r.hostname||'实例 #'+r.id}</strong><span className="num">#{r.id}{r.mainip?' · '+r.mainip:''}{Number(r.status)===1?' · 正在迁移':''}</span></li>)}</ul>
    {actionError&&<ErrorBox message={actionError}/>}</>}

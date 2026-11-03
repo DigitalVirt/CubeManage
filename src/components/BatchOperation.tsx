@@ -3,7 +3,8 @@ import {Button,Checkbox,Dropdown,Input,Label,TextField} from '@heroui/react';
 import {ChevronUp,CircleAlert,CircleCheck,Clipboard,ClipboardCheck,LayoutGrid,Monitor,TriangleAlert} from 'lucide-react';
 import {api,send,osIconUrl,type Row} from '../lib/api';
 import {Dialog,ErrorBox} from './Shared';
-import {TaskStatus} from './TaskStatus';
+import {BatchProgress} from './BatchProgress';
+import {submitInChunks,type Progress} from '../lib/chunks';
 import {Choice} from './Controls';
 
 /** Batch actions in the platform's order. Each maps to a documented endpoint through POST /api/clouds/batch/:id. */
@@ -85,7 +86,6 @@ export function Flag({checked,onChange,children}:{checked:boolean;onChange:(v:bo
 }
 const randomPassword=()=>{const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';const a=new Uint32Array(14);crypto.getRandomValues(a);return Array.from(a,n=>chars[n%chars.length]).join('')+'#7';};
 
-type Progress={done:number;total:number;current:number|null;items:Record<number,{state:'wait'|'run'|'ok'|'fail'|'skip';error?:string}>};
 type Result={total:number;success:number;failed:number;results:{id:number;ok:boolean;error?:string}[];passwords?:{id:number;password:string}[];ipv6?:{id:number;ipv6:string[]}[];submitted?:number};
 
 export function BatchOperation({actionId,rows,onClose,onDone}:{actionId:string;rows:Row[];onClose:()=>void;onDone:(summary:string)=>void}){
@@ -123,7 +123,17 @@ export function BatchOperation({actionId,rows,onClose,onDone}:{actionId:string;r
  async function run(){
   setBusy(true);setError('');
   if(actionId==='migrate'){await runOneByOne();return;}
-  try{const r=await api<Result>('/clouds/batch/'+actionId,send('POST',{ids:rows.map(r=>Number(r.id)),count:rows.length,...payload()}));const failedIds=new Set(r.results.filter(x=>!x.ok).map(x=>x.id));setResult({...r,passwords:r.passwords?.filter(p=>!failedIds.has(p.id))});}
+  // 每 10 个实例一个请求，逐批显示进度，可以在两批之间停止；各批返回的密码、IPv6、提交数合并显示。
+  stopRef.current=false;const body=payload();
+  try{
+   const r=await submitInChunks(rows.map(r=>Number(r.id)),part=>api<Result>('/clouds/batch/'+actionId,send('POST',{ids:part,count:part.length,...body})),{onProgress:setProgress,stopped:()=>stopRef.current});
+   const failedIds=new Set(r.results.filter(x=>!x.ok).map(x=>x.id));const all=r.responses;
+   const submitted=all.some(x=>x.submitted!=null)?all.reduce((n,x)=>n+Number(x.submitted||0),0):undefined;
+   setResult({total:r.total,success:r.success,failed:r.failed,results:r.results,
+    ...(all.some(x=>x.passwords)?{passwords:all.flatMap(x=>x.passwords||[]).filter(p=>!failedIds.has(p.id))}:{}),
+    ...(all.some(x=>x.ipv6)?{ipv6:all.flatMap(x=>x.ipv6||[])}:{}),
+    ...(submitted!==undefined?{submitted}:{})});
+  }
   catch(e){setError((e as Error).message);}
   finally{setBusy(false);}
  }
@@ -132,14 +142,14 @@ export function BatchOperation({actionId,rows,onClose,onDone}:{actionId:string;r
  async function runOneByOne(){
   const ids=rows.map(r=>Number(r.id)),used:number[]=[],results:Result['results']=[];stopRef.current=false;
   const items:Progress['items']=Object.fromEntries(ids.map(id=>[id,{state:'wait'}]));
-  setProgress({done:0,total:ids.length,current:null,items:{...items}});
+  setProgress({done:0,total:ids.length,items:{...items}});
   for(const id of ids){
    if(stopRef.current){items[id]={state:'skip'};results.push({id,ok:false,error:'已停止，未提交'});continue;}
-   items[id]={state:'run'};setProgress(p=>({...p!,current:id,items:{...items}}));
+   items[id]={state:'run'};setProgress(p=>({...p!,items:{...items}}));
    try{const r=await api<Result>('/clouds/batch/migrate',send('POST',{ids:[id],count:1,...payload(),exclude_ip:used}));const one=r.results[0]||{id,ok:false,error:'平台没有返回结果'};
     if(Array.isArray((one as Row).ip))used.push(...(one as Row).ip);results.push(one);items[id]=one.ok?{state:'ok'}:{state:'fail',error:one.error};}
    catch(e){results.push({id,ok:false,error:(e as Error).message});items[id]={state:'fail',error:(e as Error).message};}
-   setProgress(p=>({...p!,done:p!.done+1,current:null,items:{...items}}));
+   setProgress(p=>({...p!,done:p!.done+1,items:{...items}}));
   }
   const success=results.filter(r=>r.ok).length;
   setResult({total:results.length,success,failed:results.length-success,results});setBusy(false);
@@ -192,18 +202,10 @@ export function BatchOperation({actionId,rows,onClose,onDone}:{actionId:string;r
 
  return <Dialog wide={['reinstall','settings','migrate','rules','replace_ip'].includes(actionId)} title={'批量'+spec.title} onClose={()=>{if(busy)return;result?finish():onClose();}} footer={result
    ?<Button onPress={finish}>完成</Button>
-   :progress&&busy?<Button variant="outline" isDisabled={stopRef.current} onPress={()=>{stopRef.current=true;setProgress(p=>p&&{...p});}}>{stopRef.current?'将在当前实例后停止…':'停止提交'}</Button>
+   :progress&&busy?<Button variant="outline" isDisabled={stopRef.current} onPress={()=>{stopRef.current=true;setProgress(p=>p&&{...p});}}>{stopRef.current?(actionId==='migrate'?'将在当前实例后停止…':'将在当前这批后停止…'):'停止提交'}</Button>
    :<><Button variant="outline" isDisabled={busy} onPress={onClose}>取消</Button><Button variant={spec.tone==='danger'?'danger':'primary'} isPending={busy} isDisabled={busy||Boolean(missing)} onPress={run}>{busy?'正在提交…':spec.title+' '+rows.length+' 个实例'}</Button></>}>
   <div className="batch-dialog">
-   {!result&&progress&&busy&&<div className="batch-progress" role="status" aria-live="polite">
-    <div className="batch-progress-head"><strong>正在逐台提交迁移</strong><span className="num">{progress.done} / {progress.total}</span></div>
-    <div className="batch-progress-bar" aria-hidden="true"><i style={{width:(progress.total?progress.done/progress.total*100:0)+'%'}}/></div>
-    <ul className="batch-progress-list">{rows.map(r=>{const id=Number(r.id),it=progress.items[id]||{state:'wait'};return <li key={id} className={'is-'+it.state}>
-     <TaskStatus status={it.state==='run'?1:it.state==='ok'?2:it.state==='fail'?3:it.state==='skip'?5:0} msg={it.error}/>
-     <span className="batch-progress-name">{r.hostname||'#'+id}</span>
-     <small>{it.state==='run'?'正在提交…':it.state==='ok'?'已提交':it.state==='fail'?it.error||'失败':it.state==='skip'?'已停止，未提交':'排队中'}</small>
-    </li>;})}</ul>
-   </div>}
+   {!result&&progress&&busy&&<BatchProgress title={actionId==='migrate'?'正在逐台提交迁移':'正在提交'+spec.title} rows={rows} progress={progress}/>}
    {!result&&!(progress&&busy)&&<>
     <div className="batch-targets"><span className="batch-targets-label">已选择 {rows.length} 个实例</span><div className="batch-chips">{rows.slice(0,12).map(r=><span key={r.id} className="batch-chip" title={'#'+r.id}>{r.hostname||'#'+r.id}</span>)}{rows.length>12&&<span className="batch-chip more">等 {rows.length} 个</span>}</div></div>
     {spec.note&&<div className={'batch-note tone-'+spec.tone}>{spec.tone==='danger'?<TriangleAlert size={16}/>:<CircleAlert size={16}/>}<span>{spec.note}</span></div>}

@@ -39,6 +39,12 @@ async function inChunks(ids,call){
  }
  return {results,raw};
 }
+/** Promise.all with at most `limit` calls running at once, results in input order. */
+async function mapLimit(items,limit,fn){
+ const out=new Array(items.length);let next=0;
+ await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{while(next<items.length){const i=next++;out[i]=await fn(items[i],i);}}));
+ return out;
+}
 const listOf=(r,key)=>Array.isArray(r?.[key])?r[key]:Array.isArray(r?.data?.[key])?r.data[key]:[];
 const sumNum=raw=>{const n=raw.map(r=>r?.num??r?.data?.num).filter(x=>x!==undefined&&x!==null);return n.length?n.reduce((a,b)=>a+Number(b||0),0):undefined;};
 
@@ -48,12 +54,13 @@ export function registerBatch(app,{asyncRoute}){
   const client=req.session.client;const r=await client.request('GET','clouds/migrate');
   const rows=(Array.isArray(r)?r:Array.isArray(r?.data)?r.data:listResult(r,1,100).data).filter(x=>x&&x.id!=null);
   const pick=v=>v&&typeof v==='object'&&!Array.isArray(v)&&v.data&&typeof v.data==='object'?v.data:v||{};
-  const data=await Promise.all(rows.map(async x=>{
+  // 进度逐台查询，最多同时 6 个请求，避免队列很长时一次性压垮平台。
+  const data=await mapLimit(rows,6,async x=>{
    const row={id:Number(x.id),hostname:x.hostname||'',mainip:x.mainip||'',ipaddress:x.ipaddress||'',status:Number(x.migrate_status)===1?1:0};
    if(row.status!==1)return row;
    try{const m=pick(await client.request('GET',`clouds/${row.id}/migrate`));return {...row,progress:Math.max(0,Math.min(100,Math.round(Number(m.progress)||0))),target:m.target_node?.name||'',speed:m.speed||'',eta:m.eta_string||'',migrated:m.migrate_size||'',total:m.total_size||'',msg:m.msg||''};}
    catch{return row;}
-  }));
+  });
   data.sort((a,b)=>b.status-a.status||a.id-b.id);
   res.json({data,total:data.length,running:data.filter(x=>x.status===1).length});
  }));
