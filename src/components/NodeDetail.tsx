@@ -1,17 +1,17 @@
 import {useEffect,useState,type ReactNode} from 'react';
-import {Button,Skeleton,Table,Tooltip} from '@heroui/react';
-import {Link,useNavigate} from 'react-router-dom';
+import {Button,Skeleton} from '@heroui/react';
+import {useNavigate} from 'react-router-dom';
 import {Clipboard,ClipboardCheck,Cpu,HardDrive,List,MemoryStick,RefreshCw,Server,Settings2} from 'lucide-react';
-import {api,date,label,PAGE_TITLE_EVENT,type Row} from '../lib/api';
+import {api,date,PAGE_TITLE_EVENT,type Row} from '../lib/api';
 import {CountryFlag} from './CountryFlag';
-import {StatusIcon,healthStatus,cloudStatus} from './StatusIcon';
-import {ErrorBox,Empty} from './Shared';
+import {StatusIcon,healthStatus} from './StatusIcon';
+import {ErrorBox} from './Shared';
 import {copyText} from './CloudCells';
 
 /**
  * 节点详情页（/nodes/:id）。数据来自 GET /api/nodes/:id/overview，它合并了平台的三个接口：
  * 节点详情 v1/nodes/:id、节点内容页 v1/node_info/:id、节点实时数据 v1/nodes/:id/real_data。
- * 下方列出这个节点上的实例（v1/clouds?node=），可跳到实例列表查看全部。
+ * 布局：顶部蓝色区域 → 概况 → CPU / 内存 / 磁盘（一行三个，通栏）→ 节点信息。节点上的实例在实例列表里看（顶部“查看节点实例”）。
  */
 type Overview={node:Row;info:Row|null;real:Row|null;errors?:{info?:string;real?:string}};
 
@@ -47,12 +47,8 @@ export function NodeDetail({id,onClose}:{id:string;onClose:()=>void}){
  const go=useNavigate();
  const [data,setData]=useState<Overview|null>(null),[error,setError]=useState(''),[rev,setRev]=useState(0),[busy,setBusy]=useState(false);
  const [area,setArea]=useState<Row|null>(null);
- const [clouds,setClouds]=useState<{rows:Row[];total:number}|null>(null),[cloudsError,setCloudsError]=useState('');
  useEffect(()=>{let on=true;setBusy(true);setError('');
   api<Overview>(`/nodes/${id}/overview`).then(r=>{if(on)setData(r);}).catch(e=>{if(on)setError((e as Error).message);}).finally(()=>{if(on)setBusy(false);});
-  return()=>{on=false;};},[id,rev]);
- useEffect(()=>{let on=true;setCloudsError('');
-  api(`/resources/clouds?node=${id}&per_page=10`).then(r=>{if(on)setClouds({rows:r.data||[],total:Number(r.meta?.total)||0});}).catch(e=>{if(on)setCloudsError((e as Error).message);});
   return()=>{on=false;};},[id,rev]);
  const n=data?.node||{},info=data?.info||{},real=data?.real||{};
  const areaId=n.area_id??info.area?.id;
@@ -159,22 +155,6 @@ export function NodeDetail({id,onClose}:{id:string;onClose:()=>void}){
    ]}/>
   </Card>
 
-  <section className="inst-section">
-   <header className="inst-section-head"><h2><Server size={16}/>节点上的实例{clouds?<small className="nd-count num">{clouds.total}</small>:null}</h2>
-    {clouds&&clouds.total>clouds.rows.length&&<Link className="owner-count-link" to={`/clouds?node=${id}${areaId!=null?'&area='+areaId:''}`}>查看全部 {clouds.total} 台</Link>}</header>
-   {cloudsError?<ErrorBox message={cloudsError} retry={()=>setRev(v=>v+1)}/>
-    :!clouds?<div className="nd-sk-table">{sk('100%')}{sk('100%')}{sk('100%')}</div>
-    :!clouds.rows.length?<Empty kind="instance" size="sm" title="这个节点上还没有实例" text="在这个节点上创建的实例会显示在这里。"/>
-    :<Table><Table.ScrollContainer><Table.Content aria-label="节点上的实例" className="nd-clouds"><Table.Header>
-      <Table.Column>状态</Table.Column><Table.Column isRowHeader>实例</Table.Column><Table.Column>主 IP</Table.Column><Table.Column>配置</Table.Column><Table.Column>创建时间</Table.Column>
-     </Table.Header><Table.Body>{clouds.rows.map(c=>{const s=cloudStatus(c.status);return <Table.Row key={c.id}>
-      <Table.Cell><Tooltip delay={0}><Tooltip.Trigger tabIndex={0} aria-label={s.title} className="nd-state"><StatusIcon spec={s} size={18}/></Tooltip.Trigger><Tooltip.Content>{s.title}</Tooltip.Content></Tooltip></Table.Cell>
-      <Table.Cell><div className="instance-cell"><Link className="instance-link" to={'/clouds/'+c.id}>{c.hostname||'#'+c.id}</Link><div className="instance-sub"><span className="num">#{c.id}</span>{(c.user?.username||c.username)&&<><span aria-hidden="true">·</span><span className="instance-owner">{c.user?.username||c.username}</span></>}</div></div></Table.Cell>
-      <Table.Cell><span className="mono">{label(c.mainip)}</span></Table.Cell>
-      <Table.Cell><span className="spec-cell">{label(c.cpu)}vCPU · {label(c.memory)}GB</span></Table.Cell>
-      <Table.Cell><span className="num">{c.create_time?date(c.create_time):'—'}</span></Table.Cell>
-     </Table.Row>;})}</Table.Body></Table.Content></Table.ScrollContainer></Table>}
-  </section>
  </section>;
 }
 
