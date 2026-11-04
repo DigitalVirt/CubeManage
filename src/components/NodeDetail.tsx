@@ -46,13 +46,12 @@ function Copy({value,what}:{value:string;what:string}){
  const [done,setDone]=useState(false);
  return <Button variant="ghost" size="sm" isIconOnly className="inst-icon-btn" aria-label={'复制'+what} onPress={async()=>{if(await copyText(value)){setDone(true);setTimeout(()=>setDone(false),1500);}}}>{done?<ClipboardCheck size={15}/>:<Clipboard size={15}/>}</Button>;
 }
-/** 右侧用量格：标题；有百分比时显示大号百分比和用量条，否则显示文字值；下方一行补充说明。 */
-function Stat({title,value,text:shown,foot}:{title:string;value?:number|null;text?:ReactNode;foot?:ReactNode}){
+/** 右侧用量格：左边标题，右边百分比和用量（如“82% · 418G / 512G”），字号与左边标题一致；有百分比时下方是用量条。 */
+function Stat({title,sub,value,text:shown,amount}:{title:string;sub?:string;value?:number|null;text?:ReactNode;amount?:string}){
  const isPct=value!==undefined,level=value==null?'':value>=90?' is-critical':value>=80?' is-high':'';
  return <div className={'nd-stat'+level}>
-  <div className="nd-stat-head"><span>{title}</span><strong className="num">{isPct?(value==null?'—':+value.toFixed(value<10?1:0)+'%'):shown}</strong></div>
+  <div className="nd-stat-head"><span>{title}{sub&&<small> · {sub}</small>}</span><strong className="num">{isPct?(value==null?'—':+value.toFixed(value<10?1:0)+'%'):shown}{amount&&<small> · {amount}</small>}</strong></div>
   {isPct&&<span className="nd-meter-track" role="meter" aria-label={title} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value??0}><i style={{width:(value??0)+'%'}}/></span>}
-  {foot!=null&&<div className="nd-meter-foot num"><span>{foot}</span></div>}
  </div>;
 }
 function Kv({items}:{items:[string,ReactNode][]}){return <dl className="inst-kv nd-kv">{items.map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>;}
@@ -143,12 +142,12 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
    <Card className="nd-stats">
     <div className="nd-stat-grid">
      <Stat title="CPU 使用率" value={pct(real.cpu_use_percent)}/>
-     <Stat title="Swap 使用率" value={pct(swap.swap_use_percent)} foot={swap.total_swap?`${text(swap.use_swap)} / ${swap.total_swap}`:undefined}/>
+     <Stat title="Swap 使用率" value={pct(swap.swap_use_percent)} amount={swap.total_swap?`${text(swap.use_swap)} / ${swap.total_swap}`:undefined}/>
      <Stat title="平均负载" text={[load['1min'],load['5min'],load['15min']].map(text).join(' / ')}/>
      <Stat title="KSM 共享" text={text(mem.ksm_share_memory)}/>
-     <Stat title="内存使用率" value={pct(mem.use_percent)} foot={mem.total_memory?`${text(mem.use_memory)} / ${mem.total_memory}`:undefined}/>
+     <Stat title="内存使用率" value={pct(mem.use_percent)} amount={mem.total_memory?`${text(mem.use_memory)} / ${mem.total_memory}`:undefined}/>
      <Stat title="IO 延迟" text={real.io_wait!=null&&real.io_wait!==''?real.io_wait+'%':'—'}/>
-     {disks.map((d,i)=><Stat key={(d.mount_point||d.dev_name||'')+i} title={'硬盘 '+(d.mount_point||d.dev_name||i+1)} value={pct(d.disk_percent)} foot={`${text(d.disk_use)} / ${text(d.disk_total)}${d.dev_name&&d.mount_point?' · '+d.dev_name:''}`}/>)}
+     {disks.map((d,i)=><Stat key={(d.mount_point||d.dev_name||'')+i} title={'硬盘 '+(d.mount_point||d.dev_name||i+1)} sub={d.dev_name&&d.mount_point?d.dev_name:undefined} value={pct(d.disk_percent)} amount={`${text(d.disk_use)} / ${text(d.disk_total)}`}/>)}
     </div>
    </Card>
   </div>
