@@ -1,7 +1,7 @@
 import {useEffect,useState,type ReactNode} from 'react';
 import {Button,Skeleton,Switch,Tooltip} from '@heroui/react';
-import {Link,useNavigate} from 'react-router-dom';
-import {Clipboard,ClipboardCheck,List,RefreshCw,Settings2} from 'lucide-react';
+import {useNavigate} from 'react-router-dom';
+import {Clipboard,ClipboardCheck,List,RefreshCw} from 'lucide-react';
 import {api,send,PAGE_TITLE_EVENT,type Row} from '../lib/api';
 import {CountryFlag} from './CountryFlag';
 import {StatusIcon,healthStatus} from './StatusIcon';
@@ -9,23 +9,21 @@ import {ErrorBox,type Notify} from './Shared';
 import {copyText} from './CloudCells';
 import {Choice} from './Controls';
 import {ZoomChart} from './ZoomChart';
+import {RangePicker,type Range} from './RangePicker';
+import {DailyBars} from './DailyBars';
 
 /**
  * 节点详情页（/nodes/:id）。数据来自 GET /api/nodes/:id/overview，它合并了平台的三个接口：
  * 节点详情 v1/nodes/:id、节点内容页 v1/node_info/:id、节点实时数据 v1/nodes/:id/real_data。
- * 布局：头部卡片（状态、节点 IP、信息带）→ 一行两张无标题卡片（左：系统信息；右：两列用量格，含各磁盘）→ 节点信息。节点上的实例在实例列表里看（顶部“查看节点实例”）。
+ * 布局：头部卡片（状态、节点 IP、信息带）→ 一行两张无标题卡片（左：系统信息；右：两列用量格，含各磁盘）→ 图表（一行两张，可缩放，时间范围可选）。节点上的实例在实例列表里看（顶部“查看节点实例”）。
  */
 type Overview={node:Row;info:Row|null;real:Row|null;state?:{status?:unknown;msg?:string;version?:string}|null;errors?:{info?:string;real?:string}};
 type SwitchKey='maintenance_mode'|'enable'|'auto_boot_host';
 const switchTitles:Record<SwitchKey,string>={maintenance_mode:'维护模式',enable:'节点启用',auto_boot_host:'开机自启'};
 
 const types:Record<string,string>={host:'KVM 加强版',lightHost:'KVM 轻量版',hyperv:'Hyper-V',adsl:'拨号云'};
-const licenseModes:Record<string,string>={controller_proxy:'主控代理',node_self:'节点自行授权'};
-const storeRules:Record<string,string>={'0':'最高剩余容量','1':'实例数量最少'};
-const ksmSpeeds:Record<string,string>={'10':'极快','30':'快','60':'一般','90':'慢','120':'非常慢'};
 /** 0–100 的百分比；“45%”、“45.6”都认，没有或小于 0（平台用 -1 表示未获取）时为 null。 */
 const pct=(v:unknown)=>{if(v==null||v==='')return null;const n=Number(String(v).replace('%','').trim());return Number.isFinite(n)&&n>=0?Math.min(100,n):null;};
-const onOff=(v:unknown,on='开启',off='关闭')=>v==null||v===''?'—':Number(v)===1?on:off;
 const text=(v:unknown)=>v==null||v===''?'—':String(v);
 
 const BLUE='#2563eb',ORANGE='#f59e0b',GREEN='#16a34a';
@@ -64,14 +62,18 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
  // 开关：点一下就提交（PUT /api/nodes/:id/switch），成功后以新值显示，失败时恢复并提示。
  // 图表：最近 3 天；磁盘、网卡、磁盘 IO 可以切换设备
  const [charts,setCharts]=useState<Charts|null>(null),[chartsError,setChartsError]=useState(''),[devSel,setDevSel]=useState<{disk:string;net:string;io:string}>({disk:'',net:'',io:''});
- const [rank,setRank]=useState<{data:Row[]}|null>(null),[rankError,setRankError]=useState('');
+ // 时间范围（所有图表共用）：null = 最近 3 天
+ const [range,setRange]=useState<Range>(null);
+ const [daily,setDaily]=useState<{start:number;end:number;data:{day:string;in:number;out:number}[]}|null>(null),[dailyError,setDailyError]=useState('');
  const [switches,setSwitches]=useState<Partial<Record<SwitchKey,number>>>({}),[saving,setSaving]=useState<SwitchKey|null>(null);
  useEffect(()=>{let on=true;setBusy(true);setError('');
   api<Overview>(`/nodes/${id}/overview`).then(r=>{if(on)setData(r);}).catch(e=>{if(on)setError((e as Error).message);}).finally(()=>{if(on)setBusy(false);});
   return()=>{on=false;};},[id,rev]);
- useEffect(()=>{let on=true;setChartsError('');const q=new URLSearchParams({days:'3',...Object.fromEntries(Object.entries(devSel).filter(([,v])=>v))});
-  api<Charts>(`/nodes/${id}/charts?${q}`).then(r=>{if(on)setCharts(r);}).catch(e=>{if(on)setChartsError((e as Error).message);});return()=>{on=false;};},[id,rev,devSel]);
- useEffect(()=>{let on=true;setRankError('');api(`/nodes/${id}/traffic_rank`).then(r=>{if(on)setRank(r);}).catch(e=>{if(on)setRankError((e as Error).message);});return()=>{on=false;};},[id,rev]);
+ const rangeQuery:Record<string,string>=range?{st:String(Math.round(range.st)),et:String(Math.round(range.et))}:{days:'3'};
+ useEffect(()=>{let on=true;setChartsError('');const q=new URLSearchParams({...rangeQuery,...Object.fromEntries(Object.entries(devSel).filter(([,v])=>v))});
+  api<Charts>(`/nodes/${id}/charts?${q}`).then(r=>{if(on)setCharts(r);}).catch(e=>{if(on)setChartsError((e as Error).message);});return()=>{on=false;};},[id,rev,devSel,range]);
+ useEffect(()=>{let on=true;setDailyError('');const q=new URLSearchParams({...rangeQuery,tz:String(new Date().getTimezoneOffset())});
+  api(`/nodes/${id}/daily_traffic?${q}`).then(r=>{if(on)setDaily(r);}).catch(e=>{if(on)setDailyError((e as Error).message);});return()=>{on=false;};},[id,rev,range]);
  const n=data?.node||{},info=data?.info||{},real=data?.real||{};
  const areaId=n.area_id??info.area?.id;
  useEffect(()=>{if(areaId==null)return;let on=true;api(`/resources/areas/${areaId}`).then(r=>{if(on)setArea(r?.data&&!Array.isArray(r.data)&&r.id==null?r.data:r);}).catch(()=>{});return()=>{on=false;};},[areaId]);
@@ -88,7 +90,6 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
  const ipUsed=Number(count.ip_used),ipTotal=Number(count.ip_total);
  const hosts=count.host??n.cloud_num;
  const maxCpu=Number(info.max_cpu??n.max_cpu),maxMem=Number(info.max_memory??n.max_memory);
- const macs:string[]=Array.isArray(n.gateway_mac)?n.gateway_mac:Array.isArray(info.gateway_mac)?info.gateway_mac:[];
  const qemu=info.default_qemu_version_show||info.default_qemu_version;
 
  const sw=(k:SwitchKey)=>Number(switches[k]??n[k])===1;
@@ -160,9 +161,10 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
      const pts=c?.[k]?.points||[];
      return <Card key={title} title={title} className="nd-chart" actions={actions}>
       {!c?<div className="nd-chart-sk">{sk('100%')}</div>:c[k]?.error?<p className="nd-empty nd-chart-msg">{c[k].error}</p>
-       :<ZoomChart times={t(k)} series={series.map(s=>({name:s.name,color:s.color,values:col(pts,s.i)}))} format={format} label={title}/>}
+       :<ZoomChart times={t(k)} series={series.map(s=>({name:s.name,color:s.color,values:col(pts,s.i)}))} format={format} label={title} rangeControl={picker}/>}
      </Card>;};
     const cpuPts=c?.cpu.points||[],diskPts=c?.disk.points||[];
+    const picker=c?<RangePicker range={range} start={c.start} end={c.end} onChange={setRange}/>:null;
     return <>
      {chart('CPU 平均负载','cpu',[{name:'CPU',color:BLUE,i:1}],pctFmt)}
      {chart('内存用量','cpu',[{name:'内存',color:ORANGE,i:2}],autoFmt([col(cpuPts,2)]))}
@@ -170,35 +172,13 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
      {chart('网卡','net',[{name:'进',color:GREEN,i:1},{name:'出',color:BLUE,i:2}],bpsFmt,devPick('net','网卡'))}
      {chart('包转发率','pps',[{name:'进',color:GREEN,i:1},{name:'出',color:BLUE,i:2}],countFmt('pps'))}
      {chart('硬盘 IO','io',[{name:'读取',color:GREEN,i:1},{name:'写入',color:BLUE,i:2}],countFmt('IOPS'),devPick('io','磁盘'))}
-     <Card title="流量排行" className="nd-chart nd-rank" actions={<span className="nd-dev">本月已用</span>}>
-      {rankError?<p className="nd-empty nd-chart-msg">{rankError}</p>:!rank?<div className="nd-chart-sk">{sk('100%')}</div>
-       :!rank.data.length?<p className="nd-empty nd-chart-msg">本月还没有实例产生流量</p>
-       :<ol className="nd-rank-list">{rank.data.map((r,i)=>{const top=Number(rank.data[0].used)||1;return <li key={r.id}>
-         <span className="nd-rank-no num">{i+1}</span>
-         <Link className="nd-rank-name" to={'/clouds/'+r.id} title={r.mainip||undefined}>{r.hostname||'#'+r.id}</Link>
-         <span className="nd-rank-bar" aria-hidden="true"><i style={{width:Math.max(2,Number(r.used)/top*100)+'%'}}/></span>
-         <span className="nd-rank-val num">{Number(r.used).toFixed(Number(r.used)<10?2:1)} GB{r.percent!=null&&r.percent>0?<small> · {r.percent}%</small>:null}</span>
-        </li>;})}</ol>}
+     <Card title="用量排行" className="nd-chart nd-daily">
+      {dailyError?<p className="nd-empty nd-chart-msg">{dailyError}</p>:!daily?<div className="nd-chart-sk">{sk('100%')}</div>
+       :<DailyBars days={daily.data} format={sizeFmt} label="每天进出流量" rangeControl={<RangePicker range={range} start={daily.start} end={daily.end} onChange={setRange}/>}/>}
      </Card>
     </>;})()}
   </div>
 
-  <Card title="节点信息" icon={<Settings2 size={16}/>} className="nd-info">
-   <Kv items={[
-    ['授权方式',licenseModes[n.license_mode]||text(n.license_mode)],
-    ['节点疏散',onOff(n.evacuate??info.evacuate,'正在疏散','未启用')],
-    ['单 IP 建站',onOff(n.single_ip_nat,'支持','不支持')],
-    ['NAT 端口范围',<span className="mono">{text(n.nat_port_range??info.nat_port_range)}</span>],
-    ['本地存储使用',storeRules[String(n.choose_store_rule)]||text(n.choose_store_rule)],
-    ['内存回收',info.ksm_recycle_speed!=null?`${ksmSpeeds[String(info.ksm_recycle_speed)]||info.ksm_recycle_speed} · 超过 ${text(info.ksm_recycle_start_percent)}% 开始`:'—'],
-    ['DNS',<span className="mono">{[n.dns1,n.dns2].filter(Boolean).join('  ')||'—'}</span>],
-    ['备份路径',<span className="mono">{n.backup_path||info.backup_path||'默认（存储设置）'}</span>],
-    ['Trunk / VLAN',<span className="mono">{onOff(n.trunk??info.trunk,'Trunk','否')}{(n.vlan||info.vlan)?' · '+(n.vlan||info.vlan):''}</span>],
-    ['GPU',<span className="num">{Number(n.gpu_num??info.gpu_num)>0?`${text(n.gpu_num_used??info.gpu_num_used)} / ${n.gpu_num??info.gpu_num} 已用`:'无'}</span>],
-    ['网关 MAC',<span className="mono">{macs.length?macs.join('  '):'—'}</span>],
-    ['备注',text(info.remark)]
-   ]}/>
-  </Card>
 
  </section>;
 }

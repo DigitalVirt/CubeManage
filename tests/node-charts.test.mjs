@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createApp} from '../server/index.mjs';
 import {CubeClient} from '../server/cube-client.mjs';
-import {nodePoints,devNames} from '../server/node-charts.mjs';
+import {nodePoints,devNames,chartWindow,dailyTotals} from '../server/node-charts.mjs';
 
 const json=v=>new Response(JSON.stringify(v),{status:200,headers:{'Content-Type':'application/json'}});
 
@@ -44,4 +44,16 @@ test('节点图表：按类型调用图表数据接口，默认 3 天、选中�
  assert.equal(b.data.length,10);assert.equal(b.data[0].hostname,'vm-12');assert.equal(b.data[0].used,110);assert.equal(b.data[0].percent,5);
  assert.ok(!b.data.some(r=>r.used===0),'没有流量的实例不进排行');
  assert.equal(calls.find(c=>c.route==='clouds').q.node,'5');
+});
+
+test('节点图表：时间范围与按天汇总',()=>{
+ const now=Date.UTC(2026,10,4,2,0);const D=86400000;
+ assert.deepEqual(chartWindow({},now),{st:now-3*D,et:now});
+ assert.deepEqual(chartWindow({days:'7'},now),{st:now-7*D,et:now});
+ assert.deepEqual(chartWindow({st:String(now-2*D),et:String(now+D)},now),{st:now-2*D,et:now},'结束时间不晚于现在');
+ assert.deepEqual(chartWindow({st:String(now-60*D),et:String(now)},now),{st:now-31*D,et:now},'最长 31 天');
+ assert.throws(()=>chartWindow({st:String(now-60000),et:String(now)},now),/至少 15 分钟/);
+ // 北京时间（UTC+8，getTimezoneOffset = -480）：UTC 11/3 17:00 已是 11/4 01:00
+ const pts=[[Date.UTC(2026,10,3,10),100,10],[Date.UTC(2026,10,3,17),5,1],[Date.UTC(2026,10,4,1),7,2]];
+ assert.deepEqual(dailyTotals(pts,-480),[{day:'2026-11-03',in:100,out:10},{day:'2026-11-04',in:12,out:3}]);
 });

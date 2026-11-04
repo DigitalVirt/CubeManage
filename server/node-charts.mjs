@@ -9,7 +9,9 @@ import {HttpError,listResult} from './cube-client.mjs';
  *   node_disk_io   节点磁盘 IOPS（dev_name = 磁盘）
  * 可选的磁盘和网卡来自“节点分类数据” v1/node_statistics（dev = 磁盘，net = 网卡，disk = 磁盘 IO 的磁盘）。
  * 默认取最近 3 天；平台默认每个序列最多返回 1000 个点，3 天约 4～5 分钟一个点，放大到某一天也能看清时间段。
- * 流量排行：平台没有按节点的排行接口，取这个节点上的实例（v1/clouds?node=），按本月已用流量从高到低取前 10。
+ * 时间范围：默认最近 3 天，也可以传 st / et（毫秒）自选，最长 31 天，结束时间不晚于现在。
+ * 用量排行（每天进出流量）：统计流量总计 v1/net_total（node_id、type=main_net_info、status=1 统计数据），按本地日期汇总成每天的进 / 出字节数。
+ * 流量排行接口（/traffic_rank）保留：取节点上的实例按本月已用流量从高到低前 10。
  */
 const DAY=86400000;
 
@@ -28,12 +30,32 @@ export function devNames(list){
  return [...new Set(items.map(x=>typeof x==='string'||typeof x==='number'?String(x):x&&typeof x==='object'?String(x.dev_name??x.dev??x.name??x.ifname??x.net??''):'').map(s=>s.trim()).filter(Boolean))];
 }
 
+/** 时间范围：st / et（毫秒）优先，否则最近 days 天（默认 3）；最长 31 天。 */
+export function chartWindow(query,now=Date.now()){
+ const st=Number(query.st),et=Number(query.et);
+ if(Number.isFinite(st)&&Number.isFinite(et)&&st>0&&et>st){const end=Math.min(et,now);const start=Math.max(st,end-31*DAY);if(end-start<15*60000)throw new HttpError(400,'时间范围至少 15 分钟');return {st:start,et:end};}
+ const days=Math.min(31,Math.max(1,parseInt(query.days)||3));return {st:now-days*DAY,et:now};
+}
+
+/** 按本地日期（服务器时区，tzOffset 分钟可由浏览器传入）把 [时间, 进, 出] 汇总成每天一条。 */
+export function dailyTotals(points,tzOffset=new Date().getTimezoneOffset()){
+ const byDay=new Map();
+ for(const p of points){const local=new Date(p[0]-tzOffset*60000);const key=local.toISOString().slice(0,10);const d=byDay.get(key)||{day:key,in:0,out:0};d.in+=Number(p[1])||0;d.out+=Number(p[2])||0;byDay.set(key,d);}
+ return [...byDay.values()].sort((a,b)=>a.day<b.day?-1:1);
+}
+
 export function registerNodeCharts(app,{asyncRoute}){
  const nodeId=req=>{if(!/^\d+$/.test(req.params.id))throw new HttpError(400,'节点编号无效');return req.params.id;};
 
+ app.get('/api/nodes/:id/daily_traffic',asyncRoute(async(req,res)=>{
+  const id=nodeId(req),{st,et}=chartWindow(req.query);const tz=Number(req.query.tz);
+  const r=await req.session.client.request('GET','net_total',{query:{node_id:id,type:'main_net_info',status:1,st,et}});
+  res.json({start:st,end:et,data:dailyTotals(nodePoints(r),Number.isFinite(tz)&&Math.abs(tz)<=840?tz:undefined)});
+ }));
+
  app.get('/api/nodes/:id/charts',asyncRoute(async(req,res)=>{
   const id=nodeId(req),client=req.session.client;
-  const days=Math.min(30,Math.max(1,parseInt(req.query.days)||3));const et=Date.now(),st=et-days*DAY;
+  const {st,et}=chartWindow(req.query),days=+((et-st)/DAY).toFixed(2);
   let devs={disk:[],net:[],io:[]},devError;
   try{const r=await client.request('GET','node_statistics',{query:{id}});const d=r?.data&&!Array.isArray(r.data)?r.data:r||{};devs={disk:devNames(d.dev),net:devNames(d.net),io:devNames(d.disk)};}
   catch(e){if(e?.status===401)throw e;devError=e.message;}

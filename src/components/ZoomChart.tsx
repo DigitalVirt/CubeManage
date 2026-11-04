@@ -1,4 +1,4 @@
-import {useEffect,useId,useMemo,useRef,useState} from 'react';
+import {useEffect,useId,useMemo,useRef,useState,type ReactNode} from 'react';
 import {Button} from '@heroui/react';
 import {RotateCcw} from 'lucide-react';
 import {clock,dayClock,type Series} from './LineChart';
@@ -8,13 +8,13 @@ import {clock,dayClock,type Series} from './LineChart';
  * 按住拖动左右平移；双击或点“还原”回到全部时间范围。最小可放大到 15 分钟。
  * 纵轴按当前可见范围内的最大值自动调整；横轴刻度随范围变化（几天显示日期，一天以内显示时刻）。
  */
-type Props={times:number[];series:Series[];format:(v:number)=>string;label:string;height?:number;area?:boolean};
+type Props={times:number[];series:Series[];format:(v:number)=>string;label:string;height?:number;area?:boolean;rangeControl?:ReactNode};
 const MIN_SPAN=15*60000;
 const niceMax=(v:number)=>{if(!(v>0))return 1;const p=10**Math.floor(Math.log10(v));const n=v/p;return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p;};
 const dayLabel=(t:number)=>{const d=new Date(t);return (d.getMonth()+1)+'/'+d.getDate();};
 const spanText=(ms:number)=>ms>=86400000?+(ms/86400000).toFixed(1)+' 天':ms>=3600000?+(ms/3600000).toFixed(1)+' 小时':Math.round(ms/60000)+' 分钟';
 
-export function ZoomChart({times,series,format,label,height=220,area=true}:Props){
+export function ZoomChart({times,series,format,label,height=300,area=true,rangeControl}:Props){
  const box=useRef<HTMLDivElement>(null),svgRef=useRef<SVGSVGElement>(null),clip='zc'+useId().replace(/[^a-zA-Z0-9_-]/g,'');
  const [width,setWidth]=useState(560),[hover,setHover]=useState<number|null>(null);
  const full:[number,number]=[times[0]??0,times[times.length-1]??1];
@@ -61,8 +61,8 @@ export function ZoomChart({times,series,format,label,height=220,area=true}:Props
 
  return <div className="zoom-chart">
   <div className="zc-bar"><div className="lc-legend">{series.map(s=><span key={s.name}><i style={{background:s.color}}/>{s.name}</span>)}</div>
-   <div className="zc-range"><span className="num">{times.length?`${dayClock(a)} – ${dayClock(b)}`:''}{zoomed?` · ${spanText(span)}`:''}</span>
-    {zoomed&&<Button size="sm" variant="ghost" className="zc-reset" onPress={()=>setView(null)}><RotateCcw size={13}/>还原</Button>}</div></div>
+   <div className="zc-range">{zoomed&&<><span className="num zc-zoom">已放大 · {dayClock(a)} – {dayClock(b)}（{spanText(span)}）</span><Button size="sm" variant="ghost" className="zc-reset" onPress={()=>setView(null)}><RotateCcw size={13}/>还原</Button></>}
+    {rangeControl??(!zoomed&&times.length?<span className="num">{dayClock(a)} – {dayClock(b)}</span>:null)}</div></div>
   <div className="line-chart" ref={box}>
    <svg ref={svgRef} width={width} height={height} role="img" aria-label={label+'，滚动鼠标滚轮缩放时间范围'} className={zoomed?'is-zoomed':''}
     onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onPointerLeave={()=>{if(!drag.current)setHover(null);}} onDoubleClick={()=>setView(null)}>
