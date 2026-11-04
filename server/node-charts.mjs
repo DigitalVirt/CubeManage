@@ -8,6 +8,13 @@ import {HttpError,listResult} from './cube-client.mjs';
  *   pps            包转发率
  *   node_disk_io   节点磁盘 IOPS（dev_name = 磁盘）
  * 可选的磁盘和网卡来自“节点分类数据” v1/node_statistics（dev = 磁盘，net = 网卡，disk = 磁盘 IO 的磁盘）。
+ * 各类型的列（按真实节点数据核对过）：
+ *   main_info     [时间, 1 分钟负载, 5 分钟负载, 15 分钟负载, 内存总量(B), 已用内存(B)]
+ *   main_disk     [时间, 总量(B), 可用(B), 已用(B), 使用率%]
+ *   main_net_info [时间, 进(B/s), 出(B/s)]
+ *   pps           [时间, 进(千包/秒), 出(千包/秒)]
+ *   node_disk_io  [时间, 读 IOPS, 写 IOPS, 读(B/s), 写(B/s)]
+ * 平台在没有数据的时间段返回全是 0 的点（如第一个点），这些点去掉，避免曲线掉到 0。
  * 默认取最近 3 天；平台默认每个序列最多返回 1000 个点，3 天约 4～5 分钟一个点，放大到某一天也能看清时间段。
  * 时间范围：默认最近 3 天，也可以传 st / et（毫秒）自选，最长 31 天，结束时间不晚于现在。
  * 用量排行（每天进出流量）：统计流量总计 v1/net_total（node_id、type=main_net_info 节点网络、kvm_ifname = 网卡名、status=1 统计数据），
@@ -24,6 +31,8 @@ export function nodePoints(r){
   .map(p=>[toMs(p[0]),...p.slice(1).filter(v=>!Array.isArray(v)&&(v===null||typeof v!=='object')).map(v=>Number(v)||0)])
   .filter(p=>Number.isFinite(p[0])).sort((a,b)=>a[0]-b[0]);
 }
+/** 去掉全部数值都是 0 的点（平台对没有数据的时间段这样返回）。 */
+export const dropEmpty=points=>points.filter(p=>p.slice(1).some(v=>v!==0));
 
 /** node_statistics 的 dev / net / disk：字符串或 {name|dev|dev_name|...} 都认，去重。 */
 export function devNames(list){
@@ -64,7 +73,7 @@ export function registerNodeCharts(app,{asyncRoute}){
   catch(e){if(e?.status===401)throw e;devError=e.message;}
   const pick=(list,want)=>want&&list.includes(want)?want:list[0]||null;
   const disk=pick(devs.disk,String(req.query.disk||'')),net=pick(devs.net,String(req.query.net||'')),io=pick(devs.io,String(req.query.io||''))||disk;
-  const stat=(type,extra={})=>client.request('GET','statistics',{query:{node_id:id,type,st,et,...extra}}).then(nodePoints);
+  const stat=(type,extra={})=>client.request('GET','statistics',{query:{node_id:id,type,st,et,...extra}}).then(r=>dropEmpty(nodePoints(r)));
   const jobs={cpu:stat('main_info'),disk:disk?stat('main_disk',{dev_name:disk}):Promise.resolve([]),net:net?stat('main_net_info',{dev_name:net}):stat('main_net_info'),pps:stat('pps'),io:io?stat('node_disk_io',{dev_name:io}):Promise.resolve([])};
   const keys=Object.keys(jobs),settled=await Promise.allSettled(Object.values(jobs));
   if(settled.some(s=>s.status==='rejected'&&s.reason?.status===401))throw settled.find(s=>s.reason?.status===401).reason;

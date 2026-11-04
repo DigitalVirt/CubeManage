@@ -26,14 +26,12 @@ const types:Record<string,string>={host:'KVM 加强版',lightHost:'KVM 轻量版
 const pct=(v:unknown)=>{if(v==null||v==='')return null;const n=Number(String(v).replace('%','').trim());return Number.isFinite(n)&&n>=0?Math.min(100,n):null;};
 const text=(v:unknown)=>v==null||v===''?'—':String(v);
 
-const BLUE='#2563eb',ORANGE='#f59e0b',GREEN='#16a34a';
-const pctFmt=(v:number)=>+v.toFixed(v<10?1:0)+'%';
+const BLUE='#2563eb',ORANGE='#f59e0b',GREEN='#16a34a',GRAY='#94a3b8';
+const loadFmt=(v:number)=>String(+v.toFixed(v<10?2:1));
 const sizeFmt=(v:number)=>{const u=['B','KB','MB','GB','TB','PB'];let i=0;while(v>=1024&&i<u.length-1){v/=1024;i++;}return (i===0?Math.round(v):+v.toFixed(v<10?2:1))+' '+u[i];};
 /** 网卡速率：平台给字节 / 秒，显示成 bps（和平台自己的图一致） */
 const bpsFmt=(bytes:number)=>{let v=bytes*8;const u=['bps','Kbps','Mbps','Gbps','Tbps'];let i=0;while(v>=1000&&i<u.length-1){v/=1000;i++;}return (v>=100||i===0?Math.round(v):+v.toFixed(2))+' '+u[i];};
 const countFmt=(unit:string)=>(v:number)=>(v>=1e6?+(v/1e6).toFixed(2)+'M':v>=1e4?+(v/1e3).toFixed(1)+'K':+v.toFixed(v<10?1:0))+(unit?' '+unit:'');
-/** 同一列既可能是百分比也可能是字节：最大值不超过 100 按百分比，否则按容量 */
-const autoFmt=(values:number[][])=>Math.max(0,...values.flat())>100?sizeFmt:pctFmt;
 type Charts={start:number;end:number;devs:{disk:string[];net:string[];io:string[]};devError?:string}&Record<'cpu'|'disk'|'net'|'pps'|'io',{points:number[][];error?:string;dev?:string|null}>;
 const col=(points:number[][],i:number)=>points.map(p=>Number(p[i])||0);
 
@@ -157,20 +155,19 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
   <div className="nd-charts">
    {(()=>{const c=charts;const t=(k:keyof Charts&('cpu'|'disk'|'net'|'pps'|'io'))=>c?.[k]?.points.map(p=>p[0])||[];
     const devPick=(k:'disk'|'net'|'io',label:string)=>{const list=c?.devs?.[k]||[];return list.length>1?<Choice aria-label={'选择'+label} value={c?.[k]?.dev||''} onChange={e=>setDevSel(v=>({...v,[k]:e.target.value}))}>{list.map(d=><option key={d} value={d}>{d}</option>)}</Choice>:list.length===1?<span className="nd-dev mono">{list[0]}</span>:null;};
-    const chart=(title:string,k:'cpu'|'disk'|'net'|'pps'|'io',series:{name:string;color:string;i:number}[],format:(v:number)=>string,actions?:ReactNode)=>{
+    const chart=(title:string,k:'cpu'|'disk'|'net'|'pps'|'io',series:{name:string;color:string;i:number;scale?:number}[],format:(v:number)=>string,actions?:ReactNode)=>{
      const pts=c?.[k]?.points||[];
      return <Card key={title} title={title} className="nd-chart" actions={actions}>
       {!c?<div className="nd-chart-sk">{sk('100%')}</div>:c[k]?.error?<p className="nd-empty nd-chart-msg">{c[k].error}</p>
-       :<ZoomChart times={t(k)} series={series.map(s=>({name:s.name,color:s.color,values:col(pts,s.i)}))} format={format} label={title} rangeControl={picker}/>}
+       :<ZoomChart times={t(k)} series={series.map(s=>({name:s.name,color:s.color,values:col(pts,s.i).map(v=>v*(s.scale??1))}))} format={format} label={title} rangeControl={picker}/>}
      </Card>;};
-    const cpuPts=c?.cpu.points||[],diskPts=c?.disk.points||[];
     const picker=c?<RangePicker range={range} start={c.start} end={c.end} onChange={setRange}/>:null;
     return <>
-     {chart('CPU 平均负载','cpu',[{name:'CPU',color:BLUE,i:1}],pctFmt)}
-     {chart('内存用量','cpu',[{name:'内存',color:ORANGE,i:2}],autoFmt([col(cpuPts,2)]))}
-     {chart('硬盘容量','disk',[{name:'已用',color:BLUE,i:1},...(diskPts.some(p=>p.length>2)?[{name:'总量',color:'#94a3b8',i:2}]:[])],autoFmt([col(diskPts,1),col(diskPts,2)]),devPick('disk','磁盘'))}
+     {chart('CPU 平均负载','cpu',[{name:'1 分钟',color:BLUE,i:1},{name:'5 分钟',color:GREEN,i:2},{name:'15 分钟',color:ORANGE,i:3}],loadFmt)}
+     {chart('内存用量','cpu',[{name:'已用',color:ORANGE,i:5},{name:'总量',color:GRAY,i:4}],sizeFmt)}
+     {chart('硬盘容量','disk',[{name:'已用',color:BLUE,i:3},{name:'总量',color:GRAY,i:1}],sizeFmt,devPick('disk','磁盘'))}
      {chart('网卡','net',[{name:'进',color:GREEN,i:1},{name:'出',color:BLUE,i:2}],bpsFmt,devPick('net','网卡'))}
-     {chart('包转发率','pps',[{name:'进',color:GREEN,i:1},{name:'出',color:BLUE,i:2}],countFmt('pps'))}
+     {chart('包转发率','pps',[{name:'进',color:GREEN,i:1,scale:1000},{name:'出',color:BLUE,i:2,scale:1000}],countFmt('pps'))}
      {chart('硬盘 IO','io',[{name:'读取',color:GREEN,i:1},{name:'写入',color:BLUE,i:2}],countFmt('IOPS'),devPick('io','磁盘'))}
      <Card title="用量排行" className="nd-chart nd-daily" actions={daily&&daily.nets.length>1?<Choice aria-label="选择网卡" value={daily.net||''} onChange={e=>setDailyNet(e.target.value)}>{daily.nets.map(d=><option key={d} value={d}>{d}</option>)}</Choice>:daily?.net?<span className="nd-dev mono">{daily.net}</span>:undefined}>
       {dailyError?<p className="nd-empty nd-chart-msg">{dailyError}</p>:!daily?<div className="nd-chart-sk">{sk('100%')}</div>

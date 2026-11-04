@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createApp} from '../server/index.mjs';
 import {CubeClient} from '../server/cube-client.mjs';
-import {nodePoints,devNames,chartWindow,dailyTotals} from '../server/node-charts.mjs';
+import {nodePoints,devNames,chartWindow,dailyTotals,dropEmpty} from '../server/node-charts.mjs';
 
 const json=v=>new Response(JSON.stringify(v),{status:200,headers:{'Content-Type':'application/json'}});
 
 test('节点图表：解析数据点和设备名',()=>{
  assert.deepEqual(nodePoints({data:[['2026-11-04 10:00',12.5,40,[]],['2026-11-04 09:00','10','30']]}),[[Date.parse('2026-11-04T09:00'),10,30],[Date.parse('2026-11-04T10:00'),12.5,40]]);
  assert.deepEqual(nodePoints([[1762221600,1,2,3]]),[[1762221600000,1,2,3]]);
+ assert.deepEqual(dropEmpty([[1,0,0,0],[2,5,0,0],[3,0,0,0]]),[[2,5,0,0]],'去掉全是 0 的空数据点');
  assert.deepEqual(devNames(['sda','sdb','sda']),['sda','sdb']);
  assert.deepEqual(devNames([{dev:'vda'},{name:'eth0'},{dev_name:'nvme0n1'}]),['vda','eth0','nvme0n1']);
  assert.deepEqual(devNames({a:'eth0',b:'eth1'}),['eth0','eth1']);
