@@ -1,12 +1,14 @@
 import {useEffect,useState,type ReactNode} from 'react';
 import {Button,Skeleton,Switch,Tooltip} from '@heroui/react';
-import {useNavigate} from 'react-router-dom';
+import {Link,useNavigate} from 'react-router-dom';
 import {Clipboard,ClipboardCheck,List,RefreshCw,Settings2} from 'lucide-react';
 import {api,send,PAGE_TITLE_EVENT,type Row} from '../lib/api';
 import {CountryFlag} from './CountryFlag';
 import {StatusIcon,healthStatus} from './StatusIcon';
 import {ErrorBox,type Notify} from './Shared';
 import {copyText} from './CloudCells';
+import {Choice} from './Controls';
+import {ZoomChart} from './ZoomChart';
 
 /**
  * 节点详情页（/nodes/:id）。数据来自 GET /api/nodes/:id/overview，它合并了平台的三个接口：
@@ -25,6 +27,17 @@ const ksmSpeeds:Record<string,string>={'10':'极快','30':'快','60':'一般','9
 const pct=(v:unknown)=>{if(v==null||v==='')return null;const n=Number(String(v).replace('%','').trim());return Number.isFinite(n)&&n>=0?Math.min(100,n):null;};
 const onOff=(v:unknown,on='开启',off='关闭')=>v==null||v===''?'—':Number(v)===1?on:off;
 const text=(v:unknown)=>v==null||v===''?'—':String(v);
+
+const BLUE='#2563eb',ORANGE='#f59e0b',GREEN='#16a34a';
+const pctFmt=(v:number)=>+v.toFixed(v<10?1:0)+'%';
+const sizeFmt=(v:number)=>{const u=['B','KB','MB','GB','TB','PB'];let i=0;while(v>=1024&&i<u.length-1){v/=1024;i++;}return (i===0?Math.round(v):+v.toFixed(v<10?2:1))+' '+u[i];};
+/** 网卡速率：平台给字节 / 秒，显示成 bps（和平台自己的图一致） */
+const bpsFmt=(bytes:number)=>{let v=bytes*8;const u=['bps','Kbps','Mbps','Gbps','Tbps'];let i=0;while(v>=1000&&i<u.length-1){v/=1000;i++;}return (v>=100||i===0?Math.round(v):+v.toFixed(2))+' '+u[i];};
+const countFmt=(unit:string)=>(v:number)=>(v>=1e6?+(v/1e6).toFixed(2)+'M':v>=1e4?+(v/1e3).toFixed(1)+'K':+v.toFixed(v<10?1:0))+(unit?' '+unit:'');
+/** 同一列既可能是百分比也可能是字节：最大值不超过 100 按百分比，否则按容量 */
+const autoFmt=(values:number[][])=>Math.max(0,...values.flat())>100?sizeFmt:pctFmt;
+type Charts={start:number;end:number;devs:{disk:string[];net:string[];io:string[]};devError?:string}&Record<'cpu'|'disk'|'net'|'pps'|'io',{points:number[][];error?:string;dev?:string|null}>;
+const col=(points:number[][],i:number)=>points.map(p=>Number(p[i])||0);
 
 function Card({className='',title,icon,actions,children}:{className?:string;title?:ReactNode;icon?:ReactNode;actions?:ReactNode;children:ReactNode}){
  return <section className={'inst-card '+className}>{(title||actions)&&<header className="inst-card-head"><h2>{icon}{title}</h2>{actions&&<div className="inst-card-actions">{actions}</div>}</header>}{children}</section>;
@@ -50,10 +63,16 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
  const [data,setData]=useState<Overview|null>(null),[error,setError]=useState(''),[rev,setRev]=useState(0),[busy,setBusy]=useState(false);
  const [area,setArea]=useState<Row|null>(null);
  // 开关：点一下就提交（PUT /api/nodes/:id/switch），成功后以新值显示，失败时恢复并提示。
+ // 图表：最近 3 天；磁盘、网卡、磁盘 IO 可以切换设备
+ const [charts,setCharts]=useState<Charts|null>(null),[chartsError,setChartsError]=useState(''),[devSel,setDevSel]=useState<{disk:string;net:string;io:string}>({disk:'',net:'',io:''});
+ const [rank,setRank]=useState<{data:Row[]}|null>(null),[rankError,setRankError]=useState('');
  const [switches,setSwitches]=useState<Partial<Record<SwitchKey,number>>>({}),[saving,setSaving]=useState<SwitchKey|null>(null);
  useEffect(()=>{let on=true;setBusy(true);setError('');
   api<Overview>(`/nodes/${id}/overview`).then(r=>{if(on)setData(r);}).catch(e=>{if(on)setError((e as Error).message);}).finally(()=>{if(on)setBusy(false);});
   return()=>{on=false;};},[id,rev]);
+ useEffect(()=>{let on=true;setChartsError('');const q=new URLSearchParams({days:'3',...Object.fromEntries(Object.entries(devSel).filter(([,v])=>v))});
+  api<Charts>(`/nodes/${id}/charts?${q}`).then(r=>{if(on)setCharts(r);}).catch(e=>{if(on)setChartsError((e as Error).message);});return()=>{on=false;};},[id,rev,devSel]);
+ useEffect(()=>{let on=true;setRankError('');api(`/nodes/${id}/traffic_rank`).then(r=>{if(on)setRank(r);}).catch(e=>{if(on)setRankError((e as Error).message);});return()=>{on=false;};},[id,rev]);
  const n=data?.node||{},info=data?.info||{},real=data?.real||{};
  const areaId=n.area_id??info.area?.id;
  useEffect(()=>{if(areaId==null)return;let on=true;api(`/resources/areas/${areaId}`).then(r=>{if(on)setArea(r?.data&&!Array.isArray(r.data)&&r.id==null?r.data:r);}).catch(()=>{});return()=>{on=false;};},[areaId]);
@@ -125,13 +144,44 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
     <div className="nd-stat-grid">
      <Stat title="CPU 使用率" value={pct(real.cpu_use_percent)}/>
      <Stat title="Swap 使用率" value={pct(swap.swap_use_percent)} foot={swap.total_swap?`${text(swap.use_swap)} / ${swap.total_swap}`:undefined}/>
-     <Stat title="平均负载" text={[load['1min'],load['5min'],load['15min']].map(text).join(' / ')} foot="1 / 5 / 15 分钟"/>
+     <Stat title="平均负载" text={[load['1min'],load['5min'],load['15min']].map(text).join(' / ')}/>
      <Stat title="KSM 共享" text={text(mem.ksm_share_memory)}/>
      <Stat title="内存使用率" value={pct(mem.use_percent)} foot={mem.total_memory?`${text(mem.use_memory)} / ${mem.total_memory}`:undefined}/>
      <Stat title="IO 延迟" text={real.io_wait!=null&&real.io_wait!==''?real.io_wait+'%':'—'}/>
      {disks.map((d,i)=><Stat key={(d.mount_point||d.dev_name||'')+i} title={'硬盘 '+(d.mount_point||d.dev_name||i+1)} value={pct(d.disk_percent)} foot={`${text(d.disk_use)} / ${text(d.disk_total)}${d.dev_name&&d.mount_point?' · '+d.dev_name:''}`}/>)}
     </div>
    </Card>
+  </div>
+
+  {chartsError&&<ErrorBox message={'图表数据获取失败：'+chartsError} retry={()=>setRev(v=>v+1)}/>}
+  <div className="nd-charts">
+   {(()=>{const c=charts;const t=(k:keyof Charts&('cpu'|'disk'|'net'|'pps'|'io'))=>c?.[k]?.points.map(p=>p[0])||[];
+    const devPick=(k:'disk'|'net'|'io',label:string)=>{const list=c?.devs?.[k]||[];return list.length>1?<Choice aria-label={'选择'+label} value={c?.[k]?.dev||''} onChange={e=>setDevSel(v=>({...v,[k]:e.target.value}))}>{list.map(d=><option key={d} value={d}>{d}</option>)}</Choice>:list.length===1?<span className="nd-dev mono">{list[0]}</span>:null;};
+    const chart=(title:string,k:'cpu'|'disk'|'net'|'pps'|'io',series:{name:string;color:string;i:number}[],format:(v:number)=>string,actions?:ReactNode)=>{
+     const pts=c?.[k]?.points||[];
+     return <Card key={title} title={title} className="nd-chart" actions={actions}>
+      {!c?<div className="nd-chart-sk">{sk('100%')}</div>:c[k]?.error?<p className="nd-empty nd-chart-msg">{c[k].error}</p>
+       :<ZoomChart times={t(k)} series={series.map(s=>({name:s.name,color:s.color,values:col(pts,s.i)}))} format={format} label={title}/>}
+     </Card>;};
+    const cpuPts=c?.cpu.points||[],diskPts=c?.disk.points||[];
+    return <>
+     {chart('CPU 平均负载','cpu',[{name:'CPU',color:BLUE,i:1}],pctFmt)}
+     {chart('内存用量','cpu',[{name:'内存',color:ORANGE,i:2}],autoFmt([col(cpuPts,2)]))}
+     {chart('硬盘容量','disk',[{name:'已用',color:BLUE,i:1},...(diskPts.some(p=>p.length>2)?[{name:'总量',color:'#94a3b8',i:2}]:[])],autoFmt([col(diskPts,1),col(diskPts,2)]),devPick('disk','磁盘'))}
+     {chart('网卡','net',[{name:'进',color:GREEN,i:1},{name:'出',color:BLUE,i:2}],bpsFmt,devPick('net','网卡'))}
+     {chart('包转发率','pps',[{name:'进',color:GREEN,i:1},{name:'出',color:BLUE,i:2}],countFmt('pps'))}
+     {chart('硬盘 IO','io',[{name:'读取',color:GREEN,i:1},{name:'写入',color:BLUE,i:2}],countFmt('IOPS'),devPick('io','磁盘'))}
+     <Card title="流量排行" className="nd-chart nd-rank" actions={<span className="nd-dev">本月已用</span>}>
+      {rankError?<p className="nd-empty nd-chart-msg">{rankError}</p>:!rank?<div className="nd-chart-sk">{sk('100%')}</div>
+       :!rank.data.length?<p className="nd-empty nd-chart-msg">本月还没有实例产生流量</p>
+       :<ol className="nd-rank-list">{rank.data.map((r,i)=>{const top=Number(rank.data[0].used)||1;return <li key={r.id}>
+         <span className="nd-rank-no num">{i+1}</span>
+         <Link className="nd-rank-name" to={'/clouds/'+r.id} title={r.mainip||undefined}>{r.hostname||'#'+r.id}</Link>
+         <span className="nd-rank-bar" aria-hidden="true"><i style={{width:Math.max(2,Number(r.used)/top*100)+'%'}}/></span>
+         <span className="nd-rank-val num">{Number(r.used).toFixed(Number(r.used)<10?2:1)} GB{r.percent!=null&&r.percent>0?<small> · {r.percent}%</small>:null}</span>
+        </li>;})}</ol>}
+     </Card>
+    </>;})()}
   </div>
 
   <Card title="节点信息" icon={<Settings2 size={16}/>} className="nd-info">

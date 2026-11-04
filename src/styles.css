@@ -1289,7 +1289,7 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 @media(max-width:1100px){.nd-strip{grid-template-columns:repeat(4,minmax(0,1fr))}.nd-strip>div:nth-child(n){border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.nd-strip>div:nth-child(4n){border-right:0}.nd-strip>div:nth-child(n+9){border-bottom:0}}
 @media(max-width:640px){.nd-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-strip>div:nth-child(n){border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.nd-strip>div:nth-child(2n){border-right:0}.nd-strip>div:nth-child(n+11){border-bottom:0}}
 /* 头部下方一行两张无标题卡片：左侧系统信息（标签在左、值在右），右侧两列用量格 */
-.nd-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:1.25rem;align-items:stretch}
+.nd-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;align-items:stretch}
 .nd-sys .nd-kv{grid-template-columns:1fr;box-shadow:none;border-radius:0;background:none;padding:.25rem 1.25rem}
 .nd-sys .nd-kv>div{grid-template-columns:auto 1fr;align-items:baseline;gap:1rem;padding:.8125rem 0;border-left:0;margin:0;border-top:1px dashed var(--border)}
 .nd-sys .nd-kv>div:first-child{border-top:0}
@@ -1301,9 +1301,36 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .nd-stat:nth-child(odd){border-right:1px solid var(--border)}
 .nd-stat:last-child,.nd-stat:nth-last-child(2):nth-child(odd){border-bottom:0}
 .nd-stat-head{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;font-size:.8125rem;color:var(--muted)}
-.nd-stat-head strong{font-size:1.125rem;font-weight:600;color:var(--foreground);text-align:right;overflow-wrap:anywhere}
+.nd-stat-head strong{font-size:.875rem;font-weight:500;color:var(--foreground);text-align:right;overflow-wrap:anywhere}
 .nd-stat.is-high .nd-meter-track i{background:#f59e0b}.nd-stat.is-critical .nd-meter-track i{background:#dc2626}
 .nd-sk{padding-top:1.25rem}
 @media(max-width:1100px){.nd-pair{grid-template-columns:1fr}}
 @media(max-width:640px){.nd-stat-grid{grid-template-columns:1fr}.nd-stat:nth-child(odd){border-right:0}.nd-stat:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--border)}}
 
+/* 节点详情图表：一行两张，可缩放折线图（ZoomChart）+ 流量排行 */
+.nd-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}
+.nd-chart{display:grid;grid-template-rows:auto 1fr}
+.nd-chart .inst-card-head{padding-bottom:.25rem}
+.nd-chart .zoom-chart{padding:0 1rem 1rem}
+.nd-chart-sk{padding:0 1.25rem 1.25rem}.nd-chart-sk .sk-bar{height:220px;border-radius:.75rem}
+.nd-chart-msg{padding:2.5rem 1.25rem;text-align:center}
+.nd-dev{font-size:.75rem;color:var(--muted)}
+.nd-chart .select{min-width:8rem}
+.zoom-chart{display:grid;gap:.375rem;min-width:0}
+.zc-bar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;min-height:1.75rem;padding-left:.25rem}
+.zc-range{display:flex;align-items:center;gap:.375rem;font-size:.75rem;color:var(--muted)}
+.zc-reset{height:1.5rem;min-height:1.5rem;padding:0 .5rem;font-size:.75rem;gap:.25rem}
+.zoom-chart .line-chart{position:relative}
+.zoom-chart svg{touch-action:pan-y;cursor:crosshair;user-select:none}
+.zoom-chart svg.is-zoomed{cursor:grab}.zoom-chart svg.is-zoomed:active{cursor:grabbing}
+.zc-empty{position:absolute;inset:0;display:grid;place-items:center;font-size:.875rem;color:var(--muted);pointer-events:none}
+.nd-rank-list{display:grid;gap:.125rem;margin:0;padding:0 1.25rem 1.25rem;list-style:none}
+.nd-rank-list li{display:grid;grid-template-columns:1.5rem minmax(6rem,10rem) 1fr auto;align-items:center;gap:.75rem;min-height:2rem;font-size:.8125rem}
+.nd-rank-no{color:var(--muted);text-align:right}
+.nd-rank-list li:nth-child(-n+3) .nd-rank-no{color:var(--accent);font-weight:600}
+.nd-rank-name{color:var(--foreground);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:.25rem}
+.nd-rank-name:hover{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.nd-rank-bar{height:.5rem;border-radius:999px;background:var(--app-bg,var(--default));overflow:hidden}
+.nd-rank-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent)}
+.nd-rank-val{white-space:nowrap;text-align:right}.nd-rank-val small{color:var(--muted)}
+@media(max-width:1100px){.nd-charts{grid-template-columns:1fr}}
