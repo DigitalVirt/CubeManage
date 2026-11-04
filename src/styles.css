@@ -1247,3 +1247,28 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
  animation:cloud-state-spin .8s linear infinite}
 @keyframes cloud-state-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.cloud-state-loading{animation-duration:2.4s}}
+/* 节点详情页（NodeDetail.tsx）：沿用实例详情的卡片、头部和信息格样式 */
+.nd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem;align-items:start}
+.nd-body{display:grid;gap:1rem;padding:0 1.25rem 1.25rem}
+.nd-meter{display:grid;gap:.375rem}
+.nd-meter-head{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;font-size:.8125rem;color:var(--muted)}
+.nd-meter-head strong{font-size:1.125rem;font-weight:600;color:var(--foreground)}
+.nd-meter-track{display:block;height:.5rem;border-radius:999px;background:var(--app-bg,var(--default));overflow:hidden}
+.nd-meter-track i{display:block;height:100%;border-radius:inherit;background:var(--accent);transition:width .4s ease}
+.nd-meter.is-high .nd-meter-track i{background:#f59e0b}.nd-meter.is-critical .nd-meter-track i{background:#dc2626}
+.nd-meter-foot{display:flex;justify-content:space-between;gap:.75rem;font-size:.75rem;color:var(--muted)}
+.nd-card .nd-kv{grid-template-columns:1fr;box-shadow:none;border-radius:0;background:none}
+.nd-card .nd-kv>div{grid-template-columns:auto 1fr;align-items:baseline;gap:1rem;padding:.5rem 0;border-left:0;margin:0;border-top:1px dashed var(--border)}
+.nd-card .nd-kv>div:first-child{border-top:0}
+.nd-card .nd-kv dd{text-align:right}
+.nd-model{font-size:.8125rem}
+.nd-disks .nd-body{max-height:22rem;overflow-y:auto}
+.nd-info .inst-kv{grid-template-columns:repeat(3,minmax(0,1fr));border-radius:0;box-shadow:none;border-top:1px solid var(--border)}
+.nd-warn{color:#b45309}
+.nd-count{display:inline-flex;align-items:center;height:1.25rem;padding:0 .4375rem;border-radius:999px;background:var(--app-bg,var(--default));font-size:.75rem;font-weight:600;color:var(--muted)}
+.nd-empty{margin:0;font-size:.875rem;color:var(--muted)}
+.nd-sk-table{display:grid;gap:.5rem}.nd-sk-table .sk-bar{height:2.75rem}
+.nd-state{display:inline-flex;border-radius:.25rem}
+.nd-hero-sk{display:grid;gap:.5rem}
+@media(max-width:1100px){.nd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-info .inst-kv{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.nd-grid{grid-template-columns:1fr}.nd-info .inst-kv{grid-template-columns:1fr}}

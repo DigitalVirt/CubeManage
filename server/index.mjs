@@ -69,6 +69,18 @@ export function createApp({clientFactory=c=>new CubeClient(c)}={}){
  app.get('/api/resources/:kind',asyncRoute(async(req,res)=>{const kind=req.params.kind;if(!resources[kind]&&!['tasks','images'].includes(kind))throw new HttpError(404,'资源不存在');const q=queryFor(req,kind);res.json(listResult(await req.session.client.request('GET',routeFor(kind),{query:q}),q.page,q.per_page));}));
  app.get('/api/resources/:kind/:id',asyncRoute(async(req,res)=>{const {kind,id}=req.params;if((!resources[kind]&&kind!=='tasks')||!/^\d+$/.test(id))throw new HttpError(404,'资源不存在');res.json(scrub(await req.session.client.request('GET',`${kind}/${id}`)));}));
  app.get('/api/nodes/:id/metrics',asyncRoute(async(req,res)=>{if(!/^\d+$/.test(req.params.id))throw new HttpError(400,'节点编号无效');res.json(scrub(await req.session.client.request('GET',`nodes/${req.params.id}/status`)));}));
+ // 节点详情页：节点详情（v1/nodes/:id）、节点内容页（v1/node_info/:id，实例数、IP 用量、已分配 CPU / 内存）、
+ // 节点实时数据（v1/nodes/:id/real_data，CPU、内存、Swap、磁盘、内核与 QEMU 版本、运行时间）一起取；
+ // 后两个失败时只把错误带回去，页面照常显示其余部分。scrub 去掉 SSH 密码、密钥等敏感字段。
+ app.get('/api/nodes/:id/overview',asyncRoute(async(req,res)=>{
+  const id=req.params.id;if(!/^\d+$/.test(id))throw new HttpError(400,'节点编号无效');const c=req.session.client;
+  const [node,info,real]=await Promise.allSettled([c.request('GET',`nodes/${id}`),c.request('GET',`node_info/${id}`),c.request('GET',`nodes/${id}/real_data`)]);
+  if(node.status==='rejected')throw node.reason;
+  for(const r of [info,real])if(r.status==='rejected'&&r.reason?.status===401)throw r.reason;
+  const pick=v=>v&&typeof v==='object'&&!Array.isArray(v)&&v.data&&typeof v.data==='object'&&!Array.isArray(v.data)?v.data:v;
+  const part=r=>r.status==='fulfilled'?pick(r.value):null,fail=r=>r.status==='rejected'?String(r.reason?.message||r.reason):undefined;
+  res.json(scrub({node:pick(node.value),info:part(info),real:part(real),errors:{info:fail(info),real:fail(real)}}));
+ }));
  app.post('/api/clouds/metrics',asyncRoute(async(req,res)=>{const ids=req.body.id;if(!Array.isArray(ids)||!ids.length||ids.length>100||ids.some(id=>!Number.isSafeInteger(id)||id<1))throw new HttpError(400,'实例编号无效');res.json(scrub(await req.session.client.request('POST','clouds/real_data',{body:{id:ids}})));}));
  app.get('/api/clouds/:id/state',asyncRoute(async(req,res)=>{if(!/^\d+$/.test(req.params.id))throw new HttpError(400,'实例编号无效');res.json(scrub(await req.session.client.request('GET',`clouds/${req.params.id}/status`)));}));
  app.get('/api/clouds/:id/traffic',asyncRoute(async(req,res)=>{if(!/^\d+$/.test(req.params.id))throw new HttpError(400,'实例编号无效');res.json(scrub(await req.session.client.request('GET','net_info',{query:{host_id:req.params.id}})));}));
