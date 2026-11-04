@@ -1,11 +1,11 @@
 import {useEffect,useState,type ReactNode} from 'react';
-import {Button,Skeleton} from '@heroui/react';
+import {Button,Skeleton,Switch,Tooltip} from '@heroui/react';
 import {useNavigate} from 'react-router-dom';
-import {Clipboard,ClipboardCheck,Cpu,HardDrive,List,MemoryStick,RefreshCw,Server,Settings2} from 'lucide-react';
-import {api,date,PAGE_TITLE_EVENT,type Row} from '../lib/api';
+import {Clipboard,ClipboardCheck,Cpu,HardDrive,List,MemoryStick,RefreshCw,Settings2} from 'lucide-react';
+import {api,send,PAGE_TITLE_EVENT,type Row} from '../lib/api';
 import {CountryFlag} from './CountryFlag';
 import {StatusIcon,healthStatus} from './StatusIcon';
-import {ErrorBox} from './Shared';
+import {ErrorBox,type Notify} from './Shared';
 import {copyText} from './CloudCells';
 
 /**
@@ -13,7 +13,9 @@ import {copyText} from './CloudCells';
  * 节点详情 v1/nodes/:id、节点内容页 v1/node_info/:id、节点实时数据 v1/nodes/:id/real_data。
  * 布局：顶部蓝色区域 → 概况 → CPU / 内存 / 磁盘（一行三个，通栏）→ 节点信息。节点上的实例在实例列表里看（顶部“查看节点实例”）。
  */
-type Overview={node:Row;info:Row|null;real:Row|null;errors?:{info?:string;real?:string}};
+type Overview={node:Row;info:Row|null;real:Row|null;state?:{status?:unknown;msg?:string;version?:string}|null;errors?:{info?:string;real?:string}};
+type SwitchKey='maintenance_mode'|'enable'|'auto_boot_host';
+const switchTitles:Record<SwitchKey,string>={maintenance_mode:'维护模式',enable:'节点启用',auto_boot_host:'开机自启'};
 
 const types:Record<string,string>={host:'KVM 加强版',lightHost:'KVM 轻量版',hyperv:'Hyper-V',adsl:'拨号云'};
 const licenseModes:Record<string,string>={controller_proxy:'主控代理',node_self:'节点自行授权'};
@@ -43,10 +45,12 @@ function Meter({title,value,used,total,note}:{title:string;value:number|null;use
 function Kv({items}:{items:[string,ReactNode][]}){return <dl className="inst-kv nd-kv">{items.map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>;}
 const sk=(w:string)=><Skeleton className="sk-bar" style={{width:w}}/>;
 
-export function NodeDetail({id,onClose}:{id:string;onClose:()=>void}){
+export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notify?:Notify}){
  const go=useNavigate();
  const [data,setData]=useState<Overview|null>(null),[error,setError]=useState(''),[rev,setRev]=useState(0),[busy,setBusy]=useState(false);
  const [area,setArea]=useState<Row|null>(null);
+ // 开关：点一下就提交（PUT /api/nodes/:id/switch），成功后以新值显示，失败时恢复并提示。
+ const [switches,setSwitches]=useState<Partial<Record<SwitchKey,number>>>({}),[saving,setSaving]=useState<SwitchKey|null>(null);
  useEffect(()=>{let on=true;setBusy(true);setError('');
   api<Overview>(`/nodes/${id}/overview`).then(r=>{if(on)setData(r);}).catch(e=>{if(on)setError((e as Error).message);}).finally(()=>{if(on)setBusy(false);});
   return()=>{on=false;};},[id,rev]);
@@ -59,7 +63,7 @@ export function NodeDetail({id,onClose}:{id:string;onClose:()=>void}){
  if(error&&!data)return <section className="inst-page">{crumb}<ErrorBox message={error} retry={()=>setRev(v=>v+1)}/></section>;
  if(!data)return <NodeSkeleton crumb={crumb}/>;
 
- const spec=healthStatus(n.status);
+ const spec=healthStatus(data.state?.status??n.status);
  const cpu=real.cpu_info||{},load=real.cpu_load||{},mem=real.memory||{},swap=real.swap||{};
  const disks:Row[]=Array.isArray(real.disk)?real.disk:[];
  const count=info.count||{};
@@ -69,37 +73,42 @@ export function NodeDetail({id,onClose}:{id:string;onClose:()=>void}){
  const macs:string[]=Array.isArray(n.gateway_mac)?n.gateway_mac:Array.isArray(info.gateway_mac)?info.gateway_mac:[];
  const qemu=info.default_qemu_version_show||info.default_qemu_version;
 
+ const sw=(k:SwitchKey)=>Number(switches[k]??n[k])===1;
+ async function toggle(k:SwitchKey,on:boolean){
+  setSaving(k);setSwitches(v=>({...v,[k]:on?1:0}));
+  try{await api(`/nodes/${id}/switch`,send('PUT',{field:k,value:on?1:0}));notify?.(`${switchTitles[k]}已${on?'开启':'关闭'}`);}
+  catch(e){setSwitches(v=>({...v,[k]:on?0:1}));notify?.(`${switchTitles[k]}修改失败：${(e as Error).message}`,'danger');}
+  finally{setSaving(null);}
+ }
+ const toggleCell=(k:SwitchKey)=><Switch size="sm" isSelected={sw(k)} isDisabled={saving!==null} onChange={v=>toggle(k,v)} aria-label={switchTitles[k]}><Switch.Content><Switch.Control><Switch.Thumb/></Switch.Control></Switch.Content></Switch>;
+ const group=n.group_name||info.group_name;
+
  return <section className="inst-page nd-page">
   {crumb}
-  <header className="inst-card inst-hero">
-   <div className="inst-os" aria-hidden="true"><Server size={28}/></div>
-   <div className="inst-hero-main">
-    <div className="inst-title"><h1>{n.name||'节点 #'+id}</h1>{n.type&&<span className="inst-spec">{types[n.type]||n.type}</span>}</div>
-    <div className="inst-pills">
-     <span className="inst-pill" style={{color:spec.color}}><StatusIcon spec={spec} size={16}/>{spec.title}</span>
-     {Number(n.enable)===0&&<span className="inst-pill nd-warn">已禁用</span>}
-     {Number(n.maintenance_mode)===1&&<span className="inst-pill nd-warn">维护模式</span>}
-     {Number(n.evacuate??info.evacuate)===1&&<span className="inst-pill nd-warn">正在疏散</span>}
-     {n.ip&&<span className="inst-pill mono">{n.ip}{n.port?':'+n.port:''}<Copy value={String(n.ip)} what="节点 IP"/></span>}
-     <span className="inst-pill"><CountryFlag code={area?.country_code} name={area?.country_name||n.area_name}/>{n.area_name||area?.name||'—'}{(n.group_name||info.group_name)&&<span className="group-tag">{n.group_name||info.group_name}</span>}</span>
+  <header className="inst-card nd-top">
+   <div className="nd-head">
+    <Tooltip delay={0}><Tooltip.Trigger tabIndex={0} aria-label={'节点状态：'+spec.title} className="nd-status"><StatusIcon spec={spec} size={36}/></Tooltip.Trigger><Tooltip.Content>{spec.title}{data.state?.msg?' · '+data.state.msg:''}</Tooltip.Content></Tooltip>
+    <div className="nd-title"><h1 className="mono">{n.ip||'—'}{n.port&&Number(n.port)!==22?<small>:{n.port}</small>:null}</h1>{n.ip&&<Copy value={String(n.ip)} what="节点 IP"/>}</div>
+    <div className="inst-hero-actions">
+     <Button variant="outline" isDisabled={busy} onPress={()=>setRev(v=>v+1)}><RefreshCw size={16}/>刷新数据</Button>
+     <Button onPress={()=>go(`/clouds?node=${id}${areaId!=null?'&area='+areaId:''}`)}><List size={16}/>查看节点实例</Button>
     </div>
    </div>
-   <div className="inst-hero-actions">
-    <Button variant="outline" isDisabled={busy} onPress={()=>setRev(v=>v+1)}><RefreshCw size={16}/>刷新数据</Button>
-    <Button onPress={()=>go(`/clouds?node=${id}${areaId!=null?'&area='+areaId:''}`)}><List size={16}/>查看节点实例</Button>
-   </div>
-  </header>
-
-  <Card className="inst-facts nd-facts">
-   <dl>
+   <dl className="nd-strip">
+    <div><dt>节点名称</dt><dd>{text(n.name)}</dd></div>
     <div><dt>节点 ID</dt><dd className="inst-secret"><span className="num">{n.id??id}</span><Copy value={String(n.id??id)} what="节点 ID"/></dd></div>
+    <div><dt>区域</dt><dd><CountryFlag code={area?.country_code} name={area?.country_name||n.area_name}/>{n.area_name||area?.name||'—'}</dd></div>
+    <div><dt>分组</dt><dd>{group?<span className="group-tag">{group}</span>:'—'}</dd></div>
+    <div><dt>节点类型</dt><dd>{types[n.type]||text(n.type)}</dd></div>
+    <div><dt>版本</dt><dd className="mono">{text(data.state?.version)}</dd></div>
     <div><dt>实例数量</dt><dd className="num">{text(hosts)}</dd></div>
     <div><dt>IP 使用</dt><dd className="num">{Number.isFinite(ipTotal)&&ipTotal>0?<>{Number.isFinite(ipUsed)?ipUsed:'—'} / {ipTotal}</>:'—'}</dd></div>
     <div><dt>运行时间</dt><dd>{text(real.uptime)}</dd></div>
-    <div><dt>创建时间</dt><dd className="num">{n.create_time?date(n.create_time):'—'}</dd></div>
-    <div><dt>更新时间</dt><dd className="num">{n.update_time?date(n.update_time):'—'}</dd></div>
+    <div><dt>维护模式</dt><dd>{toggleCell('maintenance_mode')}</dd></div>
+    <div><dt>节点启用</dt><dd>{toggleCell('enable')}</dd></div>
+    <div><dt>开机自启</dt><dd>{toggleCell('auto_boot_host')}</dd></div>
    </dl>
-  </Card>
+  </header>
 
   {data.errors?.real&&<ErrorBox message={'实时数据获取失败：'+data.errors.real}/>}
   <div className="nd-grid">
@@ -138,9 +147,6 @@ export function NodeDetail({id,onClose}:{id:string;onClose:()=>void}){
     ['QEMU 版本',<span className="mono">{text(real.qemu_version)}{qemu&&qemu!==real.qemu_version?' · 默认 '+qemu:''}</span>],
     ['节点时间',<span className="num">{text(real.time)}</span>],
     ['授权方式',licenseModes[n.license_mode]||text(n.license_mode)],
-    ['节点启用',onOff(n.enable,'启用','禁用')],
-    ['维护模式',onOff(n.maintenance_mode)],
-    ['开机自动启动实例',onOff(n.auto_boot_host)],
     ['节点疏散',onOff(n.evacuate??info.evacuate,'正在疏散','未启用')],
     ['单 IP 建站',onOff(n.single_ip_nat,'支持','不支持')],
     ['NAT 端口范围',<span className="mono">{text(n.nat_port_range??info.nat_port_range)}</span>],
@@ -161,8 +167,8 @@ export function NodeDetail({id,onClose}:{id:string;onClose:()=>void}){
 function NodeSkeleton({crumb}:{crumb:ReactNode}){
  return <section className="inst-page nd-page" aria-busy="true" aria-label="正在加载节点详情">
   {crumb}
-  <header className="inst-card inst-hero"><div className="inst-os"><Server size={28}/></div><div className="inst-hero-main">{sk('12rem')}{sk('20rem')}</div></header>
-  <Card className="inst-facts nd-facts"><dl>{['节点 ID','实例数量','IP 使用','运行时间','创建时间','更新时间'].map(t=><div key={t}><dt>{t}</dt><dd>{sk('6rem')}</dd></div>)}</dl></Card>
+  <header className="inst-card nd-top"><div className="nd-head"><span className="nd-status">{sk('36px')}</span><div className="nd-title">{sk('12rem')}</div></div>
+   <dl className="nd-strip">{['节点名称','节点 ID','区域','分组','节点类型','版本','实例数量','IP 使用','运行时间','维护模式','节点启用','开机自启'].map(t=><div key={t}><dt>{t}</dt><dd>{sk('5rem')}</dd></div>)}</dl></header>
   <div className="nd-grid">{['CPU','内存','磁盘'].map(t=><Card key={t} title={t} className="nd-card"><div className="nd-body">{sk('100%')}{sk('80%')}{sk('60%')}</div></Card>)}</div>
  </section>;
 }

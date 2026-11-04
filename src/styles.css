@@ -1271,3 +1271,19 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .nd-empty{margin:0;font-size:.875rem;color:var(--muted)}
 @media(max-width:1100px){.nd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-info .inst-kv{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.nd-grid{grid-template-columns:1fr}.nd-info .inst-kv{grid-template-columns:1fr}}
+/* 节点详情头部：一张白色卡片（不用渐变）。上行是状态图标 + 节点 IP + 操作，下面一条信息带 6 列 × 2 行 */
+.nd-top{display:grid}
+.nd-head{display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem;flex-wrap:wrap}
+.nd-status{flex:none;display:grid;place-items:center;width:3rem;height:3rem;border-radius:.875rem;background:var(--app-bg,var(--default))}
+.nd-status .sk-bar{width:36px;height:36px;border-radius:50%}
+.nd-title{flex:1;min-width:12rem;display:flex;align-items:center;gap:.25rem}
+.nd-title h1{margin:0;font-size:1.5rem;font-weight:600;letter-spacing:-.01em;overflow-wrap:anywhere}
+.nd-title h1 small{font-size:1rem;color:var(--muted);font-weight:500}
+.nd-strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));margin:0;border-top:1px solid var(--border)}
+.nd-strip>div{display:grid;align-content:center;gap:.4375rem;min-width:0;padding:.875rem 1.25rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.nd-strip>div:nth-child(6n){border-right:0}.nd-strip>div:nth-last-child(-n+6){border-bottom:0}
+.nd-strip dt{font-size:.75rem;color:var(--muted)}
+.nd-strip dd{margin:0;display:flex;align-items:center;gap:.4375rem;min-height:1.5rem;font-size:.9375rem;font-weight:500;min-width:0;overflow-wrap:anywhere}
+.nd-strip dd .country-flag{font-size:.875rem;border-radius:2px}
+@media(max-width:1100px){.nd-strip{grid-template-columns:repeat(4,minmax(0,1fr))}.nd-strip>div:nth-child(n){border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.nd-strip>div:nth-child(4n){border-right:0}.nd-strip>div:nth-last-child(-n+4){border-bottom:0}}
+@media(max-width:640px){.nd-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-strip>div:nth-child(n){border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.nd-strip>div:nth-child(2n){border-right:0}.nd-strip>div:nth-last-child(-n+2){border-bottom:0}}

@@ -74,12 +74,21 @@ export function createApp({clientFactory=c=>new CubeClient(c)}={}){
  // 后两个失败时只把错误带回去，页面照常显示其余部分。scrub 去掉 SSH 密码、密钥等敏感字段。
  app.get('/api/nodes/:id/overview',asyncRoute(async(req,res)=>{
   const id=req.params.id;if(!/^\d+$/.test(id))throw new HttpError(400,'节点编号无效');const c=req.session.client;
-  const [node,info,real]=await Promise.allSettled([c.request('GET',`nodes/${id}`),c.request('GET',`node_info/${id}`),c.request('GET',`nodes/${id}/real_data`)]);
+  const [node,info,real,state]=await Promise.allSettled([c.request('GET',`nodes/${id}`),c.request('GET',`node_info/${id}`),c.request('GET',`nodes/${id}/real_data`),c.request('GET',`nodes/${id}/status`)]);
   if(node.status==='rejected')throw node.reason;
-  for(const r of [info,real])if(r.status==='rejected'&&r.reason?.status===401)throw r.reason;
+  for(const r of [info,real,state])if(r.status==='rejected'&&r.reason?.status===401)throw r.reason;
   const pick=v=>v&&typeof v==='object'&&!Array.isArray(v)&&v.data&&typeof v.data==='object'&&!Array.isArray(v.data)?v.data:v;
   const part=r=>r.status==='fulfilled'?pick(r.value):null,fail=r=>r.status==='rejected'?String(r.reason?.message||r.reason):undefined;
-  res.json(scrub({node:pick(node.value),info:part(info),real:part(real),errors:{info:fail(info),real:fail(real)}}));
+  // 获取节点状态（v1/nodes/:id/status）：实时在线状态和节点程序版本
+  const st=part(state);
+  res.json(scrub({node:pick(node.value),info:part(info),real:part(real),state:st?{status:st.status,msg:st.msg,version:st.version}:null,errors:{info:fail(info),real:fail(real)}}));
+ }));
+ // 节点详情页的开关：维护模式、节点启用、开机自动启动实例。修改节点（PUT v1/nodes/:id）的字段都是可选的，只提交这一项。
+ const NODE_SWITCHES=['maintenance_mode','enable','auto_boot_host'];
+ app.put('/api/nodes/:id/switch',asyncRoute(async(req,res)=>{
+  const id=req.params.id;if(!/^\d+$/.test(id))throw new HttpError(400,'节点编号无效');
+  const {field,value}=req.body||{};if(!NODE_SWITCHES.includes(field))throw new HttpError(400,'不支持的设置');if(value!==0&&value!==1)throw new HttpError(400,'开关只能是 0 或 1');
+  res.json({ok:true,result:await mutate(req,'PUT',`nodes/${id}`,{[field]:value},'nodes',id,field)});
  }));
  app.post('/api/clouds/metrics',asyncRoute(async(req,res)=>{const ids=req.body.id;if(!Array.isArray(ids)||!ids.length||ids.length>100||ids.some(id=>!Number.isSafeInteger(id)||id<1))throw new HttpError(400,'实例编号无效');res.json(scrub(await req.session.client.request('POST','clouds/real_data',{body:{id:ids}})));}));
  app.get('/api/clouds/:id/state',asyncRoute(async(req,res)=>{if(!/^\d+$/.test(req.params.id))throw new HttpError(400,'实例编号无效');res.json(scrub(await req.session.client.request('GET',`clouds/${req.params.id}/status`)));}));
