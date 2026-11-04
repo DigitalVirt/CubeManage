@@ -147,7 +147,7 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
      <Stat title="KSM 共享" text={text(mem.ksm_share_memory)}/>
      <Stat title="内存使用率" value={pct(mem.use_percent)} amount={mem.total_memory?`${text(mem.use_memory)} / ${mem.total_memory}`:undefined}/>
      <Stat title="IO 延迟" text={real.io_wait!=null&&real.io_wait!==''?real.io_wait+'%':'—'}/>
-     {disks.map((d,i)=><Stat key={(d.mount_point||d.dev_name||'')+i} title={'硬盘 '+(d.mount_point||d.dev_name||i+1)} sub={d.dev_name&&d.mount_point?d.dev_name:undefined} value={pct(d.disk_percent)} amount={`${text(d.disk_use)} / ${text(d.disk_total)}`}/>)}
+     {disks.map((d,i)=><Stat key={(d.mount_point||d.dev_name||'')+i} title={'硬盘 '+(d.mount_point||(disks.length>1?i+1:''))} value={pct(d.disk_percent)} amount={`${text(d.disk_use)} / ${text(d.disk_total)}`}/>)}
     </div>
    </Card>
   </div>
