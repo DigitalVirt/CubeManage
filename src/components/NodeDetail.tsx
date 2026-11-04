@@ -95,18 +95,17 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
     </div>
    </div>
    <dl className="nd-strip">
-    <div><dt>节点名称</dt><dd>{text(n.name)}</dd></div>
-    <div><dt>节点 ID</dt><dd className="inst-secret"><span className="num">{n.id??id}</span><Copy value={String(n.id??id)} what="节点 ID"/></dd></div>
     <div><dt>区域</dt><dd><CountryFlag code={area?.country_code} name={area?.country_name||n.area_name}/>{n.area_name||area?.name||'—'}</dd></div>
+    <div><dt>节点名称</dt><dd>{text(n.name)}</dd></div>
     <div><dt>分组</dt><dd>{group?<span className="group-tag">{group}</span>:'—'}</dd></div>
     <div><dt>节点类型</dt><dd>{types[n.type]||text(n.type)}</dd></div>
-    <div><dt>版本</dt><dd className="mono">{text(data.state?.version)}</dd></div>
+    <div><dt>节点版本</dt><dd className="mono">{text(data.state?.version)}</dd></div>
+    <div><dt>运行时间</dt><dd>{text(real.uptime)}</dd></div>
+    <div><dt>开机自启</dt><dd>{toggleCell('auto_boot_host')}</dd></div>
+    <div><dt>节点启用</dt><dd>{toggleCell('enable')}</dd></div>
+    <div><dt>维护模式</dt><dd>{toggleCell('maintenance_mode')}</dd></div>
     <div><dt>实例数量</dt><dd className="num">{text(hosts)}</dd></div>
     <div><dt>IP 使用</dt><dd className="num">{Number.isFinite(ipTotal)&&ipTotal>0?<>{Number.isFinite(ipUsed)?ipUsed:'—'} / {ipTotal}</>:'—'}</dd></div>
-    <div><dt>运行时间</dt><dd>{text(real.uptime)}</dd></div>
-    <div><dt>维护模式</dt><dd>{toggleCell('maintenance_mode')}</dd></div>
-    <div><dt>节点启用</dt><dd>{toggleCell('enable')}</dd></div>
-    <div><dt>开机自启</dt><dd>{toggleCell('auto_boot_host')}</dd></div>
    </dl>
   </header>
 
@@ -168,7 +167,7 @@ function NodeSkeleton({crumb}:{crumb:ReactNode}){
  return <section className="inst-page nd-page" aria-busy="true" aria-label="正在加载节点详情">
   {crumb}
   <header className="inst-card nd-top"><div className="nd-head"><span className="nd-status">{sk('36px')}</span><div className="nd-title">{sk('12rem')}</div></div>
-   <dl className="nd-strip">{['节点名称','节点 ID','区域','分组','节点类型','版本','实例数量','IP 使用','运行时间','维护模式','节点启用','开机自启'].map(t=><div key={t}><dt>{t}</dt><dd>{sk('5rem')}</dd></div>)}</dl></header>
+   <dl className="nd-strip">{['区域','节点名称','分组','节点类型','节点版本','运行时间','开机自启','节点启用','维护模式','实例数量','IP 使用'].map(t=><div key={t}><dt>{t}</dt><dd>{sk('5rem')}</dd></div>)}</dl></header>
   <div className="nd-grid">{['CPU','内存','磁盘'].map(t=><Card key={t} title={t} className="nd-card"><div className="nd-body">{sk('100%')}{sk('80%')}{sk('60%')}</div></Card>)}</div>
  </section>;
 }
