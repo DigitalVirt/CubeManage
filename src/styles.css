@@ -1288,3 +1288,22 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .nd-strip dd .country-flag{font-size:.875rem;border-radius:2px}
 @media(max-width:1100px){.nd-strip{grid-template-columns:repeat(4,minmax(0,1fr))}.nd-strip>div:nth-child(n){border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.nd-strip>div:nth-child(4n){border-right:0}.nd-strip>div:nth-child(n+9){border-bottom:0}}
 @media(max-width:640px){.nd-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-strip>div:nth-child(n){border-right:1px solid var(--border);border-bottom:1px solid var(--border)}.nd-strip>div:nth-child(2n){border-right:0}.nd-strip>div:nth-child(n+11){border-bottom:0}}
+/* 头部下方一行两张无标题卡片：左侧系统信息（标签在左、值在右），右侧两列用量格 */
+.nd-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:1.25rem;align-items:stretch}
+.nd-sys .nd-kv{grid-template-columns:1fr;box-shadow:none;border-radius:0;background:none;padding:.25rem 1.25rem}
+.nd-sys .nd-kv>div{grid-template-columns:auto 1fr;align-items:baseline;gap:1rem;padding:.8125rem 0;border-left:0;margin:0;border-top:1px dashed var(--border)}
+.nd-sys .nd-kv>div:first-child{border-top:0}
+.nd-sys .nd-kv dt{font-size:.8125rem}
+.nd-sys .nd-kv dd{text-align:right;font-size:.875rem;font-weight:500}
+.nd-sys .nd-kv dd small{font-weight:400;color:var(--muted);font-size:.75rem}
+.nd-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.nd-stat{display:grid;gap:.4375rem;align-content:start;padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.nd-stat:nth-child(odd){border-right:1px solid var(--border)}
+.nd-stat:last-child,.nd-stat:nth-last-child(2):nth-child(odd){border-bottom:0}
+.nd-stat-head{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;font-size:.8125rem;color:var(--muted)}
+.nd-stat-head strong{font-size:1.125rem;font-weight:600;color:var(--foreground);text-align:right;overflow-wrap:anywhere}
+.nd-stat.is-high .nd-meter-track i{background:#f59e0b}.nd-stat.is-critical .nd-meter-track i{background:#dc2626}
+.nd-sk{padding-top:1.25rem}
+@media(max-width:1100px){.nd-pair{grid-template-columns:1fr}}
+@media(max-width:640px){.nd-stat-grid{grid-template-columns:1fr}.nd-stat:nth-child(odd){border-right:0}.nd-stat:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--border)}}
+

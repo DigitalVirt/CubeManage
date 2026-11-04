@@ -1,7 +1,7 @@
 import {useEffect,useState,type ReactNode} from 'react';
 import {Button,Skeleton,Switch,Tooltip} from '@heroui/react';
 import {useNavigate} from 'react-router-dom';
-import {Clipboard,ClipboardCheck,Cpu,HardDrive,List,MemoryStick,RefreshCw,Settings2} from 'lucide-react';
+import {Clipboard,ClipboardCheck,List,RefreshCw,Settings2} from 'lucide-react';
 import {api,send,PAGE_TITLE_EVENT,type Row} from '../lib/api';
 import {CountryFlag} from './CountryFlag';
 import {StatusIcon,healthStatus} from './StatusIcon';
@@ -11,7 +11,7 @@ import {copyText} from './CloudCells';
 /**
  * 节点详情页（/nodes/:id）。数据来自 GET /api/nodes/:id/overview，它合并了平台的三个接口：
  * 节点详情 v1/nodes/:id、节点内容页 v1/node_info/:id、节点实时数据 v1/nodes/:id/real_data。
- * 布局：顶部蓝色区域 → 概况 → CPU / 内存 / 磁盘（一行三个，通栏）→ 节点信息。节点上的实例在实例列表里看（顶部“查看节点实例”）。
+ * 布局：头部卡片（状态、节点 IP、信息带）→ 一行两张无标题卡片（左：系统信息；右：两列用量格，含各磁盘）→ 节点信息。节点上的实例在实例列表里看（顶部“查看节点实例”）。
  */
 type Overview={node:Row;info:Row|null;real:Row|null;state?:{status?:unknown;msg?:string;version?:string}|null;errors?:{info?:string;real?:string}};
 type SwitchKey='maintenance_mode'|'enable'|'auto_boot_host';
@@ -33,13 +33,13 @@ function Copy({value,what}:{value:string;what:string}){
  const [done,setDone]=useState(false);
  return <Button variant="ghost" size="sm" isIconOnly className="inst-icon-btn" aria-label={'复制'+what} onPress={async()=>{if(await copyText(value)){setDone(true);setTimeout(()=>setDone(false),1500);}}}>{done?<ClipboardCheck size={15}/>:<Clipboard size={15}/>}</Button>;
 }
-/** 用量条：标题、百分比，下方一行“已用 / 总量”和补充说明。 */
-function Meter({title,value,used,total,note}:{title:string;value:number|null;used?:ReactNode;total?:ReactNode;note?:ReactNode}){
- const level=value==null?'':value>=90?' is-critical':value>=80?' is-high':'';
- return <div className={'nd-meter'+level}>
-  <div className="nd-meter-head"><span>{title}</span><strong className="num">{value==null?'—':+value.toFixed(value<10?1:0)+'%'}</strong></div>
-  <span className="nd-meter-track" role="meter" aria-label={title+'使用率'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value??0}><i style={{width:(value??0)+'%'}}/></span>
-  {(used!=null||note!=null)&&<div className="nd-meter-foot num">{used!=null&&<span>{used}{total!=null&&<> / {total}</>}</span>}{note!=null&&<span>{note}</span>}</div>}
+/** 右侧用量格：标题；有百分比时显示大号百分比和用量条，否则显示文字值；下方一行补充说明。 */
+function Stat({title,value,text:shown,foot}:{title:string;value?:number|null;text?:ReactNode;foot?:ReactNode}){
+ const isPct=value!==undefined,level=value==null?'':value>=90?' is-critical':value>=80?' is-high':'';
+ return <div className={'nd-stat'+level}>
+  <div className="nd-stat-head"><span>{title}</span><strong className="num">{isPct?(value==null?'—':+value.toFixed(value<10?1:0)+'%'):shown}</strong></div>
+  {isPct&&<span className="nd-meter-track" role="meter" aria-label={title} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value??0}><i style={{width:(value??0)+'%'}}/></span>}
+  {foot!=null&&<div className="nd-meter-foot num"><span>{foot}</span></div>}
  </div>;
 }
 function Kv({items}:{items:[string,ReactNode][]}){return <dl className="inst-kv nd-kv">{items.map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>;}
@@ -110,41 +110,32 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
   </header>
 
   {data.errors?.real&&<ErrorBox message={'实时数据获取失败：'+data.errors.real}/>}
-  <div className="nd-grid">
-   <Card title="CPU" icon={<Cpu size={16}/>} className="nd-card">
-    <div className="nd-body">
-     <Meter title="CPU 使用率" value={pct(real.cpu_use_percent)} note={real.io_wait!=null?'IO 等待 '+real.io_wait+'%':undefined}/>
-     <Kv items={[
-      ['型号',<span className="nd-model">{text(cpu.model_name)}</span>],
-      ['核心 / 线程',cpu.cores!=null||cpu.threads!=null?<span className="num">{text(cpu.cores)} 核 / {text(cpu.threads)} 线程{cpu.sockets?` · ${cpu.sockets} 路`:''}</span>:'—'],
-      ['负载（1 / 5 / 15 分钟）',<span className="num">{[load['1min'],load['5min'],load['15min']].map(text).join(' / ')}</span>],
-      ['已分配 vCPU',<span className="num">{text(info.assign_cpu)}{maxCpu>0?' / 限额 '+maxCpu:''}</span>]
-     ]}/>
-    </div>
+  <div className="nd-pair">
+   <Card className="nd-sys">
+    <Kv items={[
+     ['CPU 型号',<span className="nd-model">{text(cpu.model_name)}</span>],
+     ['内核版本',<span className="mono">{text(real.kernel_version)}</span>],
+     ['QEMU 版本',<span className="mono">{text(real.qemu_version)}{qemu&&qemu!==real.qemu_version?<small> · 默认 {qemu}</small>:null}</span>],
+     ['运行时间 / 当前时间',<span className="num">{text(real.uptime)}<small> · {text(real.time)}</small></span>],
+     ['使用内存 / 分配内存',<span className="num">{text(mem.use_memory)} / {text(info.assign_memory)}{mem.total_memory?<small> · 共 {mem.total_memory}{maxMem>0?'，限额 '+maxMem+' GB':''}</small>:null}</span>],
+     ['分配核心数量',<span className="num">{text(info.assign_cpu)}{cpu.threads!=null||cpu.cores!=null?<small> · 共 {cpu.cores!=null?cpu.cores+' 核 ':''}{cpu.threads!=null?cpu.threads+' 线程':''}{maxCpu>0?'，限额 '+maxCpu:''}</small>:maxCpu>0?<small> · 限额 {maxCpu}</small>:null}</span>]
+    ]}/>
    </Card>
-   <Card title="内存" icon={<MemoryStick size={16}/>} className="nd-card">
-    <div className="nd-body">
-     <Meter title="内存使用率" value={pct(mem.use_percent)} used={text(mem.use_memory)} total={text(mem.total_memory)}/>
-     <Meter title="Swap 使用率" value={pct(swap.swap_use_percent)} used={text(swap.use_swap)} total={text(swap.total_swap)}/>
-     <Kv items={[
-      ['KSM 共享',<span className="num">{text(mem.ksm_share_memory)}</span>],
-      ['已分配内存',<span className="num">{text(info.assign_memory)}{maxMem>0?' / 限额 '+maxMem+' GB':''}</span>]
-     ]}/>
-    </div>
-   </Card>
-   <Card title="磁盘" icon={<HardDrive size={16}/>} className="nd-card nd-disks">
-    <div className="nd-body">
-     {disks.length?disks.map((d,i)=><Meter key={(d.mount_point||d.dev_name||'')+i} title={d.mount_point||d.dev_name||'磁盘 '+(i+1)} value={pct(d.disk_percent)} used={text(d.disk_use)} total={text(d.disk_total)} note={d.dev_name&&d.mount_point?d.dev_name:undefined}/>)
-      :<p className="nd-empty">{data.errors?.real?'—':'平台没有返回磁盘数据'}</p>}
+   <Card className="nd-stats">
+    <div className="nd-stat-grid">
+     <Stat title="CPU 使用率" value={pct(real.cpu_use_percent)}/>
+     <Stat title="Swap 使用率" value={pct(swap.swap_use_percent)} foot={swap.total_swap?`${text(swap.use_swap)} / ${swap.total_swap}`:undefined}/>
+     <Stat title="平均负载" text={[load['1min'],load['5min'],load['15min']].map(text).join(' / ')} foot="1 / 5 / 15 分钟"/>
+     <Stat title="KSM 共享" text={text(mem.ksm_share_memory)}/>
+     <Stat title="内存使用率" value={pct(mem.use_percent)} foot={mem.total_memory?`${text(mem.use_memory)} / ${mem.total_memory}`:undefined}/>
+     <Stat title="IO 延迟" text={real.io_wait!=null&&real.io_wait!==''?real.io_wait+'%':'—'}/>
+     {disks.map((d,i)=><Stat key={(d.mount_point||d.dev_name||'')+i} title={'硬盘 '+(d.mount_point||d.dev_name||i+1)} value={pct(d.disk_percent)} foot={`${text(d.disk_use)} / ${text(d.disk_total)}${d.dev_name&&d.mount_point?' · '+d.dev_name:''}`}/>)}
     </div>
    </Card>
   </div>
 
   <Card title="节点信息" icon={<Settings2 size={16}/>} className="nd-info">
    <Kv items={[
-    ['内核版本',<span className="mono">{text(real.kernel_version)}</span>],
-    ['QEMU 版本',<span className="mono">{text(real.qemu_version)}{qemu&&qemu!==real.qemu_version?' · 默认 '+qemu:''}</span>],
-    ['节点时间',<span className="num">{text(real.time)}</span>],
     ['授权方式',licenseModes[n.license_mode]||text(n.license_mode)],
     ['节点疏散',onOff(n.evacuate??info.evacuate,'正在疏散','未启用')],
     ['单 IP 建站',onOff(n.single_ip_nat,'支持','不支持')],
@@ -168,6 +159,6 @@ function NodeSkeleton({crumb}:{crumb:ReactNode}){
   {crumb}
   <header className="inst-card nd-top"><div className="nd-head"><span className="nd-status">{sk('36px')}</span><div className="nd-title">{sk('12rem')}</div></div>
    <dl className="nd-strip">{['区域','节点名称','分组','节点类型','节点版本','运行时间','开机自启','节点启用','维护模式','实例数量','IP 使用'].map(t=><div key={t}><dt>{t}</dt><dd>{sk('5rem')}</dd></div>)}</dl></header>
-  <div className="nd-grid">{['CPU','内存','磁盘'].map(t=><Card key={t} title={t} className="nd-card"><div className="nd-body">{sk('100%')}{sk('80%')}{sk('60%')}</div></Card>)}</div>
+  <div className="nd-pair"><Card className="nd-sys"><div className="nd-body nd-sk">{sk('100%')}{sk('90%')}{sk('80%')}{sk('70%')}</div></Card><Card className="nd-stats"><div className="nd-body nd-sk">{sk('100%')}{sk('100%')}{sk('100%')}</div></Card></div>
  </section>;
 }
