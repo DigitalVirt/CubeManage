@@ -64,7 +64,7 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
  const [charts,setCharts]=useState<Charts|null>(null),[chartsError,setChartsError]=useState(''),[devSel,setDevSel]=useState<{disk:string;net:string;io:string}>({disk:'',net:'',io:''});
  // 时间范围（所有图表共用）：null = 最近 3 天
  const [range,setRange]=useState<Range>(null);
- const [daily,setDaily]=useState<{start:number;end:number;data:{day:string;in:number;out:number}[]}|null>(null),[dailyError,setDailyError]=useState('');
+ const [daily,setDaily]=useState<{start:number;end:number;net:string|null;nets:string[];data:{day:string;in:number;out:number}[]}|null>(null),[dailyError,setDailyError]=useState(''),[dailyNet,setDailyNet]=useState('');
  const [switches,setSwitches]=useState<Partial<Record<SwitchKey,number>>>({}),[saving,setSaving]=useState<SwitchKey|null>(null);
  useEffect(()=>{let on=true;setBusy(true);setError('');
   api<Overview>(`/nodes/${id}/overview`).then(r=>{if(on)setData(r);}).catch(e=>{if(on)setError((e as Error).message);}).finally(()=>{if(on)setBusy(false);});
@@ -72,8 +72,8 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
  const rangeQuery:Record<string,string>=range?{st:String(Math.round(range.st)),et:String(Math.round(range.et))}:{days:'3'};
  useEffect(()=>{let on=true;setChartsError('');const q=new URLSearchParams({...rangeQuery,...Object.fromEntries(Object.entries(devSel).filter(([,v])=>v))});
   api<Charts>(`/nodes/${id}/charts?${q}`).then(r=>{if(on)setCharts(r);}).catch(e=>{if(on)setChartsError((e as Error).message);});return()=>{on=false;};},[id,rev,devSel,range]);
- useEffect(()=>{let on=true;setDailyError('');const q=new URLSearchParams({...rangeQuery,tz:String(new Date().getTimezoneOffset())});
-  api(`/nodes/${id}/daily_traffic?${q}`).then(r=>{if(on)setDaily(r);}).catch(e=>{if(on)setDailyError((e as Error).message);});return()=>{on=false;};},[id,rev,range]);
+ useEffect(()=>{let on=true;setDailyError('');const q=new URLSearchParams({...rangeQuery,tz:String(new Date().getTimezoneOffset()),...(dailyNet?{net:dailyNet}:{})});
+  api(`/nodes/${id}/daily_traffic?${q}`).then(r=>{if(on)setDaily(r);}).catch(e=>{if(on)setDailyError((e as Error).message);});return()=>{on=false;};},[id,rev,range,dailyNet]);
  const n=data?.node||{},info=data?.info||{},real=data?.real||{};
  const areaId=n.area_id??info.area?.id;
  useEffect(()=>{if(areaId==null)return;let on=true;api(`/resources/areas/${areaId}`).then(r=>{if(on)setArea(r?.data&&!Array.isArray(r.data)&&r.id==null?r.data:r);}).catch(()=>{});return()=>{on=false;};},[areaId]);
@@ -172,7 +172,7 @@ export function NodeDetail({id,onClose,notify}:{id:string;onClose:()=>void;notif
      {chart('网卡','net',[{name:'进',color:GREEN,i:1},{name:'出',color:BLUE,i:2}],bpsFmt,devPick('net','网卡'))}
      {chart('包转发率','pps',[{name:'进',color:GREEN,i:1},{name:'出',color:BLUE,i:2}],countFmt('pps'))}
      {chart('硬盘 IO','io',[{name:'读取',color:GREEN,i:1},{name:'写入',color:BLUE,i:2}],countFmt('IOPS'),devPick('io','磁盘'))}
-     <Card title="用量排行" className="nd-chart nd-daily">
+     <Card title="用量排行" className="nd-chart nd-daily" actions={daily&&daily.nets.length>1?<Choice aria-label="选择网卡" value={daily.net||''} onChange={e=>setDailyNet(e.target.value)}>{daily.nets.map(d=><option key={d} value={d}>{d}</option>)}</Choice>:daily?.net?<span className="nd-dev mono">{daily.net}</span>:undefined}>
       {dailyError?<p className="nd-empty nd-chart-msg">{dailyError}</p>:!daily?<div className="nd-chart-sk">{sk('100%')}</div>
        :<DailyBars days={daily.data} format={sizeFmt} label="每天进出流量" rangeControl={<RangePicker range={range} start={daily.start} end={daily.end} onChange={setRange}/>}/>}
      </Card>

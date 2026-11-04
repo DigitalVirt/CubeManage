@@ -57,3 +57,25 @@ test('节点图表：时间范围与按天汇总',()=>{
  const pts=[[Date.UTC(2026,10,3,10),100,10],[Date.UTC(2026,10,3,17),5,1],[Date.UTC(2026,10,4,1),7,2]];
  assert.deepEqual(dailyTotals(pts,-480),[{day:'2026-11-03',in:100,out:10},{day:'2026-11-04',in:12,out:3}]);
 });
+
+test('用量排行：v1/net_total 取节点网络，kvm_ifname 传网卡名，按天汇总',async t=>{
+ const calls=[];
+ const app=createApp({clientFactory:c=>new CubeClient(c,{transport:async url=>{
+  const route=url.pathname.replace(/^\/admin\/v1\//,'');const q=Object.fromEntries(url.searchParams);calls.push({route,q});
+  if(route==='login')return json('TOKEN');
+  if(route==='node_statistics')return json({data:{dev:['sda'],net:['eth0','eth1'],disk:['sda']}});
+  if(route==='net_total')return json({data:[['2026-11-03 10:00',100,10],['2026-11-03 11:00',50,5]]});
+  return json({});
+ }})});
+ const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));t.after(()=>new Promise(r=>server.close(r)));
+ const base='http://127.0.0.1:'+server.address().port;
+ const res=await fetch(base+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({baseUrl:'https://cube.example/admin',username:'admin',password:'pw'})});
+ const cookie=res.headers.get('set-cookie').split(';')[0];const get=p=>fetch(base+p,{headers:{Cookie:cookie}}).then(r=>r.json());
+ let b=await get('/api/nodes/5/daily_traffic?tz=-480');
+ let nt=calls.filter(c=>c.route==='net_total').pop();
+ assert.equal(nt.q.node_id,'5');assert.equal(nt.q.type,'main_net_info');assert.equal(nt.q.status,'1');assert.equal(nt.q.kvm_ifname,'eth0','默认第一块网卡');
+ assert.deepEqual(b.nets,['eth0','eth1']);assert.equal(b.net,'eth0');assert.deepEqual(b.data,[{day:'2026-11-03',in:150,out:15}]);
+ b=await get('/api/nodes/5/daily_traffic?net=eth1');nt=calls.filter(c=>c.route==='net_total').pop();
+ assert.equal(nt.q.kvm_ifname,'eth1');assert.equal(b.net,'eth1');
+});
+
