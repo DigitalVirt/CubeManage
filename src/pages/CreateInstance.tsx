@@ -138,7 +138,7 @@ export function CreateInstance({notify}:{notify:Notify}){
  const keyName=keys?.find(k=>String(k.id)===sshKey)?.name;
  const summary:[string,string][]=[
   ['区域',areaRow?.name||'—'],['节点',nodeRow?.name||'自动分配'],['镜像',image?String(image.name):'未选择'],
-  ['所属用户',client.name||'平台默认用户'],['登录',login==='1'?(keyName?'密钥 '+keyName:'SSH 密钥'):pass?'自定义密码':'随机密码'],['数量',(pickIp?1:num||1)+' 台'],
+  ['所属用户',client.name||'平台默认用户'],['登录',login==='1'?(keyName?'密钥 '+keyName:'密钥'):pass?'自定义密码':'随机密码'],['数量',(pickIp?1:num||1)+' 台'],
   ['规格',`${cpu||'—'} vCPU · ${memGb||'—'} GB`],['系统盘',sysDisk?sysDisk+' GB':'跟随系统设置'],...(withData&&dataDisk?[['数据盘',dataDisk+' GB'] as [string,string]]:[]),
   ['网络',(net==='vpc'?'VPC':'经典')+' · '+(pickIp?(picked.length?(picked.length>1?ipText(picked[0])+' 等 '+picked.length+' 个':ipText(picked[0])):'指定 IP（未选）'):(ipNum||0)+' 个 IPv4')+(showV6&&Number(ipv6)>0?' · '+ipv6+' 个 IPv6':'')],
   ['带宽',(inBw||outBw)?`${inBw||'不限'} / ${outBw||'不限'} Mbps`:'不限'],['流量',quota&&quota!=='0'?quota+' GB':'不限']
@@ -148,7 +148,7 @@ export function CreateInstance({notify}:{notify:Notify}){
   const local:Record<string,string>={};
   if(!area)local.area='请选择区域';if(!os)local.os='请选择系统镜像';if(!Number(cpu))local.cpu='请选择 CPU';if(!(memMb>=128))local.memory='请选择内存';
   if(pickIp&&!picked.length)local.ipaddress='请选择要指定的 IP，或改用随机分配';
-  if(login==='1'&&!client.id)local.client='使用 SSH 密钥登录时，请先选择所属用户';else if(login==='1'&&!sshKey)local.ssh_key='请选择 SSH 密钥';
+  if(login==='1'&&!client.id)local.client='使用密钥登录时，请先选择所属用户';else if(login==='1'&&!sshKey)local.ssh_key='请选择密钥';
   if(Object.keys(local).length){setErrors(local);setError('请检查标红的项目');document.getElementById(local.area||local.os?'ci-1':local.client||local.ssh_key?'ci-2':'ci-3')?.scrollIntoView({behavior:'smooth',block:'start'});return;}
   const body:Row={type,area:Number(area),node:node?Number(node):0,node_priority:Number(priority),store:store?Number(store):0,os:Number(os),cpu:Number(cpu),memory:memMb,network_type:net,ip_num:Number(ipNum||0),password_type:Number(login),num:pickIp?1:Number(num||1)};
   if(pickIp){delete body.ip_num;body.ipaddress=picked;}
@@ -185,12 +185,12 @@ export function CreateInstance({notify}:{notify:Notify}){
       <Text label="主机名" w="l" value={hostname} onChange={setHostname} placeholder="自动生成" help={Number(num)>1?'批量创建时作为前缀，依次加 001、002…':undefined} error={errors.hostname}/>
       <Stepper label="创建数量" unit="台" value={pickIp?'1':num} onChange={setNum} min={1} max={100} disabled={pickIp} error={errors.num} help={pickIp?'指定 IP 时只能创建 1 台':undefined}/>
      </div>
-     <Field label="登录方式"><Seg label="登录方式" value={login} options={[['0','密码'],['1','SSH 密钥']]} onChange={setLogin}/></Field>
+     <Field label="登录方式"><Seg label="登录方式" value={login} options={[['0','密码'],['1','密钥']]} onChange={setLogin}/></Field>
      <div className="ci-fields">
-      {login==='0'?<div className="ci-field ci-w-l"><TextField value={pass} onChange={setPass} isInvalid={Boolean(errors.rootpass)}><Label>密码</Label><InputGroup><InputGroup.Input type={showPass?'text':'password'} placeholder="留空由平台随机生成" autoComplete="new-password"/><InputGroup.Suffix><Button variant="ghost" size="sm" isIconOnly aria-label="随机生成密码" onPress={()=>{setPass(randomPassword());setShowPass(true);}}><Dices size={16}/></Button><Button variant="ghost" size="sm" isIconOnly aria-label={showPass?'隐藏密码':'显示密码'} onPress={()=>setShowPass(!showPass)}>{showPass?<EyeOff size={16}/>:<Eye size={16}/>}</Button></InputGroup.Suffix></InputGroup></TextField>{errors.rootpass?<small className="field-error">{errors.rootpass}</small>:<small className="field-help">6～128 位；Windows 镜像需满足复杂度要求</small>}</div>
-      :<Field label="SSH 密钥" w="l" error={errors.ssh_key} help={!client.id?'只列出所属用户的密钥，请先选择所属用户':keys&&!keys.length?(client.name||'该用户')+' 还没有 SSH 密钥，可在“密钥管理”中添加':'只列出 '+client.name+' 的密钥'}>
-        <Choice aria-label="SSH 密钥" value={sshKey} onChange={e=>setSshKey(e.target.value)}><option value="">{!client.id?'请先选择所属用户':!keys?'加载中…':keys.length?'请选择 SSH 密钥':'没有可用的密钥'}</option>{(keys||[]).map(k=><option key={k.id} value={String(k.id)}>{k.name}</option>)}</Choice></Field>}
-      <Text label="SSH / 远程端口" w="m" mono value={port} onChange={setPort} placeholder="跟随系统" help="22、100～65535，或填 auto 随机" error={errors.port}/>
+      {login==='0'?<div className="ci-field ci-w-l"><TextField value={pass} onChange={setPass} isInvalid={Boolean(errors.rootpass)}><Label>密码</Label><InputGroup><InputGroup.Input type={showPass?'text':'password'} placeholder="留空由平台随机生成" autoComplete="new-password"/><InputGroup.Suffix><Button variant="ghost" size="sm" isIconOnly aria-label="随机生成密码" onPress={()=>{setPass(randomPassword());setShowPass(true);}}><Dices size={16}/></Button><Button variant="ghost" size="sm" isIconOnly aria-label={showPass?'隐藏密码':'显示密码'} onPress={()=>setShowPass(!showPass)}>{showPass?<EyeOff size={16}/>:<Eye size={16}/>}</Button></InputGroup.Suffix></InputGroup></TextField>{errors.rootpass&&<small className="field-error">{errors.rootpass}</small>}</div>
+      :<Field label="密钥" w="l" error={errors.ssh_key} help={!client.id?'只列出所属用户的密钥，请先选择所属用户':keys&&!keys.length?(client.name||'该用户')+' 还没有密钥，可在“密钥管理”中添加':'只列出 '+client.name+' 的密钥'}>
+        <Choice aria-label="密钥" value={sshKey} onChange={e=>setSshKey(e.target.value)}><option value="">{!client.id?'请先选择所属用户':!keys?'加载中…':keys.length?'请选择密钥':'没有可用的密钥'}</option>{(keys||[]).map(k=><option key={k.id} value={String(k.id)}>{k.name}</option>)}</Choice></Field>}
+      <Text label="SSH / 远程端口" w="m" mono value={port} onChange={setPort} placeholder="跟随系统" error={errors.port}/>
      </div>
      {!pickIp&&Number(num)>1&&login==='0'&&<Flag checked={samePass} onChange={setSamePass}>批量创建的实例使用同一个密码</Flag>}
     </Panel>
@@ -206,7 +206,7 @@ export function CreateInstance({notify}:{notify:Notify}){
       :<Field label="数据盘"><Button size="sm" variant="ghost" className="ci-add" onPress={()=>{setWithData(true);setDataDisk('50');}}><Plus size={15}/>添加数据盘</Button></Field>}
      </div>
      <div className="ci-divider"/>
-     <Field label="网络类型"><Seg label="网络类型" value={net} options={[['normal','经典网络'],...(type==='host'?[['vpc','VPC 专有网络'] as [string,string]]:[])]} onChange={setNet}/></Field>
+     <Field label="网络类型"><Seg label="网络类型" value={net} options={[['normal','经典网络'],...(type==='host'?[['vpc','VPC 网络'] as [string,string]]:[])]} onChange={setNet}/></Field>
      {net==='vpc'&&<div className="ci-fields">
       <Field label="VPC 网络" w="l" error={errors.vpc}><Choice aria-label="VPC 网络" value={vpc} onChange={e=>setVpc(e.target.value)}><option value="">新建 VPC 网络</option>{(vpcs||[]).map(v=><option key={v.id} value={String(v.id)}>{v.name} · {v.ips}{v.username?' · '+v.username:''}</option>)}</Choice></Field>
       {!vpc&&<Text label="新 VPC 名称" w="m" value={vpcName} onChange={setVpcName} placeholder="留空自动命名" error={errors.vpc_name}/>}

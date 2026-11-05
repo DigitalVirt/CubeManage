@@ -44,7 +44,7 @@ const nodeItems=(r:Row)=>[...new Set(vpcMacs(r).map(m=>String(m.node_name||'')).
 export function VpcPage({notify}:{notify:Notify}){
  const options=useOptions(null);
  const config:Config={kind:'vpcs',noun:'VPC 网络',search:'搜索 VPC 名称或用户名',location:true,edit:true,remove:true,select:false,label:r=>r.name||'#'+r.id,
-  empty:['还没有 VPC 网络','实例使用 VPC 专有网络创建后，网络会出现在这里。'],deleteNote:'只能删除没有实例在用的 VPC 网络，平台会拒绝删除仍在使用的网络。',
+  empty:['还没有 VPC 网络','实例使用 VPC 网络创建后，网络会出现在这里。'],deleteNote:'只能删除没有实例在用的 VPC 网络，平台会拒绝删除仍在使用的网络。',
   fields:[{key:'name',label:'接口名称',required:true,span:true}],
   columns:[
    {key:'name',title:'接口名称',rowHeader:true,sk:8,render:r=><strong>{r.name||'—'}</strong>},
