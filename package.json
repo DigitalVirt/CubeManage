@@ -1,6 +1,6 @@
 {
   "name": "cubemanage",
-  "version": "0.1.95",
+  "version": "0.1.96",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.16.1",

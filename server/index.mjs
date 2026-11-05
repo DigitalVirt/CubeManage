@@ -15,6 +15,7 @@ import {registerNetwork} from './network.mjs';
 import {registerCreate} from './create.mjs';
 import {registerBusiness} from './business.mjs';
 import {registerNodeCharts} from './node-charts.mjs';
+import {registerNodeBatch} from './node-batch.mjs';
 export function createApp({clientFactory=c=>new CubeClient(c)}={}){
  const app=express(),attempts=new Map(),revoked=new Map();
  // 不需要任何配置：信任本机、局域网和 Docker 内网上的反向代理传来的 X-Forwarded-Proto / X-Forwarded-Host，
@@ -136,6 +137,7 @@ export function createApp({clientFactory=c=>new CubeClient(c)}={}){
  registerCreate(app,{asyncRoute,mutate});
  registerBusiness(app,{asyncRoute,mutate});
  registerNodeCharts(app,{asyncRoute});
+ registerNodeBatch(app,{asyncRoute,mutate});
  app.use('/api',(req,res)=>res.status(404).json({error:'接口不存在'}));
  app.use(express.static(path.join(root,'dist'),{index:false}));app.get('/{*path}',(req,res)=>res.sendFile(path.join(root,'dist/index.html')));
  app.use((err,req,res,next)=>{if(res.headersSent)return next(err);if(err.status===401&&req.session)clearSessionCookie(req,res);res.status(err.status||500).json({error:err instanceof HttpError?err.message:err.status===400?'请求格式不正确':'服务内部错误，请检查服务配置',fields:err.details});});
