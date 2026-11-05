@@ -1,5 +1,5 @@
-import {useState,type FormEvent} from 'react';
-import {Button,TextField,Label,Input,InputGroup,Description} from '@heroui/react';
+import {useEffect,useState,type FormEvent} from 'react';
+import {Button,Checkbox,TextField,Label,Input,InputGroup,Description} from '@heroui/react';
 import {ArrowRight,Eye,EyeOff,ShieldCheck} from 'lucide-react';
 import {Choice} from '../components/Controls';
 import {loadPlatforms,rememberPlatform,forgetPlatform} from '../lib/savedPlatforms';
@@ -28,21 +28,34 @@ function Lifecycle(){
 
 const NEW='__new';
 
+/** 桌面客户端通过 preload 暴露的“记住账号”接口；网页版和 Docker 版没有。 */
+type Credentials={available:()=>Promise<boolean>;get:(url:string)=>Promise<{username:string;password:string|null;hasPassword:boolean}|null>;save:(url:string,username:string,password:string|null)=>Promise<unknown>;remove:(url:string)=>Promise<unknown>};
+const creds=(window as unknown as {cubemanageDesktop?:{credentials?:Credentials}}).cubemanageDesktop?.credentials;
+
 export function Login({onLogin}:{onLogin:(s:Session)=>void}){
- // 登录过的平台地址保存在这个浏览器里（只有地址），有的话默认选中最近一次的；用户名和密码每次输入，从不保存。
+ // 登录过的平台地址保存在这个浏览器里（只有地址），有的话默认选中最近一次的。
+ // 网页版：用户名和密码每次输入，从不保存。桌面客户端：可勾选“记住用户名和密码”，密码由系统加密保存在本机（见 electron/credentials.mjs）。
  const [saved,setSaved]=useState<string[]>(()=>loadPlatforms());
  const [baseUrl,setBase]=useState(()=>saved[0]||''),[typing,setTyping]=useState(()=>!saved.length);
  const [username,setUsername]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[show,setShow]=useState(false);
+ const [remember,setRemember]=useState(false),[canEncrypt,setCanEncrypt]=useState(true);
+ useEffect(()=>{creds?.available().then(setCanEncrypt).catch(()=>setCanEncrypt(false));},[]);
+ // 选中已保存的平台地址时，填入这个平台记住的用户名和密码
+ useEffect(()=>{if(!creds||typing||!baseUrl)return;let on=true;
+  creds.get(baseUrl).then(c=>{if(!on)return;if(c){setUsername(c.username);setPassword(c.password||'');setRemember(true);}else{setUsername('');setPassword('');setRemember(false);}}).catch(()=>{});
+  return()=>{on=false;};},[baseUrl,typing]);
  const pick=(v:string)=>{if(v===NEW){setTyping(true);setBase('');}else setBase(v);};
  const backToList=()=>{setTyping(false);setBase(saved[0]||'');};
- const remove=()=>{const list=forgetPlatform(baseUrl);setSaved(list);if(list.length)setBase(list[0]);else{setTyping(true);setBase('');}};
- async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{const session=await api<Session>('/login',send('POST',{baseUrl,username,password}));rememberPlatform(baseUrl);onLogin(session);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+ const remove=()=>{creds?.remove(baseUrl).catch(()=>{});const list=forgetPlatform(baseUrl);setSaved(list);if(list.length)setBase(list[0]);else{setTyping(true);setBase('');}};
+ async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{const session=await api<Session>('/login',send('POST',{baseUrl,username,password}));rememberPlatform(baseUrl);
+  if(creds){try{if(remember)await creds.save(baseUrl,username,canEncrypt?password:null);else await creds.remove(baseUrl);}catch{/* 保存失败不影响登录 */}}
+  onLogin(session);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  return <main className="login-page">
   <aside className="login-brand">
    <div className="login-mark"><img src="/logo.svg" width={36} height={36} alt=""/><span>Cube<b>Manage</b></span></div>
    <Lifecycle/>
    <div className="login-story">
-    <p className="login-trust"><ShieldCheck size={16} aria-hidden="true"/>密码只用于本次登录，不在任何地方保存；会话加密保存在你的浏览器，随平台令牌失效。</p>
+    <p className="login-trust"><ShieldCheck size={16} aria-hidden="true"/>{creds?'密码只用于登录平台；勾选“记住”时，由系统加密保存在这台电脑上，不会上传到任何地方。':'密码只用于本次登录，不在任何地方保存；会话加密保存在你的浏览器，随平台令牌失效。'}</p>
    </div>
   </aside>
   <section className="login-main">
@@ -73,6 +86,10 @@ export function Login({onLogin}:{onLogin:(s:Session)=>void}){
       <InputGroup.Suffix><Button variant="ghost" size="sm" isIconOnly type="button" aria-label={show?'隐藏密码':'显示密码'} aria-pressed={show} onPress={()=>setShow(!show)}>{show?<EyeOff size={16}/>:<Eye size={16}/>}</Button></InputGroup.Suffix>
      </InputGroup>
     </TextField>
+    {creds&&<div className="login-remember">
+     <Checkbox isSelected={remember} onChange={setRemember}><Checkbox.Content><Checkbox.Control><Checkbox.Indicator/></Checkbox.Control><Label>{canEncrypt?'记住用户名和密码':'记住用户名'}</Label></Checkbox.Content></Checkbox>
+     <small>{canEncrypt?'密码由系统加密保存在这台电脑上（macOS 钥匙串 / Windows 凭据保护），下次选择这个平台地址时自动填入。':'这台电脑不支持加密保存密码，只会记住用户名。'}</small>
+    </div>}
     <Button type="submit" fullWidth isPending={busy} isDisabled={busy} className="login-submit">{busy?'正在连接平台…':'登录'}{!busy&&<ArrowRight size={16}/>}</Button>
    </form>
    <footer className="login-footer">CubeManage v{__APP_VERSION__}</footer>

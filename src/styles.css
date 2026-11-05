@@ -1425,3 +1425,7 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
  .filter-bar .filters>:not(.resource-search){flex:1 1 calc(50% - .25rem);min-width:0}
  .filter-bar .filter-actions{width:100%;justify-content:flex-end}
 }
+/* 登录页：桌面客户端的“记住用户名和密码” */
+.login-remember{display:grid;gap:.25rem}
+.login-remember small{padding-left:1.75rem;font-size:.75rem;color:var(--muted);line-height:1.5}
+

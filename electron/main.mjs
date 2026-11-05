@@ -4,10 +4,11 @@
  * 窗口加载这个本机地址。服务只监听本机，外部访问不到；平台地址、账号仍只在登录页填写。
  * 有新版本时弹窗提示（见 updater.mjs）；macOS 在应用菜单、Windows 在页面右上角个人菜单里可以手动“检查更新”。
  */
-import {app,BrowserWindow,shell,Menu,ipcMain} from 'electron';
+import {app,BrowserWindow,shell,Menu,ipcMain,safeStorage} from 'electron';
 import path from 'node:path';
 import {createApp} from '../server/index.mjs';
 import {checkForUpdates,scheduleUpdateChecks} from './updater.mjs';
+import {createCredentialStore} from './credentials.mjs';
 
 app.setName('CubeManage');
 const PREFERRED_PORT=47080; // 固定端口让浏览器存储（筛选、网站名称缓存）跨次启动保留；被占用时改用随机端口
@@ -39,6 +40,14 @@ else{
    {role:'editMenu'},{role:'viewMenu'},{role:'windowMenu'}]));
   // 页面里的“检查更新”（个人菜单）：只接受本机页面发来的请求
   ipcMain.handle('cubemanage:check-update',e=>{if(!String(e.senderFrame?.url||'').startsWith(origin))return;return checkForUpdates(win,{manual:true});});
+  // 记住用户名和密码：密码用 safeStorage 加密（macOS 钥匙串、Windows DPAPI）后保存在应用数据目录，只接受本机页面的请求
+  const creds=createCredentialStore({file:path.join(app.getPath('userData'),'credentials.json'),
+   crypto:{available:()=>safeStorage.isEncryptionAvailable(),encrypt:t=>safeStorage.encryptString(t),decrypt:b=>safeStorage.decryptString(b)}});
+  const local=e=>String(e.senderFrame?.url||'').startsWith(origin);
+  ipcMain.handle('cubemanage:cred-available',e=>local(e)?creds.available():false);
+  ipcMain.handle('cubemanage:cred-get',(e,url)=>local(e)?creds.get(url):null);
+  ipcMain.handle('cubemanage:cred-save',(e,url,username,password)=>{if(!local(e))throw new Error('不允许的来源');return creds.save(url,username,password);});
+  ipcMain.handle('cubemanage:cred-remove',(e,url)=>{if(!local(e))throw new Error('不允许的来源');return creds.remove(url);});
   await startServer();createWindow();
   scheduleUpdateChecks(()=>win);
   app.on('activate',()=>{if(!BrowserWindow.getAllWindows().length)createWindow();});
