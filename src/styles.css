@@ -1356,7 +1356,8 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .nd-chart-sk .sk-bar{height:300px}
 /* 节点批量修改 */
 .node-batch-form{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:1rem}
-.node-batch-form .input-group,.node-batch-form .input{width:100%}
+.node-batch-form .input-group,.node-batch-form .input{width:100%;min-width:0}
+.node-batch-form .input-group__input{width:100%;min-width:0;flex:1}
 .node-batch-wide{grid-column:1/-1}
 .node-batch-key{width:100%;min-height:6rem;padding:.5rem .75rem;border:1px solid var(--field-border,var(--border));border-radius:.75rem;background:var(--field-background,var(--background));font-size:.8125rem;color:var(--foreground);resize:vertical}
 .node-batch-key:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
