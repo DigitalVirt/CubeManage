@@ -1045,13 +1045,7 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .ci-field{display:grid;gap:.375rem;align-content:start;min-width:0}
 .ci-span{grid-column:1/-1}
 .ci-label{font-size:.875rem;font-weight:500}
-.ci-areas{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:.625rem}
-.ci-area{display:grid;gap:.125rem;padding:.75rem .875rem;border:1px solid var(--field-border,#d4d4d8);border-radius:12px;background:var(--surface);text-align:left;font:inherit;cursor:pointer}
-.ci-area strong{display:flex;align-items:center;gap:.375rem;font-size:.875rem;font-weight:600}
-.ci-area small{font-size:.75rem;color:var(--muted)}
-.ci-area:hover{border-color:color-mix(in srgb,var(--accent) 45%,#d4d4d8)}
-.ci-area.is-on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
-.ci-area:focus-visible,.ci-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ci-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .ci-chips{display:flex;flex-wrap:wrap;gap:.5rem}
 .ci-inline{display:flex;align-items:flex-end;flex-wrap:wrap;gap:.5rem}
 .ci-chip{height:2.25rem;padding:0 .875rem;border:1px solid #d4d4d8;border-radius:var(--field-radius,.625rem);background:var(--surface);font:inherit;font-size:.8125rem;color:var(--foreground);cursor:pointer;font-variant-numeric:tabular-nums}
@@ -1429,3 +1423,49 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .login-remember{display:grid;gap:.25rem}
 .login-remember small{padding-left:1.75rem;font-size:.75rem;color:var(--muted);line-height:1.5}
 
+/* 新建实例（2026-11 调整）：位置与镜像 · 实例与登录 · 规格与网络。区域节点不用下拉，镜像为一行两个下拉。 */
+.ci-divider{height:1px;background:var(--border);margin:.25rem 0}
+.ci-chip{display:inline-flex;align-items:center;gap:.375rem}
+.ci-chip:disabled{opacity:.5;cursor:not-allowed}
+.ci-chip-note{font-size:.75rem;color:var(--muted);font-weight:400}
+.ci-dot{display:inline-block;flex:none;width:.4375rem;height:.4375rem;border-radius:999px;background:var(--success)}
+.ci-dot.is-bad{background:var(--danger)}
+.ci-user{width:100%}
+.ci-user-item{display:flex;align-items:baseline;gap:.5rem;min-width:0}
+.ci-user-item small{font-size:.75rem;color:var(--muted)}
+.ci-empty-option{padding:.5rem .75rem;font-size:.8125rem;color:var(--muted)}
+.ci-os-option{display:inline-flex;align-items:center;gap:.5rem}
+.ci-os-icon{flex:none;color:var(--muted)}
+
+/* 区域与节点：左右两栏 */
+.ci-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);border:1px solid var(--field-border,#d4d4d8);border-radius:12px;overflow:hidden;min-height:13.5rem}
+.ci-split-list{display:grid;align-content:start;gap:.125rem;padding:.375rem}
+.ci-split-nodes{border-left:1px solid var(--border);background:color-mix(in srgb,var(--app-bg,#f6f6f6) 55%,var(--surface))}
+.ci-split-item{display:flex;align-items:center;gap:.5rem;height:2.5rem;padding:0 .75rem;border:0;border-radius:var(--field-radius,.625rem);background:none;font:inherit;font-size:.875rem;color:var(--foreground);text-align:left;cursor:pointer}
+.ci-split-item>.ci-split-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-split-item small{font-size:.75rem;color:var(--muted)}
+.ci-split-item>svg{flex:none;color:var(--accent)}
+.ci-split-item .ci-split-arrow{color:var(--muted);opacity:0}
+.ci-split-item:hover:not(:disabled):not(.is-on){background:color-mix(in srgb,var(--foreground) 5%,transparent)}
+.ci-split-item.is-on{background:color-mix(in srgb,var(--accent) 10%,var(--surface));color:var(--accent);font-weight:500}
+.ci-split-item.is-on .ci-split-arrow{opacity:1;color:var(--accent)}
+.ci-split-item:disabled{opacity:.5;cursor:not-allowed}
+.ci-split-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+@media(max-width:720px){.ci-split{grid-template-columns:1fr}.ci-split-nodes{border-left:0;border-top:1px solid var(--border)}}
+/* 字段按内容取宽，一行排不下时换行：s 数字步进器、m 端口 / 带宽等短值、l 用户 / 主机名 / 密码、xl 多选 IP。 */
+.ci-fields{display:flex;flex-wrap:wrap;align-items:flex-start;gap:1rem 1.25rem}
+.ci-fields>.ci-field{flex:none;max-width:100%}
+.ci-w-s{width:9.5rem}
+.ci-w-m{width:11rem}
+.ci-w-l{width:16rem}
+.ci-w-xl{width:28rem}
+.ci-stepper{width:100%}
+.ci-fit{width:auto;min-width:10rem}
+.ci-fit .select__trigger{width:auto}
+.ci-fit .select__value{display:flex;align-items:center}
+@media(max-width:720px){.ci-fields>.ci-field{width:100%}}
+.ci-fields .ci-field :is(.text-field,.textfield,.input-group,.input,.combo-box,.select,.number-field){width:100%;min-width:0}
+.ci-fields .ci-field input{min-width:0}
+/* 区域与节点按内容取宽：左栏区域 14rem，右栏节点 20rem。 */
+.ci-split{grid-template-columns:14rem 20rem;width:fit-content;max-width:100%}
+@media(max-width:720px){.ci-split{width:100%;grid-template-columns:1fr}}

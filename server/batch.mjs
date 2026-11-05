@@ -189,7 +189,9 @@ export function registerBatch(app,{asyncRoute}){
  app.get('/api/lookups/:name',asyncRoute(async(req,res)=>{
   const entry=lookups[req.params.name];if(!entry)throw new HttpError(404,'选项不存在');
   if(req.params.name==='migrate_nodes')return res.json({data:await migrateNodes(req.session.client)});
-  const result=await req.session.client.request('GET',entry[0],{query:entry[1]});
+  // SSH 密钥可按用户筛选（v1/ssh_keys 的 uid）：新建实例只列出所属用户的密钥。
+  const uid=req.params.name==='ssh_keys'&&/^\d+$/.test(String(req.query.uid||''))?{uid:Number(req.query.uid)}:{};
+  const result=await req.session.client.request('GET',entry[0],{query:{...entry[1],...uid}});
   res.json({data:listResult(result).data.map(r=>({id:r.id,name:r.name}))});
  }));
 }

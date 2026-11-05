@@ -71,7 +71,7 @@ function Stepper({label,unit,value,onChange,min,max,step}:{label:string;unit:str
   <HNumberField.Group><HNumberField.DecrementButton/><HNumberField.Input/><HNumberField.IncrementButton/></HNumberField.Group>
  </HNumberField>;
 }
-function IpPicker({segments,value,onChange,label}:{segments:Row[];value:number[];onChange:(v:number[])=>void;label:string}){
+export function IpPicker({segments,value,onChange,label}:{segments:Row[];value:number[];onChange:(v:number[])=>void;label:string}){
  const byId=new Map(segments.flatMap(sg=>(sg.ips as Row[]).map(x=>[Number(x.id),x] as const)));
  return <HSelect aria-label={label} selectionMode="multiple" value={value.map(String)} onChange={keys=>onChange([...(keys as Iterable<string|number>)].map(Number))} className="ip-select">
   <HSelect.Trigger className="ip-select-trigger"><HSelect.Value>{({isPlaceholder}:{isPlaceholder:boolean})=>isPlaceholder||!value.length?<span className="ip-select-ph">点击选择 IP，可多选</span>

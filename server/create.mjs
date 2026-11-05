@@ -5,6 +5,8 @@ import {checkFields} from './network.mjs';
  * 新建实例页（/clouds/new）：
  * - GET  /api/clouds/create_page   获取创建实例页面参数 v1/clouds/create_page（区域 → 节点 → 存储，及已启用的节点类型）
  * - GET  /api/clouds/create_vpcs   vpc网络列表 v1/vpc_networks（按区域 / 用户）
+ * - GET  /api/clouds/create_ips    获取节点所有可用IP v1/ip/free（按节点，未指定节点时按区域，v2.4.3+），用于“指定 IP”
+ * - GET  /api/clouds/create_ipv6   IPv6段列表 v1/ipv6_segments（按节点或区域）的空闲数合计；没有空闲 IPv6 时页面不显示 IPv6 数量
  * - POST /api/clouds/create        创建实例 POST v1/clouds，字段按文档白名单校验
  */
 const int=(key,label,o={})=>({key,label,type:'int',min:0,...o});
@@ -17,7 +19,7 @@ export const createFields=[
  int('cpu','CPU',{required:true,min:1,max:512}),int('memory','内存（MB）',{required:true,min:128,max:4194304}),
  int('system_disk_size','系统盘（GB）',{min:1,max:65536}),int('data_disk_size','数据盘（GB）',{min:1,max:65536}),
  str('network_type','网络类型',{max:8}),int('vpc','VPC 网络',{min:1}),str('vpc_name','VPC 名称',{max:64}),str('vpc_ips','VPC 网段',{max:32}),
- int('ip_num','IPv4 数量',{max:256}),int('ipv6_num','IPv6 数量',{max:256}),int('ip_group','IP 分组',{min:1}),
+ int('ip_num','IPv4 数量',{max:256}),{key:'ipaddress',label:'指定 IP',type:'ids'},int('main_ip_id','主 IP',{min:1}),int('ipv6_num','IPv6 数量',{max:256}),int('ip_group','IP 分组',{min:1}),
  int('in_bw','入站带宽',{max:100000}),int('out_bw','出站带宽',{max:100000}),int('traffic_quota','流量限额',{max:10000000}),
  pick('password_type','登录方式',[0,1]),str('rootpass','密码',{secret:true,max:128}),int('ssh_key','SSH 密钥',{min:1}),str('port','SSH 端口',{max:8}),
  str('hostname','主机名',{max:64}),int('client','所属用户',{min:1}),int('num','创建数量',{min:1,max:100}),flag('the_same_pass','批量使用相同密码')
@@ -32,7 +34,9 @@ export function createPayload(body){
  if(output.network_type==='vpc'&&output.vpc_ips&&!/^(10|172|192)\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(1[6-9]|2[0-8])$/.test(output.vpc_ips))errors.vpc_ips='VPC 网段应为 10.x / 172.16–31.x / 192.168.x 的 /16～/28 子网';
  if(output.network_type!=='vpc'){delete output.vpc;delete output.vpc_name;delete output.vpc_ips;}
  if(output.password_type===1){delete output.rootpass;if(!output.ssh_key)errors.ssh_key='请选择 SSH 密钥';}else delete output.ssh_key;
- if(output.ip_num===undefined)errors.ip_num='请填写 IPv4 数量';
+ // 指定 IP（ipaddress，IP 地址 ID）时平台按 IP 所在节点分配，创建数量强制为 1，不再传 IPv4 数量；主 IP 必须是其中之一。
+ if(output.ipaddress){if(output.ipaddress.length>256)errors.ipaddress='一次最多指定 256 个 IP';delete output.ip_num;output.num=1;if(output.main_ip_id!==undefined&&!output.ipaddress.includes(output.main_ip_id))errors.main_ip_id='主 IP 必须是指定的 IP 之一';}
+ else{delete output.main_ip_id;if(output.ip_num===undefined)errors.ip_num='请填写 IPv4 数量';}
  if(output.rootpass!==undefined&&(output.rootpass.length<6||output.rootpass.length>128))errors.rootpass='密码长度应为 6～128 位';
  if(!output.num||output.num===1)delete output.the_same_pass;
  for(const k of ['node','store','app_preset_id'])if(output[k]===0)delete output[k];
@@ -52,6 +56,21 @@ export function registerCreate(app,{asyncRoute,mutate}){
   const q={list_type:'all'};for(const k of ['area','user']){const n=Number(req.query[k]);if(Number.isSafeInteger(n)&&n>0)q[k]=n;}
   const r=await req.session.client.request('GET','vpc_networks',{query:q});
   res.json({data:listResult(r).data.map(v=>({id:v.id,name:v.name,ips:v.ips,username:v.username}))});
+ }));
+ app.get('/api/clouds/create_ips',asyncRoute(async(req,res)=>{
+  const q={};for(const k of ['node','area','ip_group']){const n=Number(req.query[k]);if(Number.isSafeInteger(n)&&n>0)q[k]=n;}
+  if(!q.node&&!q.area)throw new HttpError(400,'请先选择区域');
+  if(q.node)delete q.area;
+  const r=await req.session.client.request('GET','ip/free',{query:q});
+  const list=Array.isArray(r)?r:Array.isArray(r?.data)?r.data:[];
+  res.json({segments:list.map(s=>({id:s.id,name:s.ip_name||'#'+s.id,ips:(s.ip||[]).map(x=>({id:x.id,ip:x.ip}))})).filter(s=>s.ips.length)});
+ }));
+ app.get('/api/clouds/create_ipv6',asyncRoute(async(req,res)=>{
+  const q={page:1,per_page:500};for(const k of ['node','area']){const n=Number(req.query[k]);if(Number.isSafeInteger(n)&&n>0)q[k]=n;}
+  if(!q.node&&!q.area)throw new HttpError(400,'请先选择区域');
+  if(q.node)delete q.area;
+  const rows=listResult(await req.session.client.request('GET','ipv6_segments',{query:q}),1,500).data;
+  res.json({free:rows.reduce((n,r)=>n+Math.max(0,Number(r.free)||0),0),segments:rows.length});
  }));
  app.post('/api/clouds/create',asyncRoute(async(req,res)=>{
   const body=createPayload(req.body);
