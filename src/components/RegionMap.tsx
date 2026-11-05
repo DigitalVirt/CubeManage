@@ -51,6 +51,8 @@ export function RegionMap({areas,onOpen}:{areas:Row[];onOpen:(areaId:unknown|nul
     <Tooltip.Content placement="bottom" className="rm-tooltip">{card(g)}</Tooltip.Content>
    </Tooltip>)}
   </div>
+  {/* 手机上不显示地图，只列出各区域（节点数、实例数），点击进入。 */}
+  <ul className="rm-legend">{groups.flatMap(g=>g.items).concat(unplaced).map(a=><li key={a.id}><button type="button" onClick={()=>onOpen(a.id)}><CountryFlag code={a.country_code} name={a.country_name}/><span className="rm-legend-name">{a.name}</span><small><b className="num">{a.node_num??0}</b> 节点</small><small><b className="num">{a.cloud_num??0}</b> 实例</small></button></li>)}</ul>
   {unplaced.length>0&&<div className="rm-unplaced"><span>未定位：</span>{unplaced.map(a=><Button key={a.id} size="sm" variant="ghost" onPress={()=>onOpen(a.id)}><CountryFlag code={a.country_code} name={a.country_name}/>{a.name}<b className="num">{a.cloud_num??0}</b></Button>)}</div>}
  </div>;
 }

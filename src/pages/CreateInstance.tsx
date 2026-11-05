@@ -75,7 +75,7 @@ function OsPicker({options,error,value,onChange,invalid}:{options:Img[]|null;err
  if(error)return <ErrorBox message={error}/>;
  if(options&&!list.length)return <p className="field-help">这个区域还没有可用镜像，请先在镜像管理中下载到节点。</p>;
  return <div className="ci-fields ci-os-row">
-  <Field label="系统分类"><Select aria-label="系统分类" className="ci-fit" isDisabled={!options} selectedKey={active||null} onSelectionChange={k=>{if(k!=null&&String(k)!==active){setFamily(String(k));onChange('');}}}>
+  <Field label="系统分类"><Select aria-label="系统分类" className="ci-fit" placeholder={options?"请选择":"加载中…"} isDisabled={!options} selectedKey={active||null} onSelectionChange={k=>{if(k!=null&&String(k)!==active){setFamily(String(k));onChange('');}}}>
    <Select.Trigger><Select.Value/><Select.Indicator/></Select.Trigger>
    <Select.Popover><ListBox>{families.map(f=><ListBox.Item key={f.name} id={f.name} textValue={f.name}><span className="ci-os-option"><OsIcon svg={f.svg}/>{f.name}</span></ListBox.Item>)}</ListBox></Select.Popover>
   </Select></Field>

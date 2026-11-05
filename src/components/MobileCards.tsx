@@ -22,7 +22,8 @@ export function useIsMobile(query='(max-width: 640px)'){
 }
 
 export type CardAction={id:string;title:string;danger?:boolean;run:()=>void};
-export type Metric={label:string;value:ReactNode;pct?:number|null};
+/** plain：进度条只用主色，不按使用率变橙 / 红（任务进度等）。 */
+export type Metric={label:string;value:ReactNode;pct?:number|null;plain?:boolean};
 
 /** 状态标签：颜色来自状态定义（运行中绿、关机灰、异常红……） */
 export function StatePill({spec,title}:{spec:StatusSpec;title?:string}){
@@ -30,7 +31,7 @@ export function StatePill({spec,title}:{spec:StatusSpec;title?:string}){
 }
 
 function Metrics({items}:{items:Metric[]}){
- return <div className="m-met" style={{gridTemplateColumns:`repeat(${items.length},minmax(0,1fr))`}}>{items.map(m=>{const p=m.pct;const level=p==null?'':p>=90?' is-critical':p>=80?' is-high':'';
+ return <div className="m-met" style={{gridTemplateColumns:`repeat(${items.length},minmax(0,1fr))`}}>{items.map(m=>{const p=m.pct;const level=p==null||m.plain?'':p>=90?' is-critical':p>=80?' is-high':'';
   return <div key={m.label} className={level}><small>{m.label}</small><b className="num">{m.value}</b>{p!=null&&<span className="m-bar" aria-hidden="true"><i style={{width:Math.min(100,Math.max(0,p))+'%'}}/></span>}</div>;})}</div>;
 }
 

@@ -28,7 +28,7 @@ export function TaskTable({rows,onSelect}:{rows:Row[];onSelect?:(r:Row)=>void}){
  if(mobile&&rows.length)return <div className="m-list">{rows.map(r=><MobileCard key={r.id} title={r.type_desc||r.description||r.type||'任务'} sub={<><span className="num">#{r.id}</span>{(r.hostname||r.hostid)&&<> · {r.hostname||'#'+r.hostid}</>}</>}
   state={<TaskStatus status={r.status} msg={r.msg}/>} onOpen={onSelect?()=>onSelect(r):undefined}
   lines={r.msg?[[<span className="m-muted">{String(r.msg)}</span>,'']]:undefined}
-  metrics={[{label:'创建时间',value:date(r.create_time)},...(r.progress!=null&&r.progress!==''?[{label:'进度',value:Number(r.progress)+'%',pct:Number(r.progress)}]:[])]}/>)}</div>;
+  metrics={[{label:'创建时间',value:date(r.create_time)},...(r.progress!=null&&r.progress!==''?[{label:'进度',value:Number(r.progress)+'%',pct:Number(r.progress),plain:true}]:[])]}/>)}</div>;
  return rows.length?<Table><Table.ScrollContainer className="table-scroll"><Table.Content aria-label="资源数据"><Table.Header><Table.Column isRowHeader>任务 / 资源</Table.Column><Table.Column>类型</Table.Column><Table.Column>状态</Table.Column><Table.Column>创建时间</Table.Column></Table.Header><Table.Body>{rows.map(r=><Table.Row key={r.id}><Table.Cell>{onSelect?<Button variant="ghost" className="text-link" onClick={()=>onSelect(r)}>#{r.id}</Button>:<strong>#{r.id}</strong>}<small>{r.hostname||r.hostid||'—'}</small></Table.Cell><Table.Cell>{r.type_desc||r.description||r.type||'—'}</Table.Cell><Table.Cell><TaskStatus status={r.status} msg={r.msg}/></Table.Cell><Table.Cell>{date(r.create_time)}</Table.Cell></Table.Row>)}</Table.Body></Table.Content></Table.ScrollContainer></Table>:<Empty kind="task" size="sm" title="暂无任务" text="还没有相关的任务记录。"/>;}
 
 export {InstanceDetail} from './InstanceDetail';

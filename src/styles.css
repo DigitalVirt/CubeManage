@@ -1474,3 +1474,49 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .nodes-table :is(.table__column,.table__cell):nth-child(2){width:1%;white-space:nowrap;padding-inline:.125rem .5rem;text-align:center}
 .nodes-table .table__cell:nth-child(2) .button{width:1.875rem;min-width:1.875rem;height:1.875rem;padding:0}
 .nodes-table .name-cell .resource-name.button{padding-inline:.375rem;margin-inline-start:-.375rem}
+/* 窄屏收起的搜索框裁掉里面的输入框，否则输入框伸出屏幕，整页能横向滚动。 */
+@media(max-width:960px){.header-search-wrap:not(:focus-within) .header-search{overflow:hidden}}
+/* 手机端（≤640px）补充 */
+/* 表格里的空状态允许换行，不再把表格撑宽（实例详情的 IP、磁盘、日志等） */
+.table__content td:has(>.empty){white-space:normal}
+.table__content:has(td>.empty){min-width:0}
+/* 首页：手机上用两行列表代替表格 */
+/* 首页：手机上用两行列表代替表格，和上面两块一样放在白色卡片里；排行前面带名次 */
+@media(max-width:640px){
+ .home-ranking{margin-top:1.25rem;gap:1.25rem}
+ .home-ranking>.data-panel{padding:.875rem 1rem .375rem;background:var(--surface,#fff);border:1px solid color-mix(in srgb,var(--border) 70%,transparent);border-radius:1rem}
+ .home-ranking .panel-heading{margin-bottom:.25rem}
+}
+.home-mlist{list-style:none;margin:0;padding:0;display:grid;counter-reset:rank}
+.home-mlist li{display:grid;grid-template-columns:minmax(0,1fr);gap:.125rem;padding:.625rem 0;min-width:0}
+.home-mlist li+li{border-top:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.home-mlist.is-rank li{grid-template-columns:1.375rem minmax(0,1fr);column-gap:.5rem;counter-increment:rank}
+.home-mlist.is-rank li::before{content:counter(rank);grid-row:span 2;align-self:center;display:grid;place-items:center;width:1.375rem;height:1.375rem;border-radius:999px;background:var(--app-bg,#f6f6f6);font-size:.75rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.home-mlist.is-rank li:nth-child(-n+3)::before{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.home-mlist .home-host{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.9375rem;font-weight:500;line-height:1.375rem}
+.home-mlist-meta{display:flex;align-items:center;flex-wrap:wrap;gap:0 .25rem;min-height:1.5rem;font-size:.75rem;color:var(--muted)}
+.home-mlist-meta .mono{color:var(--foreground);font-size:.75rem}
+.home-mlist-meta .ip-copy{opacity:1;width:1.5rem;min-width:1.5rem;height:1.5rem}
+/* 区域分布：手机上不显示地图，只列出各区域（节点数、实例数） */
+.rm-legend{display:none}
+@media(max-width:640px){
+ .rm-map,.rm-unplaced{display:none}
+ .rm-legend{display:grid;list-style:none;margin:0;padding:0;gap:.25rem}
+ .rm-legend button{display:flex;align-items:center;gap:.5rem;width:100%;height:2.5rem;padding:0 .625rem;border:0;border-radius:var(--field-radius,.625rem);background:var(--app-bg,#f6f6f6);font:inherit;font-size:.875rem;color:var(--foreground);text-align:left;cursor:pointer}
+ .rm-legend-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .rm-legend small{font-size:.75rem;color:var(--muted)}
+ .rm-legend small{min-width:3.5rem;text-align:right}
+ .rm-legend b{font-weight:600;color:var(--foreground)}
+ /* 监控时间范围：一行横向滚动，不折行 */
+ .inst-range{max-width:100%;overflow-x:auto;scrollbar-width:none}
+ .inst-range::-webkit-scrollbar{display:none}
+ .inst-range button{flex:none;white-space:nowrap}
+ .inst-section>*,.inst-section-head>*{min-width:0}
+ .inst-card-actions{max-width:100%}
+ /* 页脚上下排列 */
+ .app-footer{flex-direction:column;align-items:flex-start;gap:.25rem}
+ /* 只有一个筛选项时（如任务中心），筛选和右侧按钮放在同一行 */
+ .filter-bar:has(>.filters>div:only-of-type){flex-wrap:nowrap;align-items:center}
+ .filter-bar:has(>.filters>div:only-of-type)>.filters{flex:1;min-width:0}
+ .filter-bar:has(>.filters>div:only-of-type)>.filter-actions{flex:none;width:auto;margin-left:0}
+}
