@@ -64,13 +64,13 @@ npm start        # 默认监听 127.0.0.1:5080
 docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped digitalvirtllc/cubemanage:latest
 ```
 
-或者下载仓库里的 [`docker-compose.yml`](docker-compose.yml) 后运行 `docker compose up -d`。想从源代码自己构建镜像：
+或者下载仓库里的 [`docker-compose.yml`](docker-compose.yml) 后运行 `docker compose up -d`。飞牛、群晖等 NAS 的 Compose 界面可以直接粘贴这个文件的内容；它只引用 Docker Hub 上的镜像，NAS 能正常检测到新版本。
+
+想从源代码自己构建镜像：
 
 ```bash
-docker compose up -d --build
-# 或者
-docker build -t cubemanage .
-docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped cubemanage
+docker build -t digitalvirtllc/cubemanage:latest .
+docker compose up -d
 ```
 
 然后在浏览器打开 `http://服务器IP:5080`。
@@ -79,7 +79,7 @@ docker run -d --name cubemanage -p 5080:5080 --restart unless-stopped cubemanage
 - 对公网开放时，请在前面加 HTTPS 反向代理（Nginx、Caddy 等），不需要其他配置：程序会识别代理传来的 HTTPS 和原始域名，会话 Cookie 自动带上 Secure。
 - 平台使用 JSON 请求体时，设置 `CUBE_BODY_ENCODING=json`。
 - 如果平台的管理接口限制了来源 IP，需要把运行 CubeManage 的服务器 IP 加入白名单。
-- 升级：`docker pull digitalvirtllc/cubemanage:latest` 后重新创建容器（Compose 用 `docker compose pull && docker compose up -d`）。也可以把 `latest` 换成版本号（如 `0.1.69`）固定版本。
+- 升级：Compose 部署运行 `docker compose pull && docker compose up -d`；`docker run` 部署先 `docker pull digitalvirtllc/cubemanage:latest`，再删除并重新创建容器。也可以把 `latest` 换成版本号（如 `0.1.69`）固定版本。
 - 依赖由 pnpm 管理（`pnpm-lock.yaml`），镜像构建时通过 corepack 使用 `package.json` 里指定的 pnpm 版本。
 - **发布镜像**：推送 `v` 开头的标签，或在 Actions 页面手动运行 “Docker”，会构建 amd64 / arm64 镜像并推送到 Docker Hub（版本号和 `latest` 两个标签）。需要先在仓库 Secrets 里配置 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN`；镜像名默认 `digitalvirtllc/cubemanage`，可以用仓库变量 `DOCKERHUB_IMAGE` 修改。
 
