@@ -11,7 +11,7 @@ import {registerBatch} from './batch.mjs';
 import {registerInstance} from './instance.mjs';
 import {registerInstanceSettings} from './instance-settings.mjs';
 import {registerSiteConfig} from './siteconfig.mjs';
-import {registerNetwork} from './network.mjs';
+import {registerNetwork,freeIpsByNode} from './network.mjs';
 import {registerCreate} from './create.mjs';
 import {registerBusiness} from './business.mjs';
 import {registerNodeCharts} from './node-charts.mjs';
@@ -70,6 +70,11 @@ export function createApp({clientFactory=c=>new CubeClient(c)}={}){
  }));
  app.get('/api/resources/:kind',asyncRoute(async(req,res)=>{const kind=req.params.kind;if(!resources[kind]&&!['tasks','images'].includes(kind))throw new HttpError(404,'资源不存在');const q=queryFor(req,kind);res.json(listResult(await req.session.client.request('GET',routeFor(kind),{query:q}),q.page,q.per_page));}));
  app.get('/api/resources/:kind/:id',asyncRoute(async(req,res)=>{const {kind,id}=req.params;if((!resources[kind]&&kind!=='tasks')||!/^\d+$/.test(id))throw new HttpError(404,'资源不存在');res.json(scrub(await req.session.client.request('GET',`${kind}/${id}`)));}));
+ // 节点列表“可用 IP”列：读取全部 IP 段（v1/ipSegment，每页 500，最多 20 页），按节点合计空闲数。
+ app.get('/api/nodes-free-ips',asyncRoute(async(req,res)=>{
+  const rows=[];for(let page=1;page<=20;page++){const r=listResult(await req.session.client.request('GET','ipSegment',{query:{page,per_page:500}}),page,500);rows.push(...r.data);if(r.data.length<500)break;} // 文档里分页字段写作 mate，不按总页数判断，取满一页就继续
+  res.json({data:freeIpsByNode(rows)});
+ }));
  app.get('/api/nodes/:id/metrics',asyncRoute(async(req,res)=>{if(!/^\d+$/.test(req.params.id))throw new HttpError(400,'节点编号无效');res.json(scrub(await req.session.client.request('GET',`nodes/${req.params.id}/status`)));}));
  // 节点详情页：节点详情（v1/nodes/:id）、节点内容页（v1/node_info/:id，实例数、IP 用量、已分配 CPU / 内存）、
  // 节点实时数据（v1/nodes/:id/real_data，CPU、内存、Swap、磁盘、内核与 QEMU 版本、运行时间）一起取；

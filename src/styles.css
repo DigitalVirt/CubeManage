@@ -1469,3 +1469,8 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 /* 区域与节点按内容取宽：左栏区域 14rem，右栏节点 20rem。 */
 .ci-split{grid-template-columns:14rem 20rem;width:fit-content;max-width:100%}
 @media(max-width:720px){.ci-split{width:100%;grid-template-columns:1fr}}
+/* 节点列表：勾选列和状态列固定为最小宽度（与实例列表一致），不随表格宽度拉伸。 */
+.nodes-table :is(.table__column,.table__cell):first-child{width:1%;white-space:nowrap;padding-inline:.75rem .25rem}
+.nodes-table :is(.table__column,.table__cell):nth-child(2){width:1%;white-space:nowrap;padding-inline:.125rem .5rem;text-align:center}
+.nodes-table .table__cell:nth-child(2) .button{width:1.875rem;min-width:1.875rem;height:1.875rem;padding:0}
+.nodes-table .name-cell .resource-name.button{padding-inline:.375rem;margin-inline-start:-.375rem}

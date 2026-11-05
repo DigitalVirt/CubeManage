@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {createApp} from '../server/index.mjs';
 import {CubeClient} from '../server/cube-client.mjs';
-import {adslLine,checkFields,networkKinds} from '../server/network.mjs';
+import {adslLine,checkFields,freeIpsByNode,networkKinds} from '../server/network.mjs';
 
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json'}});
 
@@ -103,4 +103,28 @@ test('网络管理：字段校验',()=>{
 test('页头网站名称：读取网站配置的 company_name，只返回名称',async t=>{
  const {request}=await start(t,{transport:async url=>{const route=url.pathname.replace(/^\/admin\/v1\//,'');if(route==='login')return json('TOKEN');if(route==='config')return json({data:{company_name:'  星河云  ',email:'a@b.c',admin_path:'secret-admin'}});return json({});}});
  const r=await request('/site-name');assert.deepEqual(r.body,{name:'星河云'});
+});
+
+test('节点列表可用 IP：按节点合计启用 IP 段的空闲数，共用的段每个节点都算',()=>{
+ assert.deepEqual(freeIpsByNode([
+  {id:1,status:1,count:{free:48},node:[{id:11},{id:12}]},
+  {id:2,status:'1',count:{free:'12'},node:[{id:11}]},
+  {id:3,status:0,count:{free:100},node:[{id:13}]},
+  {id:4,count:{free:5},node:[{id:13}]},
+  {id:5,status:1,count:{},node:[{id:14}]}
+ ]),{11:60,12:48,13:5,14:0});
+});
+
+test('节点列表可用 IP：分页读取全部 IP 段（每页 500，取满一页才继续）',async t=>{
+ const pages=[];
+ const {request}=await start(t,{transport:async url=>{
+  const route=url.pathname.replace(/^\/admin\/v1\//,'');
+  if(route==='login')return json('TOKEN');
+  if(route==='ipSegment'){const page=Number(url.searchParams.get('page'));pages.push([page,url.searchParams.get('per_page')]);
+   const rows=page===1?Array.from({length:500},(_,i)=>({id:i+1,status:1,count:{free:1},node:[{id:7}]})):[{id:999,status:1,count:{free:3},node:[{id:8}]}];
+   return json({data:rows,mate:{page,total:501}});}
+  return json({});
+ }});
+ const r=await request('/nodes-free-ips');
+ assert.equal(r.status,200);assert.deepEqual(r.body.data,{7:500,8:3});assert.deepEqual(pages,[[1,'500'],[2,'500']]);
 });

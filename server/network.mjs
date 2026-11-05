@@ -191,3 +191,17 @@ export function registerNetwork(app,{asyncRoute,mutate}){
   res.json({ok:true,total:list.length,success:results.filter(r=>r.ok).length,failed:results.filter(r=>!r.ok).length,results});
  }));
 }
+
+/**
+ * 节点列表的“可用 IP”：IP段列表（v1/ipSegment）每个段带空闲数 count.free 和可用节点 node[]，
+ * 按节点把启用的段（status=1）的空闲数加起来。一个段可供多个节点使用时，每个节点都算上这段的空闲 IP。
+ */
+export function freeIpsByNode(segments){
+ const out={};
+ for(const s of segments||[]){
+  if(s?.status!=null&&Number(s.status)!==1)continue;
+  const free=Math.max(0,Number(s?.count?.free)||0);
+  for(const n of Array.isArray(s?.node)?s.node:[]){const id=Number(n?.id??n);if(Number.isSafeInteger(id)&&id>0)out[id]=(out[id]||0)+free;}
+ }
+ return out;
+}
