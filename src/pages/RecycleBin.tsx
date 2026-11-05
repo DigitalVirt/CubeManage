@@ -6,6 +6,7 @@ import {api,send,type List,type Row} from '../lib/api';
 import {Dialog,Empty,ErrorBox,type Notify} from '../components/Shared';
 import {Pager} from '../components/Pager';
 import {TableSkeleton} from '../components/TableSkeleton';
+import {useIsMobile,MobileCard,MobileSelectBar,MobileSkeleton} from '../components/MobileCards';
 import {useUrlState,pageFrom,perPageFrom} from '../lib/urlState';
 
 /**
@@ -28,6 +29,7 @@ export function RecycleBin({notify}:{notify:Notify}){
  const [params]=useSearchParams();
  const [page,setPage]=useState(()=>pageFrom(params)),[perPage,setPerPage]=useState(()=>perPageFrom(params)),[search,setSearch]=useState(()=>params.get('search')||''),[term,setTerm]=useState(()=>params.get('search')||''),[revision,setRevision]=useState(0);
  const [result,setResult]=useState<List|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[selected,setSelected]=useState<Set<number>>(new Set());
+ const mobile=useIsMobile();
  const [action,setAction]=useState<Action|null>(null),[busy,setBusy]=useState(false),[actionError,setActionError]=useState(''),[done,setDone]=useState<Result|null>(null);
  useEffect(()=>{if(search===term)return;const t=setTimeout(()=>{setTerm(search);setPage(1);},300);return()=>clearTimeout(t);},[search]); // eslint-disable-line react-hooks/exhaustive-deps
  useUrlState({page,per_page:perPage,search:term},{page:1,per_page:20,search:''});
@@ -59,8 +61,15 @@ export function RecycleBin({notify}:{notify:Notify}){
     <Button variant="outline" size="sm" onPress={()=>go('/clouds')}><ArrowLeft size={16}/>返回实例管理</Button>
    </div></div>
    {error&&<ErrorBox message={error} retry={()=>setRevision(v=>v+1)}/>}
-   {loading&&!result?<TableSkeleton columns={[{title:'',width:0},{title:'实例',width:10},{title:'主 IP',width:7},{title:'配置',width:6},{title:'放入回收站',width:8},{title:'到期删除',width:8},{title:'操作',width:0}]} rows={5} className="recycle-table"/>
+   {loading&&!result?mobile?<MobileSkeleton rows={5}/>:<TableSkeleton columns={[{title:'',width:0},{title:'实例',width:10},{title:'主 IP',width:7},{title:'配置',width:6},{title:'放入回收站',width:8},{title:'到期删除',width:8},{title:'操作',width:0}]} rows={5} className="recycle-table"/>
     :!rows.length?<Empty kind={term?'search':'recycle'} title={term?'没有找到匹配的实例':'回收站是空的'} text={term?<>回收站中没有主机名或 IP 包含 <strong>“{term}”</strong> 的实例。</>:'删除的实例会先进入这里，到期后由平台自动彻底删除。'} actions={term?<Button variant="outline" size="sm" onPress={()=>setSearch('')}><X size={15}/>清除搜索</Button>:<Button variant="outline" size="sm" onPress={()=>go('/clouds')}><ArrowLeft size={15}/>返回实例管理</Button>}/>
+    :mobile?<div className="m-list">{rows.map(r=>{const id=Number(r.id),left=remaining(r.delete_time);return <MobileCard key={id}
+      title={r.hostname||'实例 #'+id} sub={<><span className="num">#{id}</span>{r.node_name?' · '+r.node_name:''}{r.user?.username?' · '+r.user.username:''}</>}
+      state={left?<span className={'m-pill'+(left==='即将删除'||left.endsWith('小时后')?' is-danger':' is-muted')}><i/>{left}</span>:undefined}
+      picked={selected.has(id)} onPick={on=>toggle(id,on)} pickLabel={'选择 '+(r.hostname||id)}
+      actions={[{id:'restore',title:'恢复',run:()=>open('restore',[r])},{id:'purge',title:'彻底删除',danger:true,run:()=>open('purge',[r])}]}
+      lines={[[<span className="mono">{r.mainip||'—'}</span>,r.cpu!=null?`${r.cpu} 核 · ${r.memory} GB`:'—']]}
+      metrics={[{label:'放入回收站',value:when(r.recycle_time)},{label:'到期删除',value:when(r.delete_time)}]}/>;})}</div>
     :<Table><Table.ScrollContainer><Table.Content aria-label="回收站实例" className="recycle-table"><Table.Header>
      <Table.Column><Checkbox slot={null} className="table-check" aria-label="全选本页" isSelected={all} isIndeterminate={some} onChange={on=>setSelected(on?new Set(ids):new Set())}><Checkbox.Content><Checkbox.Control><Checkbox.Indicator/></Checkbox.Control></Checkbox.Content></Checkbox></Table.Column>
      <Table.Column isRowHeader>实例</Table.Column><Table.Column>主 IP</Table.Column><Table.Column>配置</Table.Column><Table.Column>放入回收站</Table.Column><Table.Column>到期删除</Table.Column><Table.Column>操作</Table.Column>
@@ -73,6 +82,7 @@ export function RecycleBin({notify}:{notify:Notify}){
      <Table.Cell><div className="recycle-expire"><span className="num">{when(r.delete_time)}</span>{left&&<small className={left==='即将删除'||left.endsWith('小时后')?'is-soon':''}>{left}</small>}</div></Table.Cell>
      <Table.Cell><div className="row-actions"><Button variant="ghost" size="sm" onPress={()=>open('restore',[r])}><RotateCcw size={15}/>恢复</Button><Button variant="ghost" size="sm" isIconOnly className="is-danger" aria-label={'彻底删除 '+(r.hostname||id)} onPress={()=>open('purge',[r])}><Trash2 size={15}/></Button></div></Table.Cell>
     </Table.Row>;})}</Table.Body></Table.Content></Table.ScrollContainer></Table>}
+   {mobile&&<MobileSelectBar count={chosen.length} unit="个" onClear={()=>setSelected(new Set())}><Button size="sm" variant="outline" className="m-selbar-light" onPress={()=>open('restore',chosen)}><RotateCcw size={14}/>恢复</Button><Button size="sm" variant="danger" onPress={()=>open('purge',chosen)}><Trash2 size={14}/>彻底删除</Button></MobileSelectBar>}
    <div className="list-footer">
     <div className="list-footer-start">
      <Button variant="outline" size="sm" isDisabled={!chosen.length} onPress={()=>open('restore',chosen)}><RotateCcw size={15}/>恢复{chosen.length>0&&<span className="batch-count">{chosen.length}</span>}</Button>

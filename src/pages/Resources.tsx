@@ -15,6 +15,7 @@ import {Detail,TaskTable,unwrap} from '../components/Detail';
 import {Empty,ErrorBox,type EmptyKind,type Notify} from '../components/Shared';
 import {BatchMenu,BatchOperation,exportInstances} from '../components/BatchOperation';
 import {NodeBatchEdit} from '../components/NodeBatchEdit';
+import {useIsMobile,CloudCard,NodeCard,AreaCard,MobileSelectBar,MobileSkeleton} from '../components/MobileCards';
 import {Pager} from '../components/Pager';
 import {TableSkeleton} from '../components/TableSkeleton';
 import {useUrlState,pageFrom,perPageFrom} from '../lib/urlState';
@@ -99,6 +100,7 @@ export function Resources({kind,catalog,notify}:{kind:string;catalog:Record<stri
  const rows=kind==='clouds'&&orderby==='traffic'?[...rawRows].sort((a,b)=>{const x=traffic(a).used,y=traffic(b).used;if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;return sort==='asc'?x-y:y-x;}):rawRows;
  const pageIds=rows.map(r=>Number(r.id)),selectedRows=rows.filter(r=>selected.has(Number(r.id)));
  const allSelected=pageIds.length>0&&pageIds.every(id=>selected.has(id)),someSelected=!allSelected&&pageIds.some(id=>selected.has(id));
+ const mobile=useIsMobile();
  const toggle=(id:number,on:boolean)=>setSelected(v=>{const next=new Set(v);if(on)next.add(id);else next.delete(id);return next;});
  const areaOf=(row:Row)=>areas.find(a=>String(a.id)===String(row.area?.id??row.area_id??row.area));
  const nodeOf=(row:Row)=>nodes.find(n=>String(n.id)===String(row.node_id??row.node));
@@ -132,7 +134,17 @@ export function Resources({kind,catalog,notify}:{kind:string;catalog:Record<stri
    </div>
   </div>
   {error&&['nodes','clouds'].includes(kind)&&result&&<ErrorBox message={error} retry={refresh}/>}
-  {error&&!(['nodes','clouds'].includes(kind)&&result)?<ErrorBox message={error} retry={refresh}/>:loading&&!(kind==='tasks'&&result)?<TableSkeleton columns={skeletonColumns[kind]||skeletonColumns.areas} rows={rows.length||Math.min(perPage,10)} className={kind==='nodes'?'nodes-table':kind==='areas'?'areas-table':kind==='clouds'?'clouds-table':''}/>:!rows.length?<Empty {...emptyState}/>:kind==='tasks'?<TaskTable rows={rows} onSelect={setDetail}/>:
+  {error&&!(['nodes','clouds'].includes(kind)&&result)?<ErrorBox message={error} retry={refresh}/>:loading&&!(kind==='tasks'&&result)?mobile?<MobileSkeleton rows={Math.min(perPage,6)}/>:<TableSkeleton columns={skeletonColumns[kind]||skeletonColumns.areas} rows={rows.length||Math.min(perPage,10)} className={kind==='nodes'?'nodes-table':kind==='areas'?'areas-table':kind==='clouds'?'clouds-table':''}/>:!rows.length?<Empty {...emptyState}/>:mobile&&kind!=='tasks'?<div className="m-list">{rows.map(record=>{const row=kind==='clouds'?{...record,...cloudMetrics[record.id]}:record;const picked=selected.has(Number(row.id));const area=areaOf(row);
+    if(kind==='clouds'){const u=ownerOf(row);return <CloudCard key={row.id} row={row} area={area} node={nodeOf(row)} picked={picked} onPick={on=>toggle(Number(row.id),on)} onOpen={()=>goTo('/clouds/'+row.id)}
+     owner={u.name?(u.id?<Link className="instance-owner" to={`/clouds?user=${u.id}&username=${encodeURIComponent(u.name)}`}>{u.name}</Link>:u.name):undefined}
+     actions={[{id:'open',title:'查看详情',run:()=>goTo('/clouds/'+row.id)},{id:'refresh',title:'刷新状态',run:()=>refreshCloud(row)}]}/>;}
+    if(kind==='nodes')return <NodeCard key={row.id} row={row} area={area} picked={picked} onPick={on=>toggle(Number(row.id),on)} onOpen={()=>goTo('/nodes/'+row.id)}
+     refreshKey={revision+'-'+(nodeRefresh[row.id]||0)} status={nodeStatuses[row.id]??row.status}
+     onStatus={(id,value)=>{if(value!=null)setNodeStatuses(v=>v[id]===value?v:{...v,[id]:value});}} onSettled={id=>setNodePending(v=>v[id]?{...v,[id]:false}:v)}
+     onSwitch={(field,value)=>setOperation({kind,row,action:field,title:(value?'开启':'关闭')+(field==='enable'?'启用':'维护'),value:value?1:0})}
+     actions={[{id:'open',title:'查看详情',run:()=>goTo('/nodes/'+row.id)},{id:'refresh',title:'刷新状态',run:()=>{setNodePending(v=>({...v,[row.id]:true}));setNodeRefresh(v=>({...v,[row.id]:(v[row.id]||0)+1}));}},{id:'edit',title:'编辑节点',run:()=>edit(row)}]}/>;
+    return <AreaCard key={row.id} row={row} onOpen={()=>setDetail(row)} actions={[{id:'open',title:'查看详情',run:()=>setDetail(row)},{id:'edit',title:'编辑区域',run:()=>edit(row)},{id:'delete',title:'删除区域',danger:true,run:()=>setOperation({kind,row,action:'delete',title:'删除区域'})}]}/>;
+   })}</div>:kind==='tasks'?<TaskTable rows={rows} onSelect={setDetail}/>:
   <Table><Table.ScrollContainer className="table-scroll"><Table.Content aria-label={(descriptor?.title||'资源')+'列表'} className={kind==='nodes'?'nodes-table':kind==='areas'?'areas-table':'clouds-table'}>
    <Table.Header>
     {(kind==='clouds'||kind==='nodes')&&<Table.Column aria-label="选择"><Checkbox slot={null} className="table-check" aria-label={kind==='nodes'?'选择本页全部节点':'选择本页全部实例'} isSelected={allSelected} isIndeterminate={someSelected} onChange={on=>setSelected(on?new Set(pageIds):new Set())}><Checkbox.Content><Checkbox.Control><Checkbox.Indicator/></Checkbox.Control></Checkbox.Content></Checkbox></Table.Column>}
@@ -154,6 +166,8 @@ export function Resources({kind,catalog,notify}:{kind:string;catalog:Record<stri
      {kind!=='clouds'&&<Table.Cell className={kind==='nodes'?'node-auto-column':undefined}><div className="row-actions"><Button variant="ghost" size="sm" isIconOnly aria-label={'编辑 #'+row.id} isDisabled={editingId===row.id} onPress={()=>edit(row)}><Pencil size={15}/></Button>{kind==='areas'&&<Button variant="ghost" size="sm" isIconOnly aria-label={'删除区域 '+row.name} onPress={()=>setOperation({kind,row,action:'delete',title:'删除区域'})}><Trash2 size={15}/></Button>}</div></Table.Cell>}
     </Table.Row>;})}</Table.Body>
   </Table.Content></Table.ScrollContainer></Table>}
+  {mobile&&kind==='clouds'&&<MobileSelectBar count={selectedRows.length} unit="台" onClear={()=>setSelected(new Set())}><BatchMenu rows={selectedRows} onPick={id=>{if(id!=='export'){setBatch(id);return;}const n=selectedRows.length;exportInstances(selectedRows).then(()=>notify(`已导出 ${n} 个实例`)).catch(e=>notify((e as Error).message,'danger'));}}/></MobileSelectBar>}
+  {mobile&&kind==='nodes'&&<MobileSelectBar count={selectedRows.length} unit="台" onClear={()=>setSelected(new Set())}><Button size="sm" onPress={()=>setNodeBatch(true)}><PencilLine size={14}/>批量修改</Button></MobileSelectBar>}
   <div className="list-footer">
    <div className="list-footer-start">{kind==='clouds'&&<><BatchMenu rows={selectedRows} onPick={id=>{if(id!=='export'){setBatch(id);return;}const n=selectedRows.length;exportInstances(selectedRows).then(()=>notify(`已导出 ${n} 个实例`)).catch(e=>notify((e as Error).message,'danger'));}}/>{selectedRows.length>0&&<Button variant="ghost" size="sm" onPress={()=>setSelected(new Set())}>取消选择</Button>}</>}
     {kind==='nodes'&&<><Button variant="outline" size="sm" isDisabled={!selectedRows.length} onPress={()=>setNodeBatch(true)}><PencilLine size={14}/>批量修改{selectedRows.length?`（${selectedRows.length}）`:''}</Button>{selectedRows.length>0&&<Button variant="ghost" size="sm" onPress={()=>setSelected(new Set())}>取消选择</Button>}</>}</div>
