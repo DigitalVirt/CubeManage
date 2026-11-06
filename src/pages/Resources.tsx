@@ -18,7 +18,7 @@ import {NodeBatchEdit} from '../components/NodeBatchEdit';
 import {useIsMobile,CloudCard,NodeCard,AreaCard,MobileSelectBar,MobileSkeleton} from '../components/MobileCards';
 import {Pager} from '../components/Pager';
 import {TableSkeleton} from '../components/TableSkeleton';
-import {useUrlState,pageFrom,perPageFrom} from '../lib/urlState';
+import {useUrlState,pageFrom,perPageFrom,PAGE_SIZES,CLOUD_PAGE_SIZES} from '../lib/urlState';
 import {MigrationQueue} from '../components/MigrationQueue';
 /** 实例所有人：列表接口返回 user{id,username}，详情等接口是 user_id / username。 */
 const ownerOf=(row:Row)=>({id:row.user?.id??row.user_id??row.uid??null,name:String(row.user?.username??row.username??'')});
@@ -49,7 +49,7 @@ export function Resources({kind,catalog,notify}:{kind:string;catalog:Record<stri
  const owner=kind==='clouds'&&/^\d+$/.test(params.get('user')||'')?params.get('user')!:'',ownerName=params.get('username')||'#'+owner;
  const ownerSeen=useRef(owner);useEffect(()=>{if(ownerSeen.current===owner)return;ownerSeen.current=owner;setPage(1);},[owner]);
  const clearOwner=()=>setParams(p=>{const next=new URLSearchParams(p);next.delete('user');next.delete('username');return next;},{replace:true});
- const [page,setPage]=useState(()=>pageFrom(params)),[perPage,setPerPage]=useState(()=>perPageFrom(params)),[search,setSearch]=useState(()=>params.get('search')||''),[term,setTerm]=useState(()=>params.get('search')||''),[status,setStatus]=useState(()=>params.get('status')||''),[area,setArea]=useState(params.get('area')||''),[node,setNode]=useState(()=>params.get('node')||''),[areas,setAreas]=useState<Row[]>([]),[nodes,setNodes]=useState<Row[]>([]),[filter]=useState(Boolean(params.get('area'))),[revision,setRevision]=useState(0),[loading,setLoading]=useState(true),[result,setResult]=useState<List|null>(null),[error,setError]=useState(''),[form,setForm]=useState<{record:Row|null}|null>(null),[detail,setDetail]=useState<Row|null>(null),[operation,setOperation]=useState<OperationSpec|null>(null),[editingId,setEditingId]=useState<number|null>(null);
+ const [page,setPage]=useState(()=>pageFrom(params)),[perPage,setPerPage]=useState(()=>perPageFrom(params,kind==='clouds'?CLOUD_PAGE_SIZES:PAGE_SIZES)),[search,setSearch]=useState(()=>params.get('search')||''),[term,setTerm]=useState(()=>params.get('search')||''),[status,setStatus]=useState(()=>params.get('status')||''),[area,setArea]=useState(params.get('area')||''),[node,setNode]=useState(()=>params.get('node')||''),[areas,setAreas]=useState<Row[]>([]),[nodes,setNodes]=useState<Row[]>([]),[filter]=useState(Boolean(params.get('area'))),[revision,setRevision]=useState(0),[loading,setLoading]=useState(true),[result,setResult]=useState<List|null>(null),[error,setError]=useState(''),[form,setForm]=useState<{record:Row|null}|null>(null),[detail,setDetail]=useState<Row|null>(null),[operation,setOperation]=useState<OperationSpec|null>(null),[editingId,setEditingId]=useState<number|null>(null);
  // 表头排序（仅实例列表）：orderby / sort 写进网址；traffic 只对当前页排序。
  const [orderby,setOrderby]=useState(()=>kind==='clouds'&&SORT_KEYS.includes(params.get('orderby')||'')?params.get('orderby')!:''),[sort,setSort]=useState<'asc'|'desc'>(()=>params.get('sort')==='asc'?'asc':'desc');
  const sortBy=(key:string)=>{const first=SORT_FIRST[key]||'desc';if(orderby!==key){setOrderby(key);setSort(first);}else if(sort===first)setSort(first==='asc'?'desc':'asc');else{setOrderby('');setSort('desc');}// 服务端排序变了就回到第 1 页；只在当前页排流量时保持页码。
@@ -174,7 +174,7 @@ export function Resources({kind,catalog,notify}:{kind:string;catalog:Record<stri
   <div className="list-footer">
    <div className="list-footer-start">{kind==='clouds'&&<><BatchMenu rows={selectedRows} onPick={id=>{if(id!=='export'){setBatch(id);return;}const n=selectedRows.length;exportInstances(selectedRows).then(()=>notify(`已导出 ${n} 个实例`)).catch(e=>notify((e as Error).message,'danger'));}}/>{selectedRows.length>0&&<Button variant="ghost" size="sm" onPress={()=>setSelected(new Set())}>取消选择</Button>}</>}
     {kind==='nodes'&&<><Button variant="outline" size="sm" isDisabled={!selectedRows.length} onPress={()=>setNodeBatch(true)}><PencilLine size={14}/>批量修改{selectedRows.length?`（${selectedRows.length}）`:''}</Button>{selectedRows.length>0&&<Button variant="ghost" size="sm" onPress={()=>setSelected(new Set())}>取消选择</Button>}</>}</div>
-   <Pager total={result?total:null} page={page} totalPages={totalPages} perPage={perPage} loading={loading} onPage={setPage} onPerPage={n=>{setPerPage(n);setPage(1);}}/>
+   <Pager sizes={kind==='clouds'?CLOUD_PAGE_SIZES:PAGE_SIZES} total={result?total:null} page={page} totalPages={totalPages} perPage={perPage} loading={loading} onPage={setPage} onPerPage={n=>{setPerPage(n);setPage(1);}}/>
   </div>
  </section>
  {form&&(kind==='areas'||kind==='nodes')&&<ResourceDialog kind={kind} record={form.record} onClose={()=>setForm(null)} onSaved={success}/>}{form&&kind!=='areas'&&kind!=='nodes'&&<ResourceForm kind={kind} descriptor={descriptor} record={form.record} onClose={()=>setForm(null)} onSaved={success}/>}

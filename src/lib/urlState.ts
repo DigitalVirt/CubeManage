@@ -6,8 +6,10 @@ import {useSearchParams} from 'react-router-dom';
  * back/forward returns to the same view. Defaults are left out to keep URLs short; other parameters are kept.
  */
 export const PAGE_SIZES=[10,20,50,100];
+/** 实例列表额外提供每页 500 条。 */
+export const CLOUD_PAGE_SIZES=[...PAGE_SIZES,500];
 export const pageFrom=(p:URLSearchParams)=>{const n=parseInt(p.get('page')||'',10);return Number.isSafeInteger(n)&&n>0?n:1;};
-export const perPageFrom=(p:URLSearchParams)=>{const n=Number(p.get('per_page'));return PAGE_SIZES.includes(n)?n:20;};
+export const perPageFrom=(p:URLSearchParams,sizes:number[]=PAGE_SIZES)=>{const n=Number(p.get('per_page'));return sizes.includes(n)?n:20;};
 
 export function useUrlState(values:Record<string,string|number>,defaults:Record<string,string|number>){
  const [params,setParams]=useSearchParams();
