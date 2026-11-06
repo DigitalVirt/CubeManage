@@ -1358,6 +1358,8 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .node-batch-wide{grid-column:1/-1}
 .node-batch-key{width:100%;min-height:6rem;padding:.5rem .75rem;border:1px solid var(--field-border,var(--border));border-radius:.75rem;background:var(--field-background,var(--background));font-size:.8125rem;color:var(--foreground);resize:vertical}
 .node-batch-key:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.node-batch-key:disabled{background:var(--surface-secondary,#f4f4f5);color:var(--muted);cursor:not-allowed}
+.node-batch-clear{margin-top:.5rem}
 .node-batch-result p{margin:0 0 .75rem}
 .node-batch-failed{color:#b91c1c}
 .node-batch-errors{display:grid;gap:.375rem;max-height:16rem;overflow-y:auto;margin:0;padding:0;list-style:none}
@@ -1477,6 +1479,10 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
 .nodes-table :is(.table__column,.table__cell):nth-child(2){width:1%;white-space:nowrap;padding-inline:.125rem .5rem;text-align:center}
 .nodes-table .table__cell:nth-child(2) .button{width:1.875rem;min-width:1.875rem;height:1.875rem;padding:0}
 .nodes-table .name-cell .resource-name.button{padding-inline:.375rem;margin-inline-start:-.375rem}
+/* 节点名称下方：魔方云版本，12px 灰色。 */
+.node-name-stack{display:grid;gap:.125rem}
+.node-version{font-size:.75rem;line-height:1rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.m-ip .node-version{margin-left:.375rem}
 /* 窄屏收起的搜索框裁掉里面的输入框，否则输入框伸出屏幕，整页能横向滚动。 */
 @media(max-width:960px){.header-search-wrap:not(:focus-within) .header-search{overflow:hidden}}
 /* 手机端（≤640px）补充 */

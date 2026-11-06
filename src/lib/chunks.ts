@@ -5,7 +5,7 @@ export const BATCH_CHUNK=10;
 
 export type ItemState={state:'wait'|'run'|'ok'|'fail'|'skip';error?:string};
 export type Progress={done:number;total:number;items:Record<number,ItemState>};
-export type ItemResult={id:number;ok:boolean;error?:string};
+export type ItemResult={id:number;ok:boolean;error?:string;skipped?:string};
 
 /**
  * Submit ids in chunks, one request per chunk, reporting each instance's state as it goes.

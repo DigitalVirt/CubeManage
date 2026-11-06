@@ -7,12 +7,12 @@ export function percent(value:unknown){return value==null||value===''||!Number.i
 export function bandwidth(value:unknown){if(value==null||!Number.isFinite(Number(value))||Number(value)<0)return '—';const n=Number(value),units=['bps','Kbps','Mbps','Gbps','Tbps'];const i=n?Math.max(0,Math.min(4,Math.floor(Math.log(n)/Math.log(1000)))):0;return `${(n/1000**i).toLocaleString('zh-CN',{maximumFractionDigits:2})} ${units[i]}`;}
 export function Usage({value,label}:{value:unknown;label:string}){const n=percent(value);if(n===null)return <div className="usage"><span className="usage-empty">—</span></div>;const level=n>=90?' is-critical':n>=80?' is-high':'';return <div className={'usage'+level} role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(n,100)}><strong>{n.toFixed(1)}%</strong><span className="usage-track" aria-hidden="true"><i style={{width:Math.min(n,100)+'%'}}/></span></div>;}
 
-type TelemetryProps={id:number;refreshKey?:number|string;onStatus?:(id:number,status:unknown)=>void;onSettled?:(id:number)=>void};
+type TelemetryProps={id:number;refreshKey?:number|string;onStatus?:(id:number,status:unknown,version?:string)=>void;onSettled?:(id:number)=>void};
 /** 节点监控数据（GET /api/nodes/:id/metrics），每 30 秒更新；表格行和手机卡片共用。最多同时 4 个请求。 */
 export function useNodeTelemetry({id,onStatus,onSettled,refreshKey=0}:TelemetryProps){
  const handlers=useRef({onStatus,onSettled});handlers.current={onStatus,onSettled};
  const [data,setData]=useState<Row|null>(null),[error,setError]=useState(''),[retry,setRetry]=useState(0);
- useEffect(()=>{let active=true,pending=false;const load=async()=>{if(pending)return;pending=true;try{const result=await queued(async()=>active?api(`/nodes/${id}/metrics`):null);if(active&&result){const data=result.data??result;setData(data);setError('');handlers.current.onStatus?.(id,data.status);}}catch(e){if(active)setError((e as Error).message);}finally{pending=false;if(active)handlers.current.onSettled?.(id);}};load();const timer=setInterval(load,30000);return()=>{active=false;clearInterval(timer);};},[id,retry,refreshKey]);
+ useEffect(()=>{let active=true,pending=false;const load=async()=>{if(pending)return;pending=true;try{const result=await queued(async()=>active?api(`/nodes/${id}/metrics`):null);if(active&&result){const data=result.data??result;setData(data);setError('');handlers.current.onStatus?.(id,data.status,data.version==null?undefined:String(data.version));}}catch(e){if(active)setError((e as Error).message);}finally{pending=false;if(active)handlers.current.onSettled?.(id);}};load();const timer=setInterval(load,30000);return()=>{active=false;clearInterval(timer);};},[id,retry,refreshKey]);
  return {data,error,retry:()=>setRetry(v=>v+1)};
 }
 /** 磁盘列表：平台可能返回数组或单个对象 */

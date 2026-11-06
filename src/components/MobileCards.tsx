@@ -74,14 +74,14 @@ export function CloudCard({row,area,node,owner,picked,onPick,onOpen,actions}:{ro
 
 /** 节点卡片：名称、分组、IP；实例数、CPU、内存、磁盘；带宽和启用 / 维护开关。监控数据与表格共用 useNodeTelemetry。 */
 export function NodeCard({row,area,picked,onPick,onOpen,actions,refreshKey,status,onStatus,onSettled,onSwitch}:{row:Row;area?:Row|null;picked:boolean;onPick:(on:boolean)=>void;onOpen:()=>void;actions:CardAction[];
- refreshKey:string;status:unknown;onStatus:(id:number,v:unknown)=>void;onSettled:(id:number)=>void;onSwitch:(field:'enable'|'maintenance_mode',on:boolean)=>void}){
+ refreshKey:string;status:unknown;onStatus:(id:number,v:unknown,version?:string)=>void;onSettled:(id:number)=>void;onSwitch:(field:'enable'|'maintenance_mode',on:boolean)=>void}){
  const {data}=useNodeTelemetry({id:Number(row.id),refreshKey,onStatus,onSettled});
  const healthy=Number(status)===1,maint=Number(row.maintenance_mode)===1;
  const disks=diskList(data),diskMax=disks.reduce<number|null>((m,d)=>{const p=percent(d.disk_percent);return p==null?m:m==null?p:Math.max(m,p);},null);
  const pct=(v:unknown)=>{const p=percent(v);return {value:p==null?'—':p.toFixed(0)+'%',pct:p};};
  const sw=(field:'enable'|'maintenance_mode',title:string)=><span className="m-switch">{title}<Switch size="sm" aria-label={title+'节点 '+row.name} isSelected={Number(row[field])===1} isDisabled={row[field]==null} onChange={v=>onSwitch(field,v)}><Switch.Content aria-label={title+'节点 '+row.name}><Switch.Control><Switch.Thumb/></Switch.Control></Switch.Content></Switch></span>;
  return <MobileCard title={<><CountryFlag code={row.country_code||area?.country_code} name={row.country_name||area?.country_name}/>{row.name||'#'+row.id}{row.group_name&&<span className="group-tag is-sm">{row.group_name}</span>}</>}
-  sub={row.ip?<span className="m-ip"><span className="mono">{row.ip}</span><CopyIp ip={String(row.ip)}/></span>:undefined}
+  sub={row.ip||row.version?<span className="m-ip">{row.ip&&<><span className="mono">{row.ip}</span><CopyIp ip={String(row.ip)}/></>}{row.version&&<span className="node-version" title="魔方云版本">{/^v/i.test(String(row.version).trim())?String(row.version).trim():'v'+String(row.version).trim()}</span>}</span>:undefined}
   state={<StatePill spec={healthy&&maint?{...healthStatus(1),color:'#b45309'}:healthStatus(status)} title={!healthy?'异常':maint?'维护中':'正常'}/>}
   picked={picked} onPick={onPick} pickLabel={'选择节点 '+(row.name||row.id)} onOpen={onOpen} actions={actions}
   metrics={[{label:'实例',value:label(row.cloud_num)},{label:'CPU',...pct(data?.cpu_info?.use_percent)},{label:'内存',...pct(data?.memory?.use_percent)},{label:'磁盘',value:diskMax==null?'—':diskMax.toFixed(0)+'%',pct:diskMax}]}
