@@ -99,7 +99,7 @@ export function Guidelines(){
    <div className="guide-row guide-task-row">{[['0','等待执行'],['1','执行中'],['2','执行成功'],['3','执行失败'],['4','强制结束'],['5','已取消']].map(([v,t])=><span key={v} className="guide-task"><TaskStatus status={v} msg={v==='3'?'节点通信超时':undefined}/><small>{t}</small></span>)}</div>
   </Section>
 
-  <Section id="buttons" title="按钮" note="一屏只放一个主按钮（白字蓝底）。次要操作用描边按钮，表格内和工具类操作用带提示的仅图标幽灵按钮，危险操作用红色。圆角 10px。">
+  <Section id="buttons" title="按钮" note="一屏只放一个主按钮（白字蓝底）。次要操作用描边按钮（白色底），表格内和工具类操作用带提示的仅图标幽灵按钮，危险操作用红色。圆角 10px。">
    <div className="guide-row">
     <Button size="sm"><Plus size={16}/>新建实例</Button>
     <Button size="sm" variant="outline"><ArrowLeft size={16}/>返回 IP 段</Button>

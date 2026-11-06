@@ -116,6 +116,9 @@ body{margin:0;min-width:320px}
 .clouds-table .is-picked .table__cell{background:color-mix(in srgb,var(--accent) 6%,var(--background))}
 .clouds-table :is(.table__column,.table__cell):first-child{width:1%;padding-inline:.75rem .25rem}
 
+/* 默认（描边）按钮统一白色底，放在灰色页面底色上也有底色；悬停 / 按下为浅灰。 */
+.button--outline{--button-bg:#fff;--button-bg-hover:color-mix(in srgb,var(--default) 60%,#fff);--button-bg-pressed:var(--default)}
+
 /* List footer: batch menu on the left, page size and pager on the right */
 .list-footer{display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;padding-top:1rem}
 .list-footer-start,.pager{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
