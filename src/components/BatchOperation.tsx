@@ -21,7 +21,7 @@ export const batchActions:{id:string;title:string;tone:Tone;note:string}[]=[
  {id:'password',title:'重置密码',tone:'caution',note:'平台将离线重置密码，实例可能会被重启。'},
  {id:'force_delete',title:'强制删除',tone:'danger',note:'直接删除，不进入回收站，无法恢复。'},
  {id:'delete',title:'删除',tone:'danger',note:'实例进入回收站，服务中断，保留期内可恢复。'},
- {id:'settings',title:'实例设置',tone:'normal',note:'只提交填写了的项目，留空的项目保持不变。'},
+ {id:'settings',title:'实例设置',tone:'normal',note:'只提交填写了的项目，留空的项目保持不变。网卡多队列需要平台 v2.5.2 及以上，逐台修改，可能需要重启实例后才生效。'},
  {id:'export',title:'导出',tone:'normal',note:''},
  {id:'migrate',title:'迁移',tone:'caution',note:'逐台向平台发起迁移（每台单独一个请求，不走批量迁移队列），每台实例的结果单独显示。'},
  {id:'reinstall',title:'重装',tone:'danger',note:'系统盘将被重新安装，系统盘上的数据会全部丢失。'},
@@ -105,18 +105,18 @@ export function BatchOperation({actionId,rows,onClose,onDone}:{actionId:string;r
   :actionId==='rules'&&!v.advanced_bw&&!v.advanced_cpu?'请至少选择一条规则'
   :actionId==='ipv6'&&!(Number(v.num)>=1&&Number(v.num)<=1000)?'数量应为 1～1000'
   :actionId==='replace_ip'&&!(Number(v.num)>=1)?'请填写每台的 IPv4 数量'
-  :actionId==='settings'&&!['in_bw','out_bw','cpu_limit','read_bytes_sec','write_bytes_sec','read_iops_sec','write_iops_sec'].some(k=>v[k]!==undefined&&v[k]!=='')?'请至少填写一项设置':'';
+  :actionId==='settings'&&!['in_bw','out_bw','cpu_limit','read_bytes_sec','write_bytes_sec','read_iops_sec','write_iops_sec','queues'].some(k=>v[k]!==undefined&&v[k]!=='')?'请至少填写一项设置':'';
 
  function payload(){
   const num=(k:string)=>v[k]===undefined||v[k]===''?undefined:Number(v[k]);
   switch(actionId){
    case 'password':return {password:flags.same?v.password:randomPassword(),same:flags.same};
    case 'reinstall':return {os:num('os'),password_type:v.login==='key'?1:0,password:v.login==='key'?undefined:v.password,ssh_key:num('ssh_key'),format_data_disk:Boolean(flags.format),app_preset_id:num('app_preset_id')};
-   case 'migrate':return {node:num('node'),assign_ip:Boolean(flags.assign_ip),...(v.mode?{mode:v.mode}:{})};
+   case 'migrate':{const mode=v.mode??'0';return {node:num('node'),assign_ip:Boolean(flags.assign_ip),...(mode?{mode}:{})};}
    case 'rules':return {advanced_bw:num('advanced_bw'),advanced_cpu:num('advanced_cpu')};
    case 'ipv6':return {num:num('num')};
    case 'replace_ip':return {num:num('num'),ip_group:num('ip_group')};
-   case 'settings':return Object.fromEntries(['in_bw','out_bw','cpu_limit','read_bytes_sec','write_bytes_sec','read_iops_sec','write_iops_sec'].map(k=>[k,num(k)]).filter(([,x])=>x!==undefined));
+   case 'settings':return Object.fromEntries(['in_bw','out_bw','cpu_limit','read_bytes_sec','write_bytes_sec','read_iops_sec','write_iops_sec','queues'].map(k=>[k,num(k)]).filter(([,x])=>x!==undefined));
    default:return {};
   }
  }
@@ -174,7 +174,7 @@ export function BatchOperation({actionId,rows,onClose,onDone}:{actionId:string;r
   </>
   :actionId==='migrate'?<>
    <Select label="目标节点" value={v.node||''} onChange={set('node')} empty="请选择目标节点" hint="已在目标节点上的实例会在结果里显示为失败，不影响其他实例。" lookup={nodes}/>
-   <Field label="迁移方式" hint="自动时由平台优先尝试热迁移。"><Choice aria-label="迁移方式" value={v.mode||''} onChange={e=>set('mode')(e.target.value)}><option value="">自动（热迁移优先）</option><option value="1">热迁移</option><option value="0">冷迁移</option></Choice></Field>
+   <Field label="迁移方式" hint="默认冷迁移；选“自动”时由平台优先尝试热迁移。"><Choice aria-label="迁移方式" value={v.mode??'0'} onChange={e=>set('mode')(e.target.value)}><option value="">自动（热迁移优先）</option><option value="1">热迁移</option><option value="0">冷迁移</option></Choice></Field>
    <div className="batch-field"><Flag checked={Boolean(flags.assign_ip)} onChange={flag('assign_ip')}>重新分配 IP</Flag><small>从目标节点的空闲 IP 中为每台分配与现有数量相同的新 IP，原 IP 释放。</small></div>
   </>
   :actionId==='rules'?<>
@@ -190,7 +190,7 @@ export function BatchOperation({actionId,rows,onClose,onDone}:{actionId:string;r
    <NumberField label="进带宽" unit="Mbps" value={v.in_bw||''} onChange={set('in_bw')} placeholder="不修改"/>
    <NumberField label="出带宽" unit="Mbps" value={v.out_bw||''} onChange={set('out_bw')} placeholder="不修改"/>
    <NumberField label="CPU 限制" value={v.cpu_limit||''} onChange={set('cpu_limit')} placeholder="不修改"/>
-   <span/>
+   <NumberField label="网卡多队列" unit="1～64" value={v.queues||''} onChange={set('queues')} placeholder="不修改"/>
    <NumberField label="磁盘读取" unit="MB/s" value={v.read_bytes_sec||''} onChange={set('read_bytes_sec')} placeholder="不修改"/>
    <NumberField label="磁盘写入" unit="MB/s" value={v.write_bytes_sec||''} onChange={set('write_bytes_sec')} placeholder="不修改"/>
    <NumberField label="读取 IOPS" value={v.read_iops_sec||''} onChange={set('read_iops_sec')} placeholder="不修改"/>
@@ -207,7 +207,6 @@ export function BatchOperation({actionId,rows,onClose,onDone}:{actionId:string;r
   <div className="batch-dialog">
    {!result&&progress&&busy&&<BatchProgress title={actionId==='migrate'?'正在逐台提交迁移':'正在提交'+spec.title} rows={rows} progress={progress}/>}
    {!result&&!(progress&&busy)&&<>
-    <div className="batch-targets"><span className="batch-targets-label">已选择 {rows.length} 个实例</span><div className="batch-chips">{rows.slice(0,12).map(r=><span key={r.id} className="batch-chip" title={'#'+r.id}>{r.hostname||'#'+r.id}</span>)}{rows.length>12&&<span className="batch-chip more">等 {rows.length} 个</span>}</div></div>
     {spec.note&&<div className={'batch-note tone-'+spec.tone}>{spec.tone==='danger'?<TriangleAlert size={16}/>:<CircleAlert size={16}/>}<span>{spec.note}</span></div>}
     {form&&<div className="batch-form">{form}</div>}
     {error&&<ErrorBox message={error}/>}

@@ -46,7 +46,6 @@ export function NodeBatchEdit({rows,onClose,onDone}:{rows:Row[];onClose:()=>void
     </div>
    :progress&&busy?<BatchProgress title="正在修改节点" rows={rows.map(r=>({...r,hostname:r.name}))} progress={progress} okText="已修改"/>
    :<>
-    <div className="batch-targets"><span className="batch-targets-label">已选择 {rows.length} 个节点</span><div className="batch-chips">{rows.slice(0,12).map(r=><span key={r.id} className="batch-chip" title={'#'+r.id}>{r.name||'#'+r.id}</span>)}{rows.length>12&&<span className="batch-chip more">等 {rows.length} 个</span>}</div></div>
     <div className="batch-note tone-info"><CircleAlert size={16}/><span>只修改填写了的项，留空的保持不变。新的 SSH 信息需要和节点服务器上实际的一致，否则平台会连不上节点。</span></div>
     <div className="batch-form node-batch-form">
      <Field label="SSH 密码"><TextField aria-label="SSH 密码" value={v.ssh_pass} onChange={set('ssh_pass')}><InputGroup><InputGroup.Input type={show?'text':'password'} autoComplete="new-password" placeholder="不修改"/><InputGroup.Suffix><Button variant="ghost" size="sm" isIconOnly type="button" aria-label={show?'隐藏密码':'显示密码'} aria-pressed={show} onPress={()=>setShow(x=>!x)}>{show?<EyeOff size={15}/>:<Eye size={15}/>}</Button></InputGroup.Suffix></InputGroup></TextField></Field>

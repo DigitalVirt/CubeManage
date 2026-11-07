@@ -1529,3 +1529,36 @@ tr:hover .ip-copy.button,.ip-copy.button:focus-visible,.ip-copy.is-done.button{o
  .filter-bar:has(>.filters>div:only-of-type)>.filters{flex:1;min-width:0}
  .filter-bar:has(>.filters>div:only-of-type)>.filter-actions{flex:none;width:auto;margin-left:0}
 }
+
+/* 数字步进框（NumberField）：HeroUI 给 −/+ 按钮四边都加了边框，叠在外框里形成“重影”；只保留按钮与输入框之间的一条分隔线。 */
+.number-field__increment-button,.number-field__decrement-button{border-width:0;border-color:var(--field-border)}
+.number-field__decrement-button{border-inline-end-width:1px}
+.number-field__increment-button{border-inline-start-width:1px}
+
+/* 实例详情 · 右侧日志：沿用表格外框，两列——操作（内容最多两行 + 灰字操作人 · IP）、时间（日期 / 时刻两行）。 */
+.inst-log-table td,.inst-log-table th{white-space:normal}
+.inst-log-table,.table-scroll table.inst-log-table{table-layout:fixed;width:100%;min-width:0}
+.inst-log-table :is(.table__column,.table__cell):last-child{width:7.5rem;white-space:nowrap;text-align:right}
+.inst-log-cell{display:grid;gap:.25rem;min-width:0}
+.inst-log-cell p{margin:0;line-height:1.35rem;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.inst-log-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.125rem .5rem;font-size:.75rem;color:var(--muted);min-width:0}
+.inst-log-meta>*+*::before{content:"·";margin-right:.5rem;color:var(--muted);opacity:.6}
+.inst-log-time{display:grid;gap:.125rem;justify-items:end}
+.inst-log-time small{font-size:.75rem;color:var(--muted)}
+
+/* 实例详情 · 流量计费统计：三个时段各一块浅灰卡片，右侧为总计，下方进（蓝）/ 出（绿）。 */
+.inst-traffic-periods{list-style:none;margin:.25rem 1.25rem 0;padding:0;display:grid;gap:.5rem}
+.inst-traffic-periods li{display:grid;gap:.25rem;padding:.625rem .75rem;border-radius:.75rem;background:var(--app-bg)}
+.itp-head{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;font-size:.8125rem;color:var(--muted)}
+.itp-head span{display:inline-flex;align-items:baseline;gap:.5rem}
+.itp-head small{font-size:.75rem}
+.itp-head b{font-size:1rem;font-weight:600;color:var(--foreground);white-space:nowrap}
+.itp-sub{display:flex;flex-wrap:wrap;gap:.25rem 1rem;font-size:.75rem;color:var(--muted)}
+.itp-sub span{display:inline-flex;align-items:center;gap:.25rem;white-space:nowrap}
+.itp-sub .is-in svg{color:var(--accent)}.itp-sub .is-out svg{color:var(--success)}
+
+/* 实例详情头部：系统图标、运行状态、IP、区域不加底色，直接放在头部卡片上；标签之间用间距分开。 */
+.inst-hero .inst-os{background:none;border:0;width:3rem;height:3rem}
+.inst-hero .inst-os img{width:2.75rem;height:2.75rem}
+.inst-hero .inst-pills{gap:.375rem 1.25rem}
+.inst-hero .inst-pill{background:none;border:0;padding:0;height:1.75rem}

@@ -148,7 +148,17 @@ export function registerBatch(app,{asyncRoute}){
   if(op==='rules'){const body={};const bw=int(b.advanced_bw,'智能带宽规则',{min:1,optional:true}),cpu=int(b.advanced_cpu,'智能 CPU 规则',{min:1,optional:true});if(bw===undefined&&cpu===undefined)throw new HttpError(400,'请至少选择一条规则');if(bw!==undefined)body.advanced_bw=bw;if(cpu!==undefined)body.advanced_cpu=cpu;const {results}=await native('PUT','clouds/advanced_rule',part=>({id:part,...body}));return done(results);}
   if(op==='ipv6'){const num=int(b.num,'IPv6 数量',{min:1,max:1000});const {results,raw}=await native('POST','clouds/ipv6',part=>({ids:part,num}));const added=raw.flatMap(r=>listOf(r,'success_list')).map(x=>({id:Number(x.host_id),ipv6:x.added_ipv6||[]}));return done(results,{ipv6:added});}
   if(op==='replace_ip'){const body={num:int(b.num,'IPv4 数量',{min:1,max:256})};const group=int(b.ip_group,'IP 分组',{min:1,optional:true});if(group!==undefined)body.ip_group=group;const {results}=await native('PUT','clouds/ip/change',part=>({ids:part,...body}));return done(results);}
-  if(op==='settings'){const body={};for(const k of settingFields){const v=int(b[k],k,{optional:true});if(v!==undefined)body[k]=v;}if(!Object.keys(body).length)throw new HttpError(400,'请至少填写一项设置');const {results}=await native('PUT','clouds',part=>({id:part,...body}));return done(results);}
+  // 实例设置：带宽、CPU、磁盘限制走批量修改实例 PUT v1/clouds；网卡多队列 queues 只有单台修改实例 PUT v1/clouds/:id 支持（v2.5.2+），
+  // 逐台提交，只发 queues。两者都填时先批量修改，批量修改失败的实例不再改网卡队列。
+  if(op==='settings'){
+   const body={};for(const k of settingFields){const v=int(b[k],k,{optional:true});if(v!==undefined)body[k]=v;}
+   const queues=int(b.queues,'网卡多队列',{min:1,max:64,optional:true});
+   if(!Object.keys(body).length&&queues===undefined)throw new HttpError(400,'请至少填写一项设置');
+   let results=ids.map(id=>({id,ok:true}));
+   if(Object.keys(body).length)({results}=await native('PUT','clouds',part=>({id:part,...body})));
+   if(queues!==undefined)for(const r of results){if(!r.ok)continue;try{await client.request('PUT',`clouds/${r.id}`,{body:{queues}});}catch(e){if(e?.status===401)throw e;r.ok=false;r.error='网卡多队列：'+e.message;}}
+   return done(results);
+  }
   throw new HttpError(404,'批量操作不存在');
  }));
 

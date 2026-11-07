@@ -139,12 +139,15 @@ export function InstanceDetail({id,onClose,notify}:{id:string|number;onClose:()=
     </dl>
    </Card>
    {/* 流量计费统计（方案 C）：重置日至今汇总在上，下方表格为今日 / 最近 7 天 / 本月的进、出、总计与占比，数据均来自 v1/net_info 的 info。 */}
-   <Card className="inst-traffic" title="流量计费统计" icon={<ArrowDownUp size={16}/>} actions={meta.flow_reset_time?<span className="inst-traffic-total">下次重置 {String(meta.flow_reset_time).slice(5,10)}</span>:undefined}>
+   <Card className="inst-traffic" title="流量计费统计" icon={<ArrowDownUp size={16}/>} >
     <div className="inst-traffic-row"><span>重置日至今</span><span className="num">{pct!=null?pct.toFixed(1)+'%':''}</span></div>
     <div className="inst-traffic-big num">{used!=null?used.toFixed(used<10?2:1):'—'}<small> / {quota!=null?quota+' GB':'不限'}{quota==null&&used!=null?' · GiB':''}</small></div>
     {pct!=null&&<span className={'usage-track full'+(pct>=80?' is-high':'')} role="meter" aria-label="重置日至今流量使用率" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(pct,100)}><i style={{width:Math.min(pct,100)+'%'}}/></span>}
-    <table className="inst-traffic-table num"><thead><tr><th scope="col">时段</th><th scope="col">↓ 进</th><th scope="col">↑ 出</th><th scope="col">总计</th><th scope="col">占比</th></tr></thead>
-     <tbody>{([['to_day','今日'],['7_day','最近 7 天'],['to_month','本月']] as const).map(([k,t])=>{const d=traffic?.info?.[k]||{};const f=Number(d.float);return <tr key={k}><th scope="row">{t}</th><td className="is-in">{flowSize(d.accept)}</td><td className="is-out">{flowSize(d.send)}</td><td>{flowSize(d.total)}</td><td>{f>0?f.toFixed(1)+'%':'—'}</td></tr>;})}</tbody></table>
+    {/* 今日 / 最近 7 天 / 本月：每段一行，左侧时段和占比，右侧总计，下方进、出两项，窄栏里也不会挤出横向滚动。 */}
+    <ul className="inst-traffic-periods num">{([['to_day','今日'],['7_day','最近 7 天'],['to_month','本月']] as const).map(([k,t])=>{const d=traffic?.info?.[k]||{};const f=Number(d.float);return <li key={k}>
+     <div className="itp-head"><span>{t}{f>0&&<small>占比 {f.toFixed(1)}%</small>}</span><b>{flowSize(d.total)}</b></div>
+     <div className="itp-sub"><span className="is-in"><ArrowDown size={12}/>进 {flowSize(d.accept)}</span><span className="is-out"><ArrowUp size={12}/>出 {flowSize(d.send)}</span></div>
+    </li>;})}</ul>
     <div className="inst-traffic-foot">{meta.flow_reset_time?'下次重置 '+date(meta.flow_reset_time):meta.flow_strategy==='statistics'?'统计使用总量，不自动重置':''}</div>
    </Card>
    <Card className="inst-actions">
@@ -200,8 +203,9 @@ export function InstanceDetail({id,onClose,notify}:{id:string|number;onClose:()=
      </Dropdown.Menu></Dropdown.Popover></Dropdown></>}>
     {netError?<ErrorBox message={netError}/>:!net?<KvSkeleton/>:<dl className="inst-kv">
      <div><dt>网络类型</dt><dd><span className="inst-tag">{netType==='vpc'?'VPC 网络':'经典网络'}</span></dd></div>
-     <div><dt>VPC 网络</dt><dd>{netType==='vpc'?(net.vpc_name||r.vpc_name||'—'):<span className="inst-muted">未使用</span>}</dd></div>
-     <div><dt>内网 IP</dt><dd>{privateIps.length?<span className="mono">{privateIps.map(x=>x.address).join('、')}</span>:<span className="inst-muted">—</span>}</dd></div>
+     {/* 没有 VPC 网络、没有内网 IP 时不显示这两行。 */}
+     {netType==='vpc'&&(net.vpc_name||r.vpc_name)&&<div><dt>VPC 网络</dt><dd>{net.vpc_name||r.vpc_name}</dd></div>}
+     {privateIps.length>0&&<div><dt>内网 IP</dt><dd><span className="mono">{privateIps.map(x=>x.address).join('、')}</span></dd></div>}
      <div><dt>网络状态</dt><dd>{Number(net.internet??r.internet??1)===0?<span className="inst-state is-off">已断网</span>:<span className="inst-state is-on">正常</span>}</dd></div>
     </dl>}
    </Section>
@@ -235,8 +239,9 @@ export function InstanceDetail({id,onClose,notify}:{id:string|number;onClose:()=
    </div>
    <div className="inst-col inst-side">
    <Section title="日志" icon={<ScrollText size={16}/>} actions={<Button size="sm" variant="outline" onPress={()=>setLogs(true)}>全部日志</Button>}>
-    {logError?<ErrorBox message={logError}/>:!logRows?<TableSkeleton className="inst-table" rows={6} columns={[{title:'操作',width:6},{title:'操作人',width:4},{title:'时间',width:7}]}/>:<Table><Table.ScrollContainer className="table-scroll"><Table.Content aria-label="实例日志" className="inst-table"><Table.Header><Table.Column isRowHeader>操作</Table.Column><Table.Column>操作人</Table.Column><Table.Column>时间</Table.Column></Table.Header>
-     <Table.Body renderEmptyState={()=><Empty kind="log" size="sm" title="暂无日志" text="这台实例的操作记录会显示在这里。"/>}>{logRows.map(l=><Table.Row key={l.id}><Table.Cell><div className="inst-ip-cell"><span>{l.des}</span>{l.ip&&<small className="mono">{l.ip}</small>}</div></Table.Cell><Table.Cell>{l.username||'系统'}</Table.Cell><Table.Cell className="num nowrap">{date(l.create_time)}</Table.Cell></Table.Row>)}</Table.Body></Table.Content></Table.ScrollContainer></Table>}
+    {/* 右侧栏较窄：外框仍是表格，只分“操作”“时间”两列；操作内容可换行（最多两行），下方灰字为操作人 · IP；时间分日期、时刻两行，不再横向滚动。 */}
+    {logError?<ErrorBox message={logError}/>:!logRows?<TableSkeleton className="inst-table inst-log-table" rows={6} columns={[{title:'操作',width:9,twoLine:true},{title:'时间',width:5,twoLine:true}]}/>:<Table><Table.ScrollContainer className="table-scroll"><Table.Content aria-label="实例日志" className="inst-table inst-log-table"><Table.Header><Table.Column isRowHeader>操作</Table.Column><Table.Column>时间</Table.Column></Table.Header>
+     <Table.Body renderEmptyState={()=><Empty kind="log" size="sm" title="暂无日志" text="这台实例的操作记录会显示在这里。"/>}>{logRows.map(l=>{const [d,c]=date(l.create_time).split(' ');return <Table.Row key={l.id}><Table.Cell><div className="inst-log-cell"><p title={String(l.des??'')}>{l.des}</p><div className="inst-log-meta"><span>{l.username||'系统'}</span>{l.ip&&<span className="mono">{l.ip}</span>}</div></div></Table.Cell><Table.Cell><div className="inst-log-time num"><span>{d}</span>{c&&<small>{c}</small>}</div></Table.Cell></Table.Row>;})}</Table.Body></Table.Content></Table.ScrollContainer></Table>}
    </Section>
    </div>
   </div>
@@ -285,7 +290,7 @@ function DetailSkeleton({onClose,id}:{onClose:()=>void;id:string|number}){
   </header>
   <div className="inst-grid">
    <Card className="inst-facts"><dl>{['操作系统','节点','实例密码','实例 ID','所属用户','创建时间'].map((t,i)=><div key={t}><dt>{t}</dt><dd>{sk(['9rem','5.5rem','7.5rem','3rem','5rem','9rem'][i])}</dd></div>)}</dl></Card>
-   <Card className="inst-traffic" title="流量计费统计" icon={<ArrowDownUp size={16}/>}><div className="inst-traffic-row">{sk('5rem')}{sk('2.5rem')}</div>{sk('8rem','sk-title')}<Skeleton animationType="pulse" className="sk-track"/><table className="inst-traffic-table"><thead><tr><th>时段</th><th>↓ 进</th><th>↑ 出</th><th>总计</th><th>占比</th></tr></thead><tbody>{['今日','最近 7 天','本月'].map(t=><tr key={t}><th scope="row">{t}</th><td>{sk('2.5rem')}</td><td>{sk('2.5rem')}</td><td>{sk('3rem')}</td><td>{sk('2rem')}</td></tr>)}</tbody></table></Card>
+   <Card className="inst-traffic" title="流量计费统计" icon={<ArrowDownUp size={16}/>}><div className="inst-traffic-row">{sk('5rem')}{sk('2.5rem')}</div>{sk('8rem','sk-title')}<Skeleton animationType="pulse" className="sk-track"/><ul className="inst-traffic-periods">{['今日','最近 7 天','本月'].map(t=><li key={t}><div className="itp-head"><span>{t}</span>{sk('3.5rem')}</div><div className="itp-sub">{sk('4.5rem')}{sk('4.5rem')}</div></li>)}</ul></Card>
    <Card className="inst-actions"><div className="inst-action-grid">{Array.from({length:11},(_,i)=><div key={i}>{tile}</div>)}</div></Card>
   </div>
   <div className="inst-lower">
@@ -296,7 +301,7 @@ function DetailSkeleton({onClose,id}:{onClose:()=>void;id:string|number}){
     <Section title="监控" icon={<Gauge size={16}/>}><div className="inst-chart-loading"><Skeleton animationType="pulse" className="sk-chart"/></div></Section>
    </div>
    <div className="inst-col inst-side">
-    <Section title="日志" icon={<ScrollText size={16}/>}><TableSkeleton className="inst-table" rows={6} columns={[{title:'操作',width:6},{title:'操作人',width:4},{title:'时间',width:7}]}/></Section>
+    <Section title="日志" icon={<ScrollText size={16}/>}><TableSkeleton className="inst-table inst-log-table" rows={6} columns={[{title:'操作',width:9,twoLine:true},{title:'时间',width:5,twoLine:true}]}/></Section>
    </div>
   </div>
  </section>;
